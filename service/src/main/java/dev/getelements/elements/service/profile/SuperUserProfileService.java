@@ -96,7 +96,9 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        final var existing = getProfileDao().getActiveProfile(profileId);
+        final var profile = getProfileServiceUtils()
+                .getProfileForUpdate(profileId, profileRequest, existing.getApplication().getId());
         return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
     }
 

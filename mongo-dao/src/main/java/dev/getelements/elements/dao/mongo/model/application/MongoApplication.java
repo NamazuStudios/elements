@@ -33,6 +33,12 @@ public class MongoApplication {
     @Property
     private Boolean autoCreateProfile;
 
+    @Property
+    private Boolean authoritativeProfilePicture;
+
+    @Property
+    private String displayNameRegex;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -79,6 +85,22 @@ public class MongoApplication {
 
     public void setAutoCreateProfile(Boolean autoCreateProfile) {
         this.autoCreateProfile = autoCreateProfile;
+    }
+
+    public Boolean getAuthoritativeProfilePicture() {
+        return authoritativeProfilePicture;
+    }
+
+    public void setAuthoritativeProfilePicture(Boolean authoritativeProfilePicture) {
+        this.authoritativeProfilePicture = authoritativeProfilePicture;
+    }
+
+    public String getDisplayNameRegex() {
+        return displayNameRegex;
+    }
+
+    public void setDisplayNameRegex(String displayNameRegex) {
+        this.displayNameRegex = displayNameRegex;
     }
 
 }

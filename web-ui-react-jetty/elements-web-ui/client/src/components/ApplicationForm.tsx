@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ExternalLink, Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { ApplicationConfigurationDialog } from './ApplicationConfigurationDialog';
 import { useState, useMemo } from 'react';
@@ -99,8 +100,13 @@ const createApplicationSchema = (mode: 'create' | 'update') => z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   attributes: z.record(z.any()).optional(),
+  // Kept as a string in form state (like other text inputs) and parsed to a number in handleFormSubmit.
+  maxProfiles: z.string().optional(),
+  autoCreateProfile: z.boolean().optional(),
+  authoritativeProfilePicture: z.boolean().optional(),
+  displayNameRegex: z.string().optional(),
   // Only validate applicationConfiguration in create mode
-  applicationConfiguration: mode === 'create' 
+  applicationConfiguration: mode === 'create'
     ? z.array(applicationConfigSchema).optional()
     : z.any().optional(),
 });
@@ -241,6 +247,12 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
       name: initialData.name || '',
       description: initialData.description || '',
       attributes: initialData.attributes || {},
+      maxProfiles: initialData.maxProfiles !== undefined && initialData.maxProfiles !== null
+        ? String(initialData.maxProfiles)
+        : '',
+      autoCreateProfile: initialData.autoCreateProfile ?? true,
+      authoritativeProfilePicture: initialData.authoritativeProfilePicture ?? false,
+      displayNameRegex: initialData.displayNameRegex || '',
     },
   });
 
@@ -263,7 +275,12 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
         return value !== undefined && value !== null && value !== '';
       })
     ) as ApplicationFormData;
-    
+
+    // maxProfiles is kept as a string in form state; parse it to a number for the API payload.
+    if (cleanedData.maxProfiles !== undefined) {
+      (cleanedData as any).maxProfiles = parseInt(cleanedData.maxProfiles as unknown as string, 10);
+    }
+
     // Preserve _configurations from initialData if it exists (for duplication)
     const dataWithConfigs = (initialData as any)?._configurations 
       ? { ...cleanedData, _configurations: (initialData as any)._configurations }
@@ -308,6 +325,84 @@ export function ApplicationForm({ initialData = {}, onSubmit, mode }: Applicatio
                       <FormControl>
                         <Textarea {...field} placeholder="Application description" data-testid="textarea-description" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="maxProfiles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Max Profiles</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="number" min={0} placeholder="1" data-testid="input-maxProfiles" />
+                      </FormControl>
+                      <FormDescription>
+                        Maximum number of profiles a user may create for this application. Defaults to 1 if left blank.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="autoCreateProfile"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-autoCreateProfile"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="cursor-pointer">Auto-Create Primary Profile</FormLabel>
+                        <FormDescription>
+                          Automatically create a user's primary profile for this application when requested during user creation.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="authoritativeProfilePicture"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-2 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-authoritativeProfilePicture"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="cursor-pointer">Authoritative Profile Picture</FormLabel>
+                        <FormDescription>
+                          If checked, users cannot edit their own profile picture via the API for this application -- it must be set by backend/Element code.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="displayNameRegex"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Name Regex</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="^[A-Za-z0-9 ]+$" data-testid="input-displayNameRegex" />
+                      </FormControl>
+                      <FormDescription>
+                        Optional Java regular expression a profile's display name must match for this application. Leave blank to skip this check.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -39,6 +39,8 @@ public class MongoApplicationDao implements ApplicationDao {
 
     private static final boolean DEFAULT_AUTO_CREATE_PROFILE = true;
 
+    private static final boolean DEFAULT_AUTHORITATIVE_PROFILE_PICTURE = false;
+
     private ValidationHelper validationHelper;
 
     private MongoDBUtils mongoDBUtils;
@@ -61,6 +63,10 @@ public class MongoApplicationDao implements ApplicationDao {
         mongoApplication.setAutoCreateProfile(application.getAutoCreateProfile() == null
                 ? DEFAULT_AUTO_CREATE_PROFILE
                 : application.getAutoCreateProfile());
+
+        mongoApplication.setAuthoritativeProfilePicture(application.getAuthoritativeProfilePicture() == null
+                ? DEFAULT_AUTHORITATIVE_PROFILE_PICTURE
+                : application.getAuthoritativeProfilePicture());
 
         getDatastore().insert(mongoApplication);
 
@@ -162,7 +168,11 @@ public class MongoApplicationDao implements ApplicationDao {
                         : application.getMaxProfiles()),
                 set("autoCreateProfile", application.getAutoCreateProfile() == null
                         ? DEFAULT_AUTO_CREATE_PROFILE
-                        : application.getAutoCreateProfile())
+                        : application.getAutoCreateProfile()),
+                set("authoritativeProfilePicture", application.getAuthoritativeProfilePicture() == null
+                        ? DEFAULT_AUTHORITATIVE_PROFILE_PICTURE
+                        : application.getAuthoritativeProfilePicture()),
+                set("displayNameRegex", nullToEmpty(application.getDisplayNameRegex()).trim())
         ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
 
         if (mongoApplication == null) {
@@ -254,6 +264,10 @@ public class MongoApplicationDao implements ApplicationDao {
         application.setAutoCreateProfile(mongoApplication.getAutoCreateProfile() == null
                 ? DEFAULT_AUTO_CREATE_PROFILE
                 : mongoApplication.getAutoCreateProfile());
+
+        application.setAuthoritativeProfilePicture(mongoApplication.getAuthoritativeProfilePicture() == null
+                ? DEFAULT_AUTHORITATIVE_PROFILE_PICTURE
+                : mongoApplication.getAuthoritativeProfilePicture());
 
         return application;
 

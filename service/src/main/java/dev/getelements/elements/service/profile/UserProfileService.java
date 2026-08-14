@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.isNull;
 
 /**
@@ -113,10 +114,16 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile updateProfile(final String profileId, final UpdateProfileRequest profileRequest) {
 
-        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
+        final var existing = getProfileDao().getActiveProfile(profileId);
+        checkUserAndProfile(existing.getUser().getId());
         profileRequest.setMetadata(null);
 
-        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        if (!isNullOrEmpty(profileRequest.getImageUrl())) {
+            checkProfilePictureNotAuthoritative(existing.getApplication().getId());
+        }
+
+        final var profile = getProfileServiceUtils()
+                .getProfileForUpdate(profileId, profileRequest, existing.getApplication().getId());
         return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
 
     }
@@ -152,6 +159,14 @@ public class UserProfileService implements ProfileService {
         }
     }
 
+    private void checkProfilePictureNotAuthoritative(final String applicationId) {
+        final var application = getApplicationDao().getApplication(applicationId);
+        if (Boolean.TRUE.equals(application.getAuthoritativeProfilePicture())) {
+            throw new InvalidDataException(
+                    "This application's profile picture is authoritative and cannot be edited via the API.");
+        }
+    }
+
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
         final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
         profileRequest.setMetadata(null);
@@ -174,6 +189,7 @@ public class UserProfileService implements ProfileService {
         final var profile = getCurrentProfile();
 
         checkUserAndProfile(getProfileDao().getActiveProfile(profile.getId()).getUser().getId());
+        checkProfilePictureNotAuthoritative(profile.getApplication().getId());
 
         if (isNull(profile.getImageObject())) {
             logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
