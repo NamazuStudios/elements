@@ -11,7 +11,9 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: write
+  # contents: write was only needed for the old gh-pages push; docs now
+  # publish to S3, so this only needs read access to check out the repo.
+  contents: read
   packages: write
 
 jobs:
@@ -68,13 +70,15 @@ jobs:
         id: short-sha
         run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Publish Javadoc + OpenAPI spec to gh-pages
+      - name: Publish Javadoc + OpenAPI spec to apidocs.namazustudios.com
         # main sits at the same -SNAPSHOT version between release-branch
-        # cuts, so unlike an rc/release tag's immutable directory, this would
+        # cuts, so unlike an rc/release tag's immutable prefix, this would
         # just overwrite the same path on every push. Append the short SHA
-        # so each snapshot build gets its own directory instead of clobbering
+        # so each snapshot build gets its own prefix instead of clobbering
         # the last one.
         uses: ./.github/actions/publish-docs
         with:
           version: ${{ steps.build-setup.outputs.maven-version }}-${{ steps.short-sha.outputs.sha }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.APIDOCS_S3_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.APIDOCS_S3_SECRET_ACCESS_KEY }}
+          cloudfront-distribution-id: E30XJUM7BR8918

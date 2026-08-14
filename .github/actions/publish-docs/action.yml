@@ -1,21 +1,40 @@
 name: Publish docs
 description: >
   Aggregates Javadoc, grabs the built OpenAPI spec, and publishes both to
-  the gh-pages branch under a subdirectory named after the given version,
-  regenerating the root index. Used for every rc/release tag AND for every
-  main snapshot build (main is perpetually the same version between release
-  cuts, so its directory is simply overwritten in place each time -- still
-  useful, just not immutable the way an rc/release directory is). Assumes
-  the reactor has already been built (so the OpenAPI spec and compiled
-  classes for the aggregate javadoc already exist) and that git user/email
-  are configured for the checkout the caller made.
+  the namazu-apidocs S3 bucket under the "elements/<version>" prefix
+  (served at apidocs.namazustudios.com/elements/), regenerating the root
+  index and invalidating the CloudFront distribution in front of it. Used
+  for every rc/release tag AND for every main snapshot build (main is
+  perpetually the same version between release cuts, so its prefix is
+  simply overwritten in place each time -- still useful, just not
+  immutable the way an rc/release prefix is). Assumes the reactor has
+  already been built (so the OpenAPI spec and compiled classes for the
+  aggregate javadoc already exist).
 
 inputs:
   version:
     description: Version string to publish under (e.g. 3.9.0-rc-1, or 3.9.0-SNAPSHOT for main)
     required: true
-  github-token:
-    description: Token used to push to gh-pages
+  aws-access-key-id:
+    description: AWS access key ID for the namazu-apidocs S3 bucket
+    required: true
+  aws-secret-access-key:
+    description: AWS secret access key for the namazu-apidocs S3 bucket
+    required: true
+  aws-region:
+    description: AWS region the namazu-apidocs S3 bucket lives in
+    required: true
+    default: us-east-1
+  s3-bucket:
+    description: S3 bucket to publish into
+    required: true
+    default: namazu-apidocs
+  s3-prefix:
+    description: Key prefix within the bucket to publish under
+    required: true
+    default: elements
+  cloudfront-distribution-id:
+    description: CloudFront distribution ID fronting the bucket, invalidated after publish
     required: true
 
 runs:
@@ -24,7 +43,6 @@ runs:
     - shell: bash
       env:
         VERSION: ${{ inputs.version }}
-        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
 
@@ -48,46 +66,54 @@ runs:
           exit 1
         fi
 
-        REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-        rm -rf /tmp/gh-pages
-        if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
-          git clone --branch gh-pages --single-branch "$REPO_URL" /tmp/gh-pages
-        else
-          git clone "$REPO_URL" /tmp/gh-pages
-          git -C /tmp/gh-pages checkout --orphan gh-pages
-          git -C /tmp/gh-pages rm -rf .
-        fi
+        rm -rf "/tmp/apidocs-publish/$VERSION"
+        mkdir -p "/tmp/apidocs-publish/$VERSION/javadoc"
+        cp -r "$APIDOCS_DIR"/. "/tmp/apidocs-publish/$VERSION/javadoc/"
+        cp rest-api/target/classes/META-INF/openapi.json "/tmp/apidocs-publish/$VERSION/openapi.json"
 
-        rm -rf "/tmp/gh-pages/$VERSION"
-        mkdir -p "/tmp/gh-pages/$VERSION/javadoc"
-        cp -r "$APIDOCS_DIR"/. "/tmp/gh-pages/$VERSION/javadoc/"
-        cp rest-api/target/classes/META-INF/openapi.json "/tmp/gh-pages/$VERSION/openapi.json"
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        BUCKET: ${{ inputs.s3-bucket }}
+        PREFIX: ${{ inputs.s3-prefix }}
+      run: |
+        set -euo pipefail
+
+        aws s3 sync "/tmp/apidocs-publish/$VERSION" "s3://$BUCKET/$PREFIX/$VERSION" --delete
+
+        # Regenerate the root index by listing every version "directory"
+        # already published under this prefix (including the one just
+        # uploaded above), newest-looking version string first.
+        VERSIONS="$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix "$PREFIX/" --delimiter "/" \
+          --query 'CommonPrefixes[].Prefix' --output text \
+          | tr '\t' '\n' \
+          | sed -E "s#^$PREFIX/##; s#/\$##" \
+          | sort -rV)"
 
         {
           echo "<!doctype html><html><body><h1>Namazu Elements API Docs</h1><ul>"
-          for d in $(cd /tmp/gh-pages && ls -d */ | sed 's#/##' | sort -rV); do
+          for d in $VERSIONS; do
             echo "<li><a href=\"$d/javadoc/\">$d</a> (<a href=\"$d/openapi.json\">openapi.json</a>)</li>"
           done
           echo "</ul></body></html>"
-        } > /tmp/gh-pages/index.html
+        } > /tmp/apidocs-index.html
 
-        cd /tmp/gh-pages
-        git config user.name "Continuous Integration"
-        git config user.email "ci@getelements.dev"
-        git add -A
-        git commit -m "Publish docs for $VERSION"
+        aws s3 cp /tmp/apidocs-index.html "s3://$BUCKET/$PREFIX/index.html" --content-type text/html
 
-        # gh-pages can be pushed to by more than one workflow (main snapshot
-        # builds and tag publishes can race); retry a few times against a
-        # freshly rebased branch rather than assume no one else is pushing.
-        for attempt in 1 2 3 4 5; do
-          if git push origin gh-pages; then
-            exit 0
-          fi
-          echo "push rejected, retrying ($attempt/5)..."
-          sleep $(( attempt * 5 ))
-          git fetch origin gh-pages
-          git rebase origin/gh-pages
-        done
-        echo "::error::failed to push gh-pages after retries"
-        exit 1
+    - name: Invalidate CloudFront cache
+      shell: bash
+      env:
+        PREFIX: ${{ inputs.s3-prefix }}
+        DISTRIBUTION_ID: ${{ inputs.cloudfront-distribution-id }}
+      run: |
+        set -euo pipefail
+        aws cloudfront create-invalidation \
+          --distribution-id "$DISTRIBUTION_ID" \
+          --paths "/$PREFIX/*"
