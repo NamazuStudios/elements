@@ -1,0 +1,52 @@
+name: Cut Release Candidate
+
+# Manual-only: turns a release branch's current plain -SNAPSHOT into its
+# first release candidate (X.Y.Z-SNAPSHOT -> X.Y.Z-rc-1), tags it, and pushes.
+# The resulting tag push triggers tag-publish.yml for the real build/publish.
+# Run this from the Actions UI against the target release/* branch.
+#
+# The commit this creates carries [ci skip] specifically so it doesn't also
+# get picked up and immediately re-bumped by release-branch-push.yml, which
+# would otherwise see the fresh -rc-1 suffix and jump straight to rc-2.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  cut-rc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Verify this is a release branch
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != release/* ]]; then
+            echo "::error::Cut RC can only be run against a release/* branch (got '${GITHUB_REF_NAME}')"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_AUTOMATION_PAT }}
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+
+      - name: Cut the release candidate
+        run: |
+          set -euo pipefail
+          CURRENT=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          NEXT=$(.github/scripts/compute-version.sh cut-rc "$CURRENT")
+          echo "Cutting RC: $CURRENT -> $NEXT"
+
+          make version VERSION="$NEXT"
+          git config user.name "Continuous Integration"
+          git config user.email "ci@getelements.dev"
+          make COMMIT_MSG="[ci skip] Cut release candidate:" commit
+          make tag
+
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "refs/tags/$NEXT"
