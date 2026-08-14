@@ -53,5 +53,6 @@ jobs:
             git push origin "refs/tags/$NEXT"
           else
             echo "No RC cut yet on '$CURRENT' -- building only, nothing to publish."
+            make install_no_tests
             make build
           fi

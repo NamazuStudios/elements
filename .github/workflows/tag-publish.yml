@@ -73,6 +73,12 @@ jobs:
           import-gpg: 'true'
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
+      - name: Install (skip tests)
+        # See main-build.yml -- some tests resolve a sibling module's jar
+        # from the local repo at test-execution time, so every module needs
+        # to already be installed before the real (tests-enabled) pass runs.
+        run: make install_no_tests
+
       - name: Build, test, and publish to Central + GitHub Packages
         env:
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}

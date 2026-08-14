@@ -26,6 +26,15 @@ jobs:
       - name: Build setup
         uses: ./.github/actions/build-setup
 
+      - name: Install (skip tests)
+        # Populates every module into the local repo first. Some tests
+        # (e.g. sdk-test's ShrinkWrap-resolved fixtures) resolve a sibling
+        # module's jar from the local repo at test-execution time rather
+        # than via a normal reactor dependency edge, so they only see it if
+        # it's already installed -- a single deploy pass builds modules in
+        # reactor order and can hit that test before the fixture exists.
+        run: make install_no_tests
+
       - name: Build, test, and publish snapshot to GitHub Packages
         env:
           GITHUB_USERNAME: ${{ github.actor }}
