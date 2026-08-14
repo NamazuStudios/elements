@@ -28,10 +28,23 @@ runs:
       run: |
         set -euo pipefail
 
-        mvn --no-transfer-progress -B -q javadoc:aggregate
-        APIDOCS_DIR=$(find . -type d \( -path '*/target/site/apidocs' -o -path '*/target/reports/apidocs' \) | head -1)
-        if [ -z "$APIDOCS_DIR" ]; then
-          echo "::error::could not locate aggregated javadoc output directory"
+        # sdk-local-maven's dependency:copy-dependencies execution needs a
+        # sibling reactor module's *packaged* jar, but javadoc:aggregate's
+        # internal forked builds only run modules through `compile` -- so
+        # sdk-local-maven hard-fails (MDEP-187) if it's left in the reactor
+        # for this goal. Exclude it; it has no javadoc-worthy public API of
+        # its own anyway (it's a build-time helper for the SDK archetypes).
+        mvn --no-transfer-progress -B -q -pl '!sdk-local-maven' javadoc:aggregate
+
+        # The real aggregate lands at target/reports/apidocs off the repo
+        # root -- NOT found via a recursive search, since every module also
+        # has its OWN target/reports/apidocs from the routine per-module
+        # attach-javadocs (jar) execution that runs on every install/deploy.
+        # A recursive find non-deterministically matches one of those
+        # per-module directories instead of the real aggregate.
+        APIDOCS_DIR="target/reports/apidocs"
+        if [ ! -f "$APIDOCS_DIR/allclasses-index.html" ]; then
+          echo "::error::aggregated javadoc output not found at $APIDOCS_DIR"
           exit 1
         fi
 
