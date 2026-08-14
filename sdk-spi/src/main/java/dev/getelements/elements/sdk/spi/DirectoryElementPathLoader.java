@@ -291,6 +291,27 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             final var element = record.loadElement(config.failedElementHandler());
                             elements.add(element);
                             config.elementLoadedHandler().accept(subdir, element);
+
+                            // spiClassLoader/elementClassLoader sit between the (ref-counted, shared)
+                            // apiClassLoader and the element's own implementation classloader.
+                            // URLClassLoader.close() never cascades to its parent, so unlike the impl
+                            // classloader (closed via GuiceSdkElement#close), these are otherwise only
+                            // released by GC — leaking SPI jar file handles on every redeploy. Close them
+                            // once the element itself is closed, but never close apiClassLoader itself:
+                            // when no SPI is configured both variables fall back to apiClassLoader, and
+                            // it's shared/ref-counted across every element loaded from this deployment.
+                            final var spiClassLoaderToClose = spiClassLoader == apiClassLoader ? null : spiClassLoader;
+                            final var elementClassLoaderToClose =
+                                    elementClassLoader == apiClassLoader || elementClassLoader == spiClassLoaderToClose
+                                            ? null
+                                            : elementClassLoader;
+
+                            if (spiClassLoaderToClose != null || elementClassLoaderToClose != null) {
+                                element.onClose(el -> {
+                                    if (spiClassLoaderToClose != null) closeClassLoader(spiClassLoaderToClose);
+                                    if (elementClassLoaderToClose != null) closeClassLoader(elementClassLoaderToClose);
+                                });
+                            }
                         } catch (final Throwable t) {
 
                             if (t instanceof SdkException sdkEx) {

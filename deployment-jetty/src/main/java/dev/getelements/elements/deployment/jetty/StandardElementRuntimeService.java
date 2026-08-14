@@ -477,6 +477,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 }
             }
 
+            for (final Path deploymentDirectory : context.deploymentDirectories()) {
+                TemporaryFiles.deleteRecursively(deploymentDirectory);
+            }
+
             return failedRecord;
         }
     }
@@ -1147,6 +1151,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             List<FailedElementEntry> failedElements,
             List<Path> elementPaths,
             List<Path> deploymentFiles,
+            List<Path> deploymentDirectories,
             Map<Path, ElementManifestRecord> manifests,
             Map<Element, ElementPathRecord> elementPathsByElement,
             Map<Path, String> elementPathSources,
@@ -1160,6 +1165,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             elements = List.copyOf(elements);
             failedElements = failedElements == null ? List.of() : java.util.List.copyOf(failedElements);
             deploymentFiles = List.copyOf(deploymentFiles);
+            deploymentDirectories = List.copyOf(deploymentDirectories);
             manifests = Map.copyOf(manifests);
             elementPathsByElement = Map.copyOf(elementPathsByElement);
             // elementPathSources has null values (null = main ELM); Map.copyOf forbids nulls so use unmodifiableMap
@@ -1251,6 +1257,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     deploymentContext.failedElements(),
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
+                    deploymentContext.deploymentDirectories(),
                     deploymentContext.manifests(),
                     deploymentContext.elementPathsByElement(),
                     deploymentContext.elementPathSources(),
@@ -1280,6 +1287,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     deploymentContext.failedElements(),
                     deploymentContext.elementPaths(),
                     deploymentContext.deploymentFiles(),
+                    deploymentContext.deploymentDirectories(),
                     deploymentContext.manifests(),
                     deploymentContext.elementPathsByElement(),
                     deploymentContext.elementPathSources(),
@@ -1319,6 +1327,13 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 } catch (IOException ex) {
                     logger.warn("Failed to close file system {} for deployment {}", fileSystem, deployment.id(), ex);
                 }
+            }
+
+            // Clean up deployment directories (e.g. staged api/spi/lib trees created for
+            // Maven-artifact-based elements). The individual jar files above are only the leaves;
+            // the containing directory tree itself must also be removed or it leaks on every reload.
+            for (final Path deploymentDirectory : deploymentDirectories) {
+                TemporaryFiles.deleteRecursively(deploymentDirectory);
             }
         }
     }

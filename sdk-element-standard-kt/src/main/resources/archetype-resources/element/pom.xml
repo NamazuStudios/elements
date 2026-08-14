@@ -142,6 +142,38 @@
 
 
             <!--
+                Generates META-INF/openapi.json at build time from this Element's REST resources, mirroring
+                the platform's own rest-api module. JakartaRsLoader reads this pre-generated spec from the
+                classpath if present, avoiding a live reflection scan on every deploy/redeploy. Must run before
+                the maven-antrun-plugin's "elm-stage-classpath" execution below so the generated file is copied
+                into the ELM's classpath/ directory.
+            -->
+
+            <plugin>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-maven-plugin-jakarta</artifactId>
+                <version>${swagger.version}</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputFileName>openapi</outputFileName>
+                    <outputPath>${project.build.outputDirectory}/META-INF</outputPath>
+                    <outputFormat>JSON</outputFormat>
+                    <resourcePackages>
+                        <resourcePackage>${package}.rest</resourcePackage>
+                        <resourcePackage>${package}.model</resourcePackage>
+                    </resourcePackages>
+                    <prettyPrint>true</prettyPrint>
+                </configuration>
+            </plugin>
+
+            <!--
                 This run of the maven-dependency-plugin builds the ELM file containing the Element formatted in
                 the specific layout the loader understands.
             -->
