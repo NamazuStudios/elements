@@ -35,6 +35,10 @@ import static java.util.Collections.emptyMap;
  */
 public class MongoApplicationDao implements ApplicationDao {
 
+    private static final int DEFAULT_MAX_PROFILES = 1;
+
+    private static final boolean DEFAULT_AUTO_CREATE_PROFILE = true;
+
     private ValidationHelper validationHelper;
 
     private MongoDBUtils mongoDBUtils;
@@ -49,6 +53,15 @@ public class MongoApplicationDao implements ApplicationDao {
         validate(application, ValidationGroups.Insert.class);
 
         final var mongoApplication = getMapperRegistry().map(application, MongoApplication.class);
+
+        mongoApplication.setMaxProfiles(application.getMaxProfiles() == null
+                ? DEFAULT_MAX_PROFILES
+                : application.getMaxProfiles());
+
+        mongoApplication.setAutoCreateProfile(application.getAutoCreateProfile() == null
+                ? DEFAULT_AUTO_CREATE_PROFILE
+                : application.getAutoCreateProfile());
+
         getDatastore().insert(mongoApplication);
 
         return transform(mongoApplication);
@@ -143,7 +156,13 @@ public class MongoApplicationDao implements ApplicationDao {
         final var mongoApplication = mongoDBUtils.perform(ds -> new UpdateBuilder().with(
                 set("name", application.getName().trim()),
                 set("description", nullToEmpty(application.getDescription()).trim()),
-                set("attributes", application.getAttributes())
+                set("attributes", application.getAttributes()),
+                set("maxProfiles", application.getMaxProfiles() == null
+                        ? DEFAULT_MAX_PROFILES
+                        : application.getMaxProfiles()),
+                set("autoCreateProfile", application.getAutoCreateProfile() == null
+                        ? DEFAULT_AUTO_CREATE_PROFILE
+                        : application.getAutoCreateProfile())
         ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER)));
 
         if (mongoApplication == null) {
@@ -225,7 +244,19 @@ public class MongoApplicationDao implements ApplicationDao {
     }
 
     private Application transform(final MongoApplication mongoApplication) {
-        return getMapperRegistry().map(mongoApplication, Application.class);
+
+        final var application = getMapperRegistry().map(mongoApplication, Application.class);
+
+        application.setMaxProfiles(mongoApplication.getMaxProfiles() == null
+                ? DEFAULT_MAX_PROFILES
+                : mongoApplication.getMaxProfiles());
+
+        application.setAutoCreateProfile(mongoApplication.getAutoCreateProfile() == null
+                ? DEFAULT_AUTO_CREATE_PROFILE
+                : mongoApplication.getAutoCreateProfile());
+
+        return application;
+
     }
 
     private void validate(final Application application, final Class<?> group) {

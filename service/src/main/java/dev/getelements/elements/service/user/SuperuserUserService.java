@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.*;
 import dev.getelements.elements.rt.exception.BadRequestException;
@@ -15,6 +16,8 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
+import java.util.ArrayList;
+
 import static dev.getelements.elements.sdk.service.user.UserService.*;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -22,7 +25,6 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static dev.getelements.elements.util.PhoneNormalizer.normalizePhoneNb;
-import static java.util.Collections.emptyList;
 
 /**
  *
@@ -90,12 +92,17 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
         final var profiles = userCreateRequest.getProfiles();
 
-        if (profiles == null) {
-            response.setProfiles(emptyList());
-        } else {
-            final var createdProfiles = createProfiles(created.getId(), userCreateRequest.getProfiles());
-            response.setProfiles(createdProfiles);
+        final var createdProfiles = profiles == null
+                ? new ArrayList<Profile>()
+                : new ArrayList<>(createProfiles(created.getId(), profiles));
+
+        final var autoCreatedProfile = autoCreateExplicitProfileIfRequested(created.getId(), userCreateRequest);
+
+        if (autoCreatedProfile != null) {
+            createdProfiles.add(autoCreatedProfile);
         }
+
+        response.setProfiles(createdProfiles);
 
         return response;
 

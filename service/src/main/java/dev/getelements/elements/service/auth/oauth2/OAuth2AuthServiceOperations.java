@@ -81,6 +81,17 @@ public class OAuth2AuthServiceOperations {
                 session.setProfile(profile);
                 session.setApplication(profile.getApplication());
             }
+
+        } else if (oAuth2SessionRequest.getApplicationId() != null) {
+
+            getApplicationDao()
+                    .findApplication(oAuth2SessionRequest.getApplicationId())
+                    .flatMap(application -> getProfileDao().findPrimaryProfile(user.getId(), application.getId()))
+                    .ifPresent(profile -> {
+                        session.setProfile(profile);
+                        session.setApplication(profile.getApplication());
+                    });
+
         }
 
         return getSessionDao().create(session);

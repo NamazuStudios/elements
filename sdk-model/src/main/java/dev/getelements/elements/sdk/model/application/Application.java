@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.model.ValidationGroups.*;
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import jakarta.validation.constraints.Pattern;
@@ -55,6 +56,15 @@ public class Application implements Serializable {
 
     @Null(groups = {Create.class})
     private ApplicationConfiguration applicationConfiguration;
+
+    @Min(0)
+    @Schema(description = "The maximum number of profiles a user may create for this application. " +
+            "If unspecified, defaults to 1.")
+    private Integer maxProfiles;
+
+    @Schema(description = "Whether a user's primary profile for this application should be created " +
+            "automatically when the user is created. If unspecified, defaults to true.")
+    private Boolean autoCreateProfile;
 
     /**
      * The globally-unique identifier.
@@ -218,17 +228,56 @@ public class Application implements Serializable {
         this.applicationConfiguration = applicationConfiguration;
     }
 
+    /**
+     * Gets the maximum number of profiles a user may create for this application. If null (unspecified), the
+     * server treats this as {@code 1}.
+     *
+     * @return the maximum number of profiles per user, or null if unspecified
+     */
+    public Integer getMaxProfiles() {
+        return maxProfiles;
+    }
+
+    /**
+     * Sets the maximum number of profiles a user may create for this application.
+     *
+     * @param maxProfiles the maximum number of profiles per user
+     */
+    public void setMaxProfiles(Integer maxProfiles) {
+        this.maxProfiles = maxProfiles;
+    }
+
+    /**
+     * Gets whether a user's primary profile for this application should be created automatically when the user
+     * is created. If null (unspecified), the server treats this as {@code true}.
+     *
+     * @return whether to automatically create a primary profile, or null if unspecified
+     */
+    public Boolean getAutoCreateProfile() {
+        return autoCreateProfile;
+    }
+
+    /**
+     * Sets whether a user's primary profile for this application should be created automatically when the user
+     * is created.
+     *
+     * @param autoCreateProfile whether to automatically create a primary profile
+     */
+    public void setAutoCreateProfile(Boolean autoCreateProfile) {
+        this.autoCreateProfile = autoCreateProfile;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Application that = (Application) o;
-        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getGitBranch(), that.getGitBranch()) && Objects.equals(getScriptRepoUrl(), that.getScriptRepoUrl()) && Objects.equals(getHttpDocumentationUrl(), that.getHttpDocumentationUrl()) && Objects.equals(getHttpDocumentationUiUrl(), that.getHttpDocumentationUiUrl()) && Objects.equals(getHttpTunnelEndpointUrl(), that.getHttpTunnelEndpointUrl()) && Objects.equals(getAttributes(), that.getAttributes()) && Objects.equals(getApplicationConfiguration(), that.getApplicationConfiguration());
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getName(), that.getName()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getGitBranch(), that.getGitBranch()) && Objects.equals(getScriptRepoUrl(), that.getScriptRepoUrl()) && Objects.equals(getHttpDocumentationUrl(), that.getHttpDocumentationUrl()) && Objects.equals(getHttpDocumentationUiUrl(), that.getHttpDocumentationUiUrl()) && Objects.equals(getHttpTunnelEndpointUrl(), that.getHttpTunnelEndpointUrl()) && Objects.equals(getAttributes(), that.getAttributes()) && Objects.equals(getApplicationConfiguration(), that.getApplicationConfiguration()) && Objects.equals(getMaxProfiles(), that.getMaxProfiles()) && Objects.equals(getAutoCreateProfile(), that.getAutoCreateProfile());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getDescription(), getGitBranch(), getScriptRepoUrl(), getHttpDocumentationUrl(), getHttpDocumentationUiUrl(), getHttpTunnelEndpointUrl(), getAttributes(), getApplicationConfiguration());
+        return Objects.hash(getId(), getName(), getDescription(), getGitBranch(), getScriptRepoUrl(), getHttpDocumentationUrl(), getHttpDocumentationUiUrl(), getHttpTunnelEndpointUrl(), getAttributes(), getApplicationConfiguration(), getMaxProfiles(), getAutoCreateProfile());
     }
 
     /**
