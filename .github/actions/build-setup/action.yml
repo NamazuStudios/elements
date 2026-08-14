@@ -1,0 +1,54 @@
+name: Build setup
+description: >
+  Shared setup for workflows that build this reactor with Maven: JDK, Maven
+  cache, ~/.m2/settings.xml, and an optional GPG key import for artifact
+  signing. Does NOT check out the repository -- a local `uses: ./...` action
+  can't be resolved until the repo is already checked out, so every caller
+  must run its own `actions/checkout` step (with whatever ref/token/depth it
+  needs) before invoking this action, not after.
+
+inputs:
+  java-version:
+    description: JDK version to install
+    required: false
+    default: '21'
+  import-gpg:
+    description: Whether to import a GPG private key for artifact signing
+    required: false
+    default: 'false'
+  gpg-private-key:
+    description: Base64-encoded GPG private key (required when import-gpg is true)
+    required: false
+    default: ''
+
+outputs:
+  maven-version:
+    description: The reactor's current project.version
+    value: ${{ steps.maven-version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: temurin
+        cache: maven
+
+    - name: Install settings.xml
+      shell: bash
+      run: |
+        mkdir -p ~/.m2
+        cp settings.xml ~/.m2/settings.xml
+
+    - name: Import GPG key
+      if: inputs.import-gpg == 'true'
+      shell: bash
+      env:
+        GPG_PRIVATE_KEY: ${{ inputs.gpg-private-key }}
+      run: echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+
+    - name: Evaluate project.version
+      id: maven-version
+      shell: bash
+      run: echo "version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"

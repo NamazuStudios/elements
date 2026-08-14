@@ -31,7 +31,13 @@ build_central:
 	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish install
 
 deploy:
-	mvn --no-transfer-progress -B  -q -Pcentral-publish deploy
+	mvn --no-transfer-progress -B -q -Pcentral-publish deploy
+
+deploy_github:
+	mvn --no-transfer-progress -B -q -Pgithub-publish deploy
+
+deploy_central:
+	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish deploy
 
 docker:
 	make -C docker-config internal

@@ -12,9 +12,9 @@
     <packaging>pom</packaging>
 
     <scm>
-        <url>ssh://git@bitbucket.org:eci-elements/web-services.git</url>
-        <connection>scm:git:ssh://git@bitbucket.org:eci-elements/web-services.git</connection>
-        <developerConnection>scm:git:git@bitbucket.org:eci-elements/web-services.git</developerConnection>
+        <url>https://github.com/NamazuStudios/elements</url>
+        <connection>scm:git:https://github.com/NamazuStudios/elements.git</connection>
+        <developerConnection>scm:git:git@github.com:NamazuStudios/elements.git</developerConnection>
     </scm>
 
     <repositories>
