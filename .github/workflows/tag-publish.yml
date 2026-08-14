@@ -1,0 +1,154 @@
+name: Tag Publish
+
+# The one place real release publishing happens, mirroring the existing
+# Bitbucket `tags: "*"` pipeline pattern: every version-transition workflow
+# (cut-rc, release-branch auto-bump, release) hands off by pushing a git tag,
+# and this workflow does the actual build/test/publish. It never writes to
+# git itself, so it can't loop.
+#
+# The `on.push.tags` glob below is only a coarse pre-filter (GitHub Actions
+# tag filters don't support real regex quantifiers) -- the guard job below
+# does the real validation, and deliberately excludes anything below 3.9.x so
+# it never reacts to: the ~190 legacy `x.y.z-SNAPSHOT` tags already in this
+# repo's history, or the ongoing real `3.8.x` release tags the still-running
+# legacy Bitbucket `release/3.8` pipeline keeps depositing on this remote.
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+      is_release: ${{ steps.check.outputs.is_release }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - id: check
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+
+          if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-rc-[0-9]+)?$ ]]; then
+            MAJOR="${BASH_REMATCH[1]}"
+            MINOR="${BASH_REMATCH[2]}"
+            if (( MAJOR > 3 || (MAJOR == 3 && MINOR >= 9) )); then
+              echo "proceed=true" >> "$GITHUB_OUTPUT"
+              if [[ "$TAG" == *-rc-* ]]; then
+                echo "is_release=false" >> "$GITHUB_OUTPUT"
+              else
+                echo "is_release=true" >> "$GITHUB_OUTPUT"
+              fi
+              exit 0
+            fi
+          fi
+
+          echo "proceed=false" >> "$GITHUB_OUTPUT"
+          echo "is_release=false" >> "$GITHUB_OUTPUT"
+          echo "Tag '$TAG' is not a >=3.9 release/rc version -- ignoring." >&2
+
+  publish:
+    needs: guard
+    if: needs.guard.outputs.proceed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    concurrency:
+      group: tag-publish-${{ github.ref_name }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+        with:
+          import-gpg: 'true'
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Build, test, and publish to Central + GitHub Packages
+        env:
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: make deploy_central
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        run: make docker
+
+      - name: Publish Javadoc + OpenAPI spec to gh-pages
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.guard.outputs.version }}"
+
+          mvn --no-transfer-progress -B -q javadoc:aggregate
+          APIDOCS_DIR=$(find . -type d \( -path '*/target/site/apidocs' -o -path '*/target/reports/apidocs' \) | head -1)
+          if [ -z "$APIDOCS_DIR" ]; then
+            echo "::error::could not locate aggregated javadoc output directory"
+            exit 1
+          fi
+
+          REPO_URL="https://github.com/${{ github.repository }}.git"
+          rm -rf /tmp/gh-pages
+          if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
+            git clone --branch gh-pages --single-branch "$REPO_URL" /tmp/gh-pages
+          else
+            git clone "$REPO_URL" /tmp/gh-pages
+            git -C /tmp/gh-pages checkout --orphan gh-pages
+            git -C /tmp/gh-pages rm -rf .
+          fi
+
+          rm -rf "/tmp/gh-pages/$VERSION"
+          mkdir -p "/tmp/gh-pages/$VERSION/javadoc"
+          cp -r "$APIDOCS_DIR"/. "/tmp/gh-pages/$VERSION/javadoc/"
+          cp rest-api/target/classes/META-INF/openapi.json "/tmp/gh-pages/$VERSION/openapi.json"
+
+          {
+            echo "<!doctype html><html><body><h1>Namazu Elements API Docs</h1><ul>"
+            for d in $(cd /tmp/gh-pages && ls -d */ | sed 's#/##' | sort -rV); do
+              echo "<li><a href=\"$d/javadoc/\">$d</a> (<a href=\"$d/openapi.json\">openapi.json</a>)</li>"
+            done
+            echo "</ul></body></html>"
+          } > /tmp/gh-pages/index.html
+
+          cd /tmp/gh-pages
+          git config user.name "Continuous Integration"
+          git config user.email "ci@getelements.dev"
+          git add -A
+          git commit -m "Publish docs for $VERSION"
+          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+
+      - name: Create GitHub Release
+        if: needs.guard.outputs.is_release == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --generate-notes

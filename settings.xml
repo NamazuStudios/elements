@@ -30,8 +30,4 @@
         </profile>
     </profiles>
 
-    <activeProfiles>
-        <activeProfile>central-publish</activeProfile>
-    </activeProfiles>
-
 </settings>
