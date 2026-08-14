@@ -8,11 +8,16 @@ name: Complete Build
 # resulting tag triggers tag-publish.yml instead, which does the real
 # Central/release publish and does not call this).
 #
-# Maven artifact publishing to the GitHub Packages snapshot repo is opt-in
-# via publish-packages, and deliberately NOT the default: every branch
-# shares the same reactor version, so publishing packages from every branch
-# would just have them fight over the same GitHub Packages coordinates.
-# Only main sets this true.
+# Every branch attempts a Central-only snapshot deploy (make deploy) as
+# part of its build/test step, even though Central rejects/ignores
+# -SNAPSHOT uploads and nothing actually ends up published there -- running
+# the real sign+deploy pipeline (not just `install`) catches signing/
+# packaging failures a plain install wouldn't. Publishing to the GitHub
+# Packages snapshot repo is a real publish (unlike the Central no-op) and
+# is opt-in via publish-packages, deliberately NOT the default: every
+# branch shares the same reactor version, so publishing packages from every
+# branch would just have them fight over the same GitHub Packages
+# coordinates. Only main sets this true.
 
 on:
   workflow_call:
@@ -39,6 +44,9 @@ jobs:
       - name: Build setup
         id: build-setup
         uses: ./.github/actions/build-setup
+        with:
+          import-gpg: 'true'
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Install (skip tests)
         # Populates every module into the local repo first. Some tests
@@ -50,16 +58,25 @@ jobs:
         # exists.
         run: make install_no_tests
 
-      - name: Build, test, and publish snapshot to GitHub Packages
+      - name: Build, test, and publish snapshot to Central (no-op) + GitHub Packages
         if: inputs.publish-packages
         env:
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: make deploy_github
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: make deploy_central
 
-      - name: Build and test (no package publish)
+      - name: Build, test, and attempt snapshot deploy to Central (no-op)
         if: ${{ !inputs.publish-packages }}
-        run: make build
+        env:
+          SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: make deploy
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
