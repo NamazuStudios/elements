@@ -122,7 +122,7 @@ public abstract class AbstractUserService implements UserService {
 
     /**
      * Auto-creates the user's primary profile for the application named by
-     * {@link UserCreateRequest#getAutoCreateProfileApplicationId()}, if requested. This is an explicit, opt-in
+     * {@link UserCreateRequest#getAutoCreateProfileApplicationNameOrId()}, if requested. This is an explicit, opt-in
      * action: if that field is null, this is a no-op, preserving pre-existing behavior. If the named application
      * also appears in {@link UserCreateRequest#getProfiles()}, this throws a {@link BadRequestException}, since the
      * two mechanisms conflict for the same application. Otherwise, a profile is only actually created if the
@@ -138,7 +138,7 @@ public abstract class AbstractUserService implements UserService {
     protected Profile autoCreateExplicitProfileIfRequested(final String userId,
                                                             final UserCreateRequest userCreateRequest) {
 
-        final var applicationNameOrId = userCreateRequest.getAutoCreateProfileApplicationId();
+        final var applicationNameOrId = userCreateRequest.getAutoCreateProfileApplicationNameOrId();
 
         if (applicationNameOrId == null) {
             return null;

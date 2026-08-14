@@ -54,7 +54,7 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final var profileId = usernamePasswordSessionRequest.getProfileId();
         final var profileSelector = usernamePasswordSessionRequest.getProfileSelector();
 
-        final var applicationId = usernamePasswordSessionRequest.getApplicationId();
+        final var applicationId = usernamePasswordSessionRequest.getApplicationNameOrId();
 
         final var user = getUserDao().validateUserPassword(userId, password);
         final var profile = getProfileIfSpecified(profileId)

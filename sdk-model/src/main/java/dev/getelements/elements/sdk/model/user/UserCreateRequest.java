@@ -50,7 +50,7 @@ public class UserCreateRequest implements Serializable {
             "automatically created, if that application is configured for it (Application#autoCreateProfile and " +
             "Application#maxProfiles). Optional; if omitted, no automatic profile is created. It is an error to " +
             "name an application here that also appears in the profiles list.")
-    private String autoCreateProfileApplicationId;
+    private String autoCreateProfileApplicationNameOrId;
 
     /**
      * Returns the unique login name for the user.
@@ -147,17 +147,17 @@ public class UserCreateRequest implements Serializable {
      *
      * @return the application name or ID, or null if unspecified
      */
-    public String getAutoCreateProfileApplicationId() {
-        return autoCreateProfileApplicationId;
+    public String getAutoCreateProfileApplicationNameOrId() {
+        return autoCreateProfileApplicationNameOrId;
     }
 
     /**
      * Sets the name or ID of the application for which the user's primary profile should be auto-created.
      *
-     * @param autoCreateProfileApplicationId the application name or ID
+     * @param autoCreateProfileApplicationNameOrId the application name or ID
      */
-    public void setAutoCreateProfileApplicationId(String autoCreateProfileApplicationId) {
-        this.autoCreateProfileApplicationId = autoCreateProfileApplicationId;
+    public void setAutoCreateProfileApplicationNameOrId(String autoCreateProfileApplicationNameOrId) {
+        this.autoCreateProfileApplicationNameOrId = autoCreateProfileApplicationNameOrId;
     }
 
     /**
@@ -219,12 +219,12 @@ public class UserCreateRequest implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserCreateRequest that = (UserCreateRequest) o;
-        return Objects.equals(name, that.name) && Objects.equals(email, that.email) && Objects.equals(primaryPhoneNb, that.primaryPhoneNb) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(password, that.password) && level == that.level && Objects.equals(profiles, that.profiles) && Objects.equals(autoCreateProfileApplicationId, that.autoCreateProfileApplicationId);
+        return Objects.equals(name, that.name) && Objects.equals(email, that.email) && Objects.equals(primaryPhoneNb, that.primaryPhoneNb) && Objects.equals(firstName, that.firstName) && Objects.equals(lastName, that.lastName) && Objects.equals(password, that.password) && level == that.level && Objects.equals(profiles, that.profiles) && Objects.equals(autoCreateProfileApplicationNameOrId, that.autoCreateProfileApplicationNameOrId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, email, primaryPhoneNb, firstName, lastName, password, level, profiles, autoCreateProfileApplicationId);
+        return Objects.hash(name, email, primaryPhoneNb, firstName, lastName, password, level, profiles, autoCreateProfileApplicationNameOrId);
     }
 
     @Override
@@ -238,7 +238,7 @@ public class UserCreateRequest implements Serializable {
                 ", password='" + password + '\'' +
                 ", level=" + level +
                 ", profiles=" + profiles +
-                ", autoCreateProfileApplicationId='" + autoCreateProfileApplicationId + '\'' +
+                ", autoCreateProfileApplicationNameOrId='" + autoCreateProfileApplicationNameOrId + '\'' +
                 '}';
     }
 }

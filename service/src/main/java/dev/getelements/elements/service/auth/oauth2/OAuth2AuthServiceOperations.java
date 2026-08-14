@@ -82,10 +82,10 @@ public class OAuth2AuthServiceOperations {
                 session.setApplication(profile.getApplication());
             }
 
-        } else if (oAuth2SessionRequest.getApplicationId() != null) {
+        } else if (oAuth2SessionRequest.getApplicationNameOrId() != null) {
 
             getApplicationDao()
-                    .findApplication(oAuth2SessionRequest.getApplicationId())
+                    .findApplication(oAuth2SessionRequest.getApplicationNameOrId())
                     .flatMap(application -> getProfileDao().findPrimaryProfile(user.getId(), application.getId()))
                     .ifPresent(profile -> {
                         session.setProfile(profile);

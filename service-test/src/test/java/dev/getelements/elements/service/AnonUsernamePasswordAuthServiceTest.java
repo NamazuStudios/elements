@@ -30,7 +30,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
 
 /**
- * Covers the new (Elements 3.9+) applicationId-based primary-profile resolution added to username/password
+ * Covers the new (Elements 3.9+) applicationNameOrId-based primary-profile resolution added to username/password
  * session creation, alongside the pre-existing profileId/profileSelector resolution it must not disturb.
  */
 public class AnonUsernamePasswordAuthServiceTest {
@@ -65,7 +65,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         final var request = new UsernamePasswordSessionRequest();
         request.setUserId(USER_ID);
         request.setPassword("password");
-        request.setApplicationId("app-1");
+        request.setApplicationNameOrId("app-1");
 
         service.createSession(request);
 
@@ -84,7 +84,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         final var request = new UsernamePasswordSessionRequest();
         request.setUserId(USER_ID);
         request.setPassword("password");
-        request.setApplicationId("missing-app");
+        request.setApplicationNameOrId("missing-app");
 
         service.createSession(request);
 
@@ -109,7 +109,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         request.setUserId(USER_ID);
         request.setPassword("password");
         request.setProfileId("explicit-profile-id");
-        request.setApplicationId("app-1");
+        request.setApplicationNameOrId("app-1");
 
         service.createSession(request);
 

@@ -32,7 +32,7 @@ public class UsernamePasswordSessionRequest {
     @Schema(description = "The name or ID of an application whose primary profile should be attached to the " +
             "session. Only used if profileId and profileSelector are not specified. If the application or the " +
             "user's primary profile for it cannot be resolved, the session is created without a profile.")
-    private String applicationId;
+    private String applicationNameOrId;
 
     /**
      * Returns the user ID (login name or email) for this session request.
@@ -111,17 +111,17 @@ public class UsernamePasswordSessionRequest {
      *
      * @return the application name or ID
      */
-    public String getApplicationId() {
-        return applicationId;
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
     }
 
     /**
      * Sets the name or ID of the application whose primary profile should be attached to the session.
      *
-     * @param applicationId the application name or ID
+     * @param applicationNameOrId the application name or ID
      */
-    public void setApplicationId(String applicationId) {
-        this.applicationId = applicationId;
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
     }
 
     @Override
@@ -129,12 +129,12 @@ public class UsernamePasswordSessionRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UsernamePasswordSessionRequest that = (UsernamePasswordSessionRequest) o;
-        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationId(), that.getApplicationId());
+        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUserId(), getPassword(), getProfileId(), getProfileSelector(), getApplicationId());
+        return Objects.hash(getUserId(), getPassword(), getProfileId(), getProfileSelector(), getApplicationNameOrId());
     }
 
     @Override
@@ -144,7 +144,7 @@ public class UsernamePasswordSessionRequest {
                 ", password='...you keep your secrets" + '\'' +
                 ", profileId='" + profileId + '\'' +
                 ", profileSelector='" + profileSelector + '\'' +
-                ", applicationId='" + applicationId + '\'' +
+                ", applicationNameOrId='" + applicationNameOrId + '\'' +
                 '}';
     }
 
