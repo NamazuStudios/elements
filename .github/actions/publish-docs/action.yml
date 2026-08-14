@@ -1,0 +1,80 @@
+name: Publish docs
+description: >
+  Aggregates Javadoc, grabs the built OpenAPI spec, and publishes both to
+  the gh-pages branch under a subdirectory named after the given version,
+  regenerating the root index. Used for every rc/release tag AND for every
+  main snapshot build (main is perpetually the same version between release
+  cuts, so its directory is simply overwritten in place each time -- still
+  useful, just not immutable the way an rc/release directory is). Assumes
+  the reactor has already been built (so the OpenAPI spec and compiled
+  classes for the aggregate javadoc already exist) and that git user/email
+  are configured for the checkout the caller made.
+
+inputs:
+  version:
+    description: Version string to publish under (e.g. 3.9.0-rc-1, or 3.9.0-SNAPSHOT for main)
+    required: true
+  github-token:
+    description: Token used to push to gh-pages
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+
+        mvn --no-transfer-progress -B -q javadoc:aggregate
+        APIDOCS_DIR=$(find . -type d \( -path '*/target/site/apidocs' -o -path '*/target/reports/apidocs' \) | head -1)
+        if [ -z "$APIDOCS_DIR" ]; then
+          echo "::error::could not locate aggregated javadoc output directory"
+          exit 1
+        fi
+
+        REPO_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+        rm -rf /tmp/gh-pages
+        if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
+          git clone --branch gh-pages --single-branch "$REPO_URL" /tmp/gh-pages
+        else
+          git clone "$REPO_URL" /tmp/gh-pages
+          git -C /tmp/gh-pages checkout --orphan gh-pages
+          git -C /tmp/gh-pages rm -rf .
+        fi
+
+        rm -rf "/tmp/gh-pages/$VERSION"
+        mkdir -p "/tmp/gh-pages/$VERSION/javadoc"
+        cp -r "$APIDOCS_DIR"/. "/tmp/gh-pages/$VERSION/javadoc/"
+        cp rest-api/target/classes/META-INF/openapi.json "/tmp/gh-pages/$VERSION/openapi.json"
+
+        {
+          echo "<!doctype html><html><body><h1>Namazu Elements API Docs</h1><ul>"
+          for d in $(cd /tmp/gh-pages && ls -d */ | sed 's#/##' | sort -rV); do
+            echo "<li><a href=\"$d/javadoc/\">$d</a> (<a href=\"$d/openapi.json\">openapi.json</a>)</li>"
+          done
+          echo "</ul></body></html>"
+        } > /tmp/gh-pages/index.html
+
+        cd /tmp/gh-pages
+        git config user.name "Continuous Integration"
+        git config user.email "ci@getelements.dev"
+        git add -A
+        git commit -m "Publish docs for $VERSION"
+
+        # gh-pages can be pushed to by more than one workflow (main snapshot
+        # builds and tag publishes can race); retry a few times against a
+        # freshly rebased branch rather than assume no one else is pushing.
+        for attempt in 1 2 3 4 5; do
+          if git push origin gh-pages; then
+            exit 0
+          fi
+          echo "push rejected, retrying ($attempt/5)..."
+          sleep $(( attempt * 5 ))
+          git fetch origin gh-pages
+          git rebase origin/gh-pages
+        done
+        echo "::error::failed to push gh-pages after retries"
+        exit 1

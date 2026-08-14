@@ -112,46 +112,10 @@ jobs:
         run: make docker
 
       - name: Publish Javadoc + OpenAPI spec to gh-pages
-        run: |
-          set -euo pipefail
-          VERSION="${{ needs.guard.outputs.version }}"
-
-          mvn --no-transfer-progress -B -q javadoc:aggregate
-          APIDOCS_DIR=$(find . -type d \( -path '*/target/site/apidocs' -o -path '*/target/reports/apidocs' \) | head -1)
-          if [ -z "$APIDOCS_DIR" ]; then
-            echo "::error::could not locate aggregated javadoc output directory"
-            exit 1
-          fi
-
-          REPO_URL="https://github.com/${{ github.repository }}.git"
-          rm -rf /tmp/gh-pages
-          if git ls-remote --exit-code --heads "$REPO_URL" gh-pages >/dev/null 2>&1; then
-            git clone --branch gh-pages --single-branch "$REPO_URL" /tmp/gh-pages
-          else
-            git clone "$REPO_URL" /tmp/gh-pages
-            git -C /tmp/gh-pages checkout --orphan gh-pages
-            git -C /tmp/gh-pages rm -rf .
-          fi
-
-          rm -rf "/tmp/gh-pages/$VERSION"
-          mkdir -p "/tmp/gh-pages/$VERSION/javadoc"
-          cp -r "$APIDOCS_DIR"/. "/tmp/gh-pages/$VERSION/javadoc/"
-          cp rest-api/target/classes/META-INF/openapi.json "/tmp/gh-pages/$VERSION/openapi.json"
-
-          {
-            echo "<!doctype html><html><body><h1>Namazu Elements API Docs</h1><ul>"
-            for d in $(cd /tmp/gh-pages && ls -d */ | sed 's#/##' | sort -rV); do
-              echo "<li><a href=\"$d/javadoc/\">$d</a> (<a href=\"$d/openapi.json\">openapi.json</a>)</li>"
-            done
-            echo "</ul></body></html>"
-          } > /tmp/gh-pages/index.html
-
-          cd /tmp/gh-pages
-          git config user.name "Continuous Integration"
-          git config user.email "ci@getelements.dev"
-          git add -A
-          git commit -m "Publish docs for $VERSION"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gh-pages
+        uses: ./.github/actions/publish-docs
+        with:
+          version: ${{ needs.guard.outputs.version }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         if: needs.guard.outputs.is_release == 'true'
