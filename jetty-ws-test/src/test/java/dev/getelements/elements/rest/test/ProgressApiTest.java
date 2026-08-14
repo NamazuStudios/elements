@@ -42,13 +42,19 @@ public class ProgressApiTest {
     @Inject
     private ClientContext superUser;
 
+    @Inject
+    private ClientContext user;
+
     private Mission mission;
+
+    private Mission nonAuthoritativeMission;
 
     private Progress createdProgress;
 
     @BeforeClass
     public void setUp() {
         superUser.createSuperuser("progress_api_superuser").createProfile("Progress API Superuser").createSession();
+        user.createUser("progress_api_user").createProfile("Progress API User").createSessionWithDefaultProfile();
     }
 
     @BeforeClass(dependsOnMethods = "setUp")
@@ -75,6 +81,33 @@ public class ProgressApiTest {
                 "Pre-condition: mission creation must succeed");
         mission = response.readEntity(Mission.class);
         assertNotNull(mission.getId(), "mission id must be set");
+    }
+
+    @BeforeClass(dependsOnMethods = "setUp")
+    public void createNonAuthoritativeMission() {
+        final var request = new CreateMissionRequest();
+        request.setName("progress_api_test_mission_non_authoritative");
+        request.setDisplayName("Progress API Test Mission (Non-Authoritative)");
+        request.setDescription("Mission for ProgressApiTest advanceProgress regression coverage");
+        request.setAuthoritative(false);
+
+        final var step = new Step();
+        step.setCount(5);
+        step.setDisplayName("step_one");
+        step.setDescription("step one");
+        step.setRewards(java.util.List.of());
+        request.setSteps(java.util.List.of(step));
+
+        final var response = client
+                .target(apiRoot + "/mission")
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "Pre-condition: non-authoritative mission creation must succeed");
+        nonAuthoritativeMission = response.readEntity(Mission.class);
+        assertNotNull(nonAuthoritativeMission.getId(), "non-authoritative mission id must be set");
     }
 
     // -- createProgress regression --
@@ -172,6 +205,101 @@ public class ProgressApiTest {
                 "profile must be unchanged after superuser update");
         assertEquals(fetched.getRemaining(), Integer.valueOf(3),
                 "persisted remaining must match the updated value");
+    }
+
+    // -- advanceProgress (regression for NamazuStudios/elements#3 follow-up: the client-facing
+    // POST /progress/{id}/advance endpoint proposed by @hobolabsdigital, gated by the new per-Mission
+    // Mission#getAuthoritative() flag) --
+
+    private Progress userAuthoritativeProgress;
+
+    private Progress userNonAuthoritativeProgress;
+
+    @Test
+    public void testCreateUserProgressOnAuthoritativeMission() {
+        final var missionInfo = new ProgressMissionInfo();
+        missionInfo.setId(mission.getId());
+
+        final var request = new CreateProgressRequest();
+        request.setProfile(profileRef(user.getDefaultProfile()));
+        request.setMission(missionInfo);
+
+        final var response = client
+                .target(apiRoot + "/progress")
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "Pre-condition: user progress on the authoritative mission must be created by the superuser");
+        userAuthoritativeProgress = response.readEntity(Progress.class);
+    }
+
+    @Test
+    public void testCreateUserProgressOnNonAuthoritativeMission() {
+        final var missionInfo = new ProgressMissionInfo();
+        missionInfo.setId(nonAuthoritativeMission.getId());
+
+        final var request = new CreateProgressRequest();
+        request.setProfile(profileRef(user.getDefaultProfile()));
+        request.setMission(missionInfo);
+
+        final var response = client
+                .target(apiRoot + "/progress")
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "Pre-condition: user progress on the non-authoritative mission must be created by the superuser");
+        userNonAuthoritativeProgress = response.readEntity(Progress.class);
+    }
+
+    @Test(dependsOnMethods = "testCreateUserProgressOnAuthoritativeMission")
+    public void testUserAdvanceProgressForbiddenOnAuthoritativeMission() {
+        final var response = client
+                .target(apiRoot + "/progress/" + userAuthoritativeProgress.getId() + "/advance")
+                .queryParam("actions", 1)
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, user.getSessionSecret())
+                .post(Entity.entity("", APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.FORBIDDEN.getStatusCode(),
+                "Advancing an authoritative Mission's progress via the API must be forbidden for a regular user");
+    }
+
+    @Test(dependsOnMethods = "testCreateUserProgressOnNonAuthoritativeMission")
+    public void testUserAdvanceProgressAllowedOnNonAuthoritativeMission() {
+        final var response = client
+                .target(apiRoot + "/progress/" + userNonAuthoritativeProgress.getId() + "/advance")
+                .queryParam("actions", 2)
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, user.getSessionSecret())
+                .post(Entity.entity("", APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "A user must be able to advance progress for a Mission explicitly marked non-authoritative");
+
+        final var advanced = response.readEntity(Progress.class);
+        assertEquals(advanced.getRemaining(), Integer.valueOf(3),
+                "remaining must be decremented by the requested number of actions");
+    }
+
+    @Test(dependsOnMethods = "testUserAdvanceProgressForbiddenOnAuthoritativeMission")
+    public void testSuperuserAdvanceProgressAlwaysAllowedRegardlessOfAuthoritativeFlag() {
+        final var response = client
+                .target(apiRoot + "/progress/" + userAuthoritativeProgress.getId() + "/advance")
+                .queryParam("actions", 1)
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, superUser.getSessionSecret())
+                .post(Entity.entity("", APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), Response.Status.OK.getStatusCode(),
+                "A superuser must always be able to advance progress regardless of the Mission's authoritative setting");
+
+        final var advanced = response.readEntity(Progress.class);
+        assertEquals(advanced.getRemaining(), Integer.valueOf(4),
+                "remaining must be decremented by the requested number of actions");
     }
 
     // -- helpers --

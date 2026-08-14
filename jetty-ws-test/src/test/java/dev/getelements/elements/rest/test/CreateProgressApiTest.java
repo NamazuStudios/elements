@@ -126,7 +126,7 @@ public class CreateProgressApiTest {
      * {@link Progress} rather than the {@link CreateProgressRequest}. Post-fix the
      * profile is persisted and echoed back on the created {@link Progress}.
      */
-    @Test(dependsOnMethods = "createMission")
+    @Test
     public void testCreateProgressPersistsProfile() {
 
         final var request = new CreateProgressRequest();

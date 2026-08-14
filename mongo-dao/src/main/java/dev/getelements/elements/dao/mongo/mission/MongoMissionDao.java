@@ -215,6 +215,10 @@ public class MongoMissionDao implements MissionDao {
             builder.with(unset("metadata"));
         }
 
+        if (mission.getAuthoritative() != null) {
+            builder.with(set("authoritative", mission.getAuthoritative()));
+        }
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
@@ -276,6 +280,10 @@ public class MongoMissionDao implements MissionDao {
             builder.with(set("metadata", mongoMission.getMetadata()));
         } else {
             builder.with(unset("metadata"));
+        }
+
+        if (mission.getAuthoritative() != null) {
+            builder.with(set("authoritative", mongoMission.getAuthoritative()));
         }
 
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
