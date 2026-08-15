@@ -59,6 +59,10 @@ jobs:
     if: needs.guard.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     concurrency:
       group: tag-publish-${{ github.ref_name }}
       cancel-in-progress: false
@@ -115,8 +119,7 @@ jobs:
         uses: ./.github/actions/publish-docs
         with:
           version: ${{ needs.guard.outputs.version }}
-          aws-access-key-id: ${{ secrets.APIDOCS_S3_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.APIDOCS_S3_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.APIDOCS_STS_ROLE }}
           cloudfront-distribution-id: E30XJUM7BR8918
 
       - name: Create GitHub Release

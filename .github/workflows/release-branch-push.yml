@@ -66,5 +66,9 @@ jobs:
   build:
     needs: bump
     if: needs.bump.outputs.rc-cut == 'false'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     uses: ./.github/workflows/complete-build.yml
     secrets: inherit

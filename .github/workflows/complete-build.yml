@@ -31,6 +31,7 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
 
 jobs:
   build:
@@ -113,6 +114,5 @@ jobs:
         uses: ./.github/actions/publish-docs
         with:
           version: ${{ steps.build-setup.outputs.maven-version }}-${{ steps.short-sha.outputs.sha }}
-          aws-access-key-id: ${{ secrets.APIDOCS_S3_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.APIDOCS_S3_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ secrets.APIDOCS_STS_ROLE }}
           cloudfront-distribution-id: E30XJUM7BR8918

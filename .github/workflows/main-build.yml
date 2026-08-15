@@ -14,6 +14,10 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     uses: ./.github/workflows/complete-build.yml
     with:
       publish-packages: ${{ github.ref == 'refs/heads/main' }}

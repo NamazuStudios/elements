@@ -15,11 +15,8 @@ inputs:
   version:
     description: Version string to publish under (e.g. 3.9.0-rc-1, or 3.9.0-SNAPSHOT for main)
     required: true
-  aws-access-key-id:
-    description: AWS access key ID for the namazu-apidocs S3 bucket
-    required: true
-  aws-secret-access-key:
-    description: AWS secret access key for the namazu-apidocs S3 bucket
+  role-to-assume:
+    description: IAM role ARN to assume via OIDC for namazu-apidocs S3/CloudFront access
     required: true
   aws-region:
     description: AWS region the namazu-apidocs S3 bucket lives in
@@ -74,8 +71,7 @@ runs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        aws-access-key-id: ${{ inputs.aws-access-key-id }}
-        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        role-to-assume: ${{ inputs.role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
 
     - shell: bash
