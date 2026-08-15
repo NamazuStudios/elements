@@ -1221,8 +1221,12 @@
                     </systemPropertyVariables>
                     <!-- Without this, a hung test (e.g. a Docker-backed Mongo fixture
                          waiting on a subprocess that never exits) blocks the fork
-                         indefinitely instead of failing with a diagnosable timeout. -->
-                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                         indefinitely instead of failing with a diagnosable timeout.
+                         600s was too tight for mongo-test under CI resource
+                         contention -- confirmed via thread dump that individual
+                         ops are bounded (socketTimeoutMS=30000) but retry enough
+                         under CPU starvation to exceed it. -->
+                    <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
                 </configuration>
             </plugin>
             <!-- Enforcer Plugin -->
