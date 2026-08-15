@@ -19,7 +19,7 @@ clean:
 	mvn --no-transfer-progress -B -q clean
 
 install_no_tests:
-	mvn -Darchetype.test.skip=true -DskipTests --no-transfer-progress -q install
+	mvn -Darchetype.test.skip=true -DskipTests -Dmaven.javadoc.skip=true -Dskip.web-ui-build=true --no-transfer-progress -q install
 
 build:
 	mvn --no-transfer-progress -B -q install

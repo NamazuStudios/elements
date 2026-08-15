@@ -1219,6 +1219,10 @@
                     <systemPropertyVariables>
                         <maven.version>${project.version}</maven.version>
                     </systemPropertyVariables>
+                    <!-- Without this, a hung test (e.g. a Docker-backed Mongo fixture
+                         waiting on a subprocess that never exits) blocks the fork
+                         indefinitely instead of failing with a diagnosable timeout. -->
+                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                 </configuration>
             </plugin>
             <!-- Enforcer Plugin -->
