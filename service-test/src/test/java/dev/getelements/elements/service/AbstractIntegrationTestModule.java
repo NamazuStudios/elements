@@ -77,7 +77,7 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
 
         install(new ConfigurationModule(() -> {
             final var properties = defaultConfigurationSupplier.get();
-            properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d", mongoPort));
+            properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d/?socketTimeoutMS=30000", mongoPort));
             properties.put(STATIC_HOST_INFO, format("tcp://127.0.0.1:%d", nodePort));
             properties.put(FLOW.urlsName(), "grpc://localhost:3569");
             properties.put(FLOW_TEST.urlsName(), "grpc://localhost:3569");

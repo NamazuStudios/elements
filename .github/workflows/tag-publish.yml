@@ -59,6 +59,10 @@ jobs:
     if: needs.guard.outputs.proceed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 150
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
     concurrency:
       group: tag-publish-${{ github.ref_name }}
       cancel-in-progress: false
@@ -85,7 +89,6 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: make deploy_central
 
@@ -111,11 +114,12 @@ jobs:
       - name: Build and push Docker images
         run: make docker
 
-      - name: Publish Javadoc + OpenAPI spec to gh-pages
+      - name: Publish Javadoc + OpenAPI spec to apidocs.namazustudios.com
         uses: ./.github/actions/publish-docs
         with:
           version: ${{ needs.guard.outputs.version }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          role-to-assume: ${{ secrets.APIDOCS_STS_ROLE }}
+          cloudfront-distribution-id: E30XJUM7BR8918
 
       - name: Create GitHub Release
         if: needs.guard.outputs.is_release == 'true'

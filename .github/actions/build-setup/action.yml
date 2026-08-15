@@ -17,7 +17,7 @@ inputs:
     required: false
     default: 'false'
   gpg-private-key:
-    description: Base64-encoded GPG private key (required when import-gpg is true)
+    description: ASCII-armored GPG private key, e.g. `gpg --export-secret-keys --armor <key-id>` (required when import-gpg is true)
     required: false
     default: ''
 
@@ -34,19 +34,18 @@ runs:
         java-version: ${{ inputs.java-version }}
         distribution: temurin
         cache: maven
+        # setup-java imports this directly via `gpg --import` -- it wants the
+        # raw ASCII-armored key text, not a base64-encoded version of it (see
+        # https://github.com/actions/setup-java#publishing-using-apache-maven).
+        # Passing '' when import-gpg is false is a no-op; setup-java only
+        # imports a key when this is non-empty.
+        gpg-private-key: ${{ inputs.import-gpg == 'true' && inputs.gpg-private-key || '' }}
 
     - name: Install settings.xml
       shell: bash
       run: |
         mkdir -p ~/.m2
         cp settings.xml ~/.m2/settings.xml
-
-    - name: Import GPG key
-      if: inputs.import-gpg == 'true'
-      shell: bash
-      env:
-        GPG_PRIVATE_KEY: ${{ inputs.gpg-private-key }}
-      run: echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
 
     - name: Evaluate project.version
       id: maven-version

@@ -1,80 +1,24 @@
-name: Main Snapshot Build
+name: Branch Build
 
-# Continuous build for trunk. main is always a -SNAPSHOT and never touches
-# Maven Central (Central rejects -SNAPSHOT versions outright) -- publishes
-# only go to the GitHub Packages snapshot repo, plus Docker images to both
-# Docker Hub and GHCR. main's version is never bumped by this workflow; that
-# only ever happens via the manual "Set Version" workflow.
+# Every push to any branch (except release/*, which has its own dedicated
+# workflow with version-bump logic -- see release-branch-push.yml) gets a
+# complete build+test, Docker image build+push, and Javadoc/OpenAPI publish
+# via complete-build.yml. Only main also publishes Maven artifacts to the
+# GitHub Packages snapshot repo (see complete-build.yml for why that's not
+# every branch). main's version is never bumped by this workflow; that only
+# ever happens via the manual "Set Version" workflow.
 
 on:
   push:
-    branches: [ main ]
-
-permissions:
-  contents: write
-  packages: write
+    branches: [ '**', '!release/**' ]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Build setup
-        id: build-setup
-        uses: ./.github/actions/build-setup
-
-      - name: Install (skip tests)
-        # Populates every module into the local repo first. Some tests
-        # (e.g. sdk-test's ShrinkWrap-resolved fixtures) resolve a sibling
-        # module's jar from the local repo at test-execution time rather
-        # than via a normal reactor dependency edge, so they only see it if
-        # it's already installed -- a single deploy pass builds modules in
-        # reactor order and can hit that test before the fixture exists.
-        run: make install_no_tests
-
-      - name: Build, test, and publish snapshot to GitHub Packages
-        env:
-          GITHUB_USERNAME: ${{ github.actor }}
-          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-        run: make deploy_github
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USER }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker images
-        run: make docker
-
-      - name: Compute short SHA
-        id: short-sha
-        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
-
-      - name: Publish Javadoc + OpenAPI spec to gh-pages
-        # main sits at the same -SNAPSHOT version between release-branch
-        # cuts, so unlike an rc/release tag's immutable directory, this would
-        # just overwrite the same path on every push. Append the short SHA
-        # so each snapshot build gets its own directory instead of clobbering
-        # the last one.
-        uses: ./.github/actions/publish-docs
-        with:
-          version: ${{ steps.build-setup.outputs.maven-version }}-${{ steps.short-sha.outputs.sha }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/complete-build.yml
+    with:
+      publish-packages: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit

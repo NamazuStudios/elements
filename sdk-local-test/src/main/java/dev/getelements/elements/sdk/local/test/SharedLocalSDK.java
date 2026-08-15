@@ -44,7 +44,10 @@ public class SharedLocalSDK {
             public Properties get() {
                 final var properties = super.get();
                 properties.put(HTTP_PORT, "8181");
-                properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d", TEST_MONGO_PORT));
+                // socketTimeoutMS bounds every driver operation -- without it
+                // (the driver default is unlimited) a stalled mongod blocks
+                // the calling thread forever instead of failing the test.
+                properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d/?socketTimeoutMS=30000", TEST_MONGO_PORT));
                 return properties;
             }
         };

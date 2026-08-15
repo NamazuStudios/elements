@@ -4,9 +4,11 @@ name: Release Branch Auto-Bump
 # first RC cut (version has an -rc-N suffix), every non-bot push auto-bumps
 # to the next rc and tags it -- the resulting tag push is what actually
 # triggers tag-publish.yml to build/test/publish. If no RC has been cut yet
-# (branch still sitting at a plain -SNAPSHOT), this just builds+tests as a
-# sanity check; cutting the first RC is a deliberate, separate manual action
-# (cut-rc.yml), never automatic.
+# (branch still sitting at a plain -SNAPSHOT), the build job below runs the
+# same complete build+test+docker+javadoc publish every other branch gets
+# (via complete-build.yml) as a sanity check and to keep its published
+# snapshot docs current; cutting the first RC is a deliberate, separate
+# manual action (cut-rc.yml), never automatic.
 #
 # The `[ci skip]` guard below is required, not optional: this workflow's own
 # bump commit is itself a push to release/*, so without the guard every bump
@@ -24,6 +26,8 @@ jobs:
     if: "!contains(github.event.head_commit.message, '[ci skip]')"
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      rc-cut: ${{ steps.check.outputs.rc-cut }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,13 +37,16 @@ jobs:
       - name: Build setup
         uses: ./.github/actions/build-setup
 
-      - name: Bump RC or build-only
+      - name: Bump RC or flag build-only
+        id: check
         run: |
           set -euo pipefail
           CURRENT=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           echo "Current version: $CURRENT"
 
           if [[ "$CURRENT" == *-rc-* ]]; then
+            echo "rc-cut=true" >> "$GITHUB_OUTPUT"
+
             NEXT=$(.github/scripts/compute-version.sh bump-rc "$CURRENT")
             echo "Bumping $CURRENT -> $NEXT"
 
@@ -52,7 +59,16 @@ jobs:
             git push origin "HEAD:${GITHUB_REF_NAME}"
             git push origin "refs/tags/$NEXT"
           else
-            echo "No RC cut yet on '$CURRENT' -- building only, nothing to publish."
-            make install_no_tests
-            make build
+            echo "rc-cut=false" >> "$GITHUB_OUTPUT"
+            echo "No RC cut yet on '$CURRENT' -- building/testing/publishing only, nothing tagged."
           fi
+
+  build:
+    needs: bump
+    if: needs.bump.outputs.rc-cut == 'false'
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/complete-build.yml
+    secrets: inherit
