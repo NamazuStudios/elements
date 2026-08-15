@@ -47,11 +47,6 @@ runs:
         mkdir -p ~/.m2
         cp settings.xml ~/.m2/settings.xml
 
-    - name: TEMP -- print imported GPG key ID (to fill in GPG_KEY_ID secret)
-      if: inputs.import-gpg == 'true'
-      shell: bash
-      run: gpg --list-secret-keys --keyid-format LONG
-
     - name: Evaluate project.version
       id: maven-version
       shell: bash
