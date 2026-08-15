@@ -39,8 +39,12 @@ jobs:
     # Mongo containers; on the standard 2-core runner they starve each other
     # for CPU badly enough that mongod itself stalls answering commands
     # (confirmed via a surefire thread dump showing the client blocked on a
-    # plain socket read, not deadlocked). Bumping cores to relieve that.
-    runs-on: ubuntu-latest-4-cores
+    # plain socket read, not deadlocked). ubuntu-latest-4-cores was tried
+    # here but sat queued indefinitely -- this org has no "Larger runners"
+    # provisioned (a paid GitHub feature), so we're stuck on the standard
+    # 2-core runner and rely on socketTimeoutMS (see IntegrationTestModule)
+    # to fail fast instead of hanging when mongod gets starved.
+    runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
