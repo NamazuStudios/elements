@@ -1,0 +1,83 @@
+name: Cut Release Branch
+
+# Manual-only: creates a new release/X.Y branch from main and sets its
+# version directly to the given release-candidate version (e.g.
+# 3.9.0-rc-1). This is the normal way to start a new release line -- run it
+# from the Actions UI. It intentionally skips the intermediate plain
+# -SNAPSHOT state that cut-rc.yml exists to promote a release branch out of;
+# that workflow remains available for the rare case a release branch ends
+# up sitting at a bare -SNAPSHOT some other way (e.g. via Set Version).
+#
+# The commit this creates carries [ci skip] so the push doesn't trigger
+# release-branch-push.yml's auto-bump job, which would otherwise see the
+# fresh -rc-1 suffix on its very first push and immediately jump to rc-2.
+#
+# This does not tag or publish anything. Once the branch exists, use Cut
+# Release Candidate / Release as normal to tag and publish RCs -- see
+# ACTIONS.md for the full release process.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release-candidate version for the new branch (e.g. 3.9.0-rc-1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  cut-release-branch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Validate version format
+        run: |
+          set -euo pipefail
+          if [[ ! "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+-rc-[0-9]+$ ]]; then
+            echo "::error::Version must look like X.Y.Z-rc-N (got '${{ inputs.version }}')"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_AUTOMATION_PAT }}
+
+      - name: Compute release branch name
+        id: branch
+        run: |
+          set -euo pipefail
+          VERSION="${{ inputs.version }}"
+          if [[ "$VERSION" =~ ^([0-9]+\.[0-9]+)\. ]]; then
+            echo "name=release/${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Could not derive a release branch name from '$VERSION'"
+            exit 1
+          fi
+
+      - name: Verify the release branch doesn't already exist
+        run: |
+          set -euo pipefail
+          BRANCH="${{ steps.branch.outputs.name }}"
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null; then
+            echo "::error::$BRANCH already exists -- refusing to overwrite it"
+            exit 1
+          fi
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+
+      - name: Create release branch and set its version
+        run: |
+          set -euo pipefail
+          git config user.name "Continuous Integration"
+          git config user.email "ci@getelements.dev"
+
+          git checkout -b "${{ steps.branch.outputs.name }}"
+          make version VERSION="${{ inputs.version }}"
+          make COMMIT_MSG="[ci skip] Setting Version:" commit
+
+          git push origin "HEAD:${{ steps.branch.outputs.name }}"
