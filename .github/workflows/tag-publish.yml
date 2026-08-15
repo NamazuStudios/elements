@@ -111,11 +111,13 @@ jobs:
       - name: Build and push Docker images
         run: make docker
 
-      - name: Publish Javadoc + OpenAPI spec to gh-pages
+      - name: Publish Javadoc + OpenAPI spec to apidocs.namazustudios.com
         uses: ./.github/actions/publish-docs
         with:
           version: ${{ needs.guard.outputs.version }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.APIDOCS_S3_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.APIDOCS_S3_SECRET_ACCESS_KEY }}
+          cloudfront-distribution-id: E30XJUM7BR8918
 
       - name: Create GitHub Release
         if: needs.guard.outputs.is_release == 'true'
