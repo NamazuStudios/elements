@@ -35,7 +35,12 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # The full test suite spins up several concurrent per-test-class Docker
+    # Mongo containers; on the standard 2-core runner they starve each other
+    # for CPU badly enough that mongod itself stalls answering commands
+    # (confirmed via a surefire thread dump showing the client blocked on a
+    # plain socket read, not deadlocked). Bumping cores to relieve that.
+    runs-on: ubuntu-latest-4-cores
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
