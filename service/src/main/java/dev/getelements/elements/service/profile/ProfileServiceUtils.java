@@ -2,6 +2,8 @@ package dev.getelements.elements.service.profile;
 
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.sdk.model.exception.user.UserNotFoundException;
@@ -14,12 +16,19 @@ import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.largeobject.LargeObjectCdnUtils;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static java.util.Objects.nonNull;
 
 public class ProfileServiceUtils {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProfileServiceUtils.class);
 
     private UserDao userDao;
 
@@ -47,16 +56,24 @@ public class ProfileServiceUtils {
         if (profile.getDisplayName() == null || profile.getDisplayName().trim().isEmpty())
             profile.setDisplayName(getNameService().generateQualifiedName());
 
+        validateDisplayNameAgainstApplication(profile.getApplication(), profile.getDisplayName());
+
         return profile;
 
     }
 
-    public Profile getProfileForUpdate(final String profileId, final UpdateProfileRequest profileRequest) {
+    public Profile getProfileForUpdate(final String profileId,
+                                        final UpdateProfileRequest profileRequest,
+                                        final String applicationId) {
 
         final var updates = new Profile();
         updates.setId(profileId);
 
         if (!isNullOrEmpty(profileRequest.getDisplayName())) {
+
+            final var application = getApplicationDao().getApplication(applicationId);
+            validateDisplayNameAgainstApplication(application, profileRequest.getDisplayName());
+
             updates.setDisplayName(profileRequest.getDisplayName());
         }
 
@@ -68,6 +85,42 @@ public class ProfileServiceUtils {
         updates.setMetadata(metadata);
 
         return updates;
+
+    }
+
+    /**
+     * Validates the given display name against the application's configured {@code displayNameRegex}, if any.
+     * If the application has no regex configured (null/blank), this is a no-op. If the regex fails to compile,
+     * this logs the failure and throws an {@link InternalException} (500) rather than silently ignoring it.
+     *
+     * @param application the application the profile belongs to
+     * @param displayName the display name to validate
+     * @throws InvalidDataException if the display name does not match the application's regex
+     * @throws InternalException if the application's configured regex fails to compile
+     */
+    private void validateDisplayNameAgainstApplication(final Application application, final String displayName) {
+
+        final var displayNameRegex = application == null ? null : application.getDisplayNameRegex();
+
+        if (isNullOrEmpty(displayNameRegex)) {
+            return;
+        }
+
+        final Pattern pattern;
+
+        try {
+            pattern = Pattern.compile(displayNameRegex);
+        } catch (PatternSyntaxException ex) {
+            logger.error("Application {} has an invalid displayNameRegex '{}'.",
+                    application.getId(), displayNameRegex, ex);
+            throw new InternalException(
+                    "Application " + application.getId() + " has an invalid displayNameRegex configured.", ex);
+        }
+
+        if (displayName == null || !pattern.matcher(displayName).matches()) {
+            throw new InvalidDataException(
+                    "Display name does not match the required pattern for this application.");
+        }
 
     }
 

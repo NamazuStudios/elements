@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.user;
 
+import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
@@ -7,6 +8,7 @@ import dev.getelements.elements.sdk.model.profile.CreateProfileRequest;
 import dev.getelements.elements.sdk.model.profile.CreateProfileSignupRequest;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.user.UserCreateRequest;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import dev.getelements.elements.service.profile.SuperUserProfileService;
@@ -116,6 +118,59 @@ public abstract class AbstractUserService implements UserService {
                 .stream()
                 .map(req -> createProfile(userId, req))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Auto-creates the user's primary profile for the application named by
+     * {@link UserCreateRequest#getAutoCreateProfileApplicationNameOrId()}, if requested. This is an explicit, opt-in
+     * action: if that field is null, this is a no-op, preserving pre-existing behavior. If the named application
+     * also appears in {@link UserCreateRequest#getProfiles()}, this throws a {@link BadRequestException}, since the
+     * two mechanisms conflict for the same application. Otherwise, a profile is only actually created if the
+     * application is configured for it (i.e. {@link dev.getelements.elements.sdk.model.application.Application#getAutoCreateProfile()}
+     * is {@code true} and {@link dev.getelements.elements.sdk.model.application.Application#getMaxProfiles()} is at
+     * least 1) -- if not, this silently no-ops rather than erroring, since the field names the feature to invoke,
+     * but the application's own configuration still governs whether it does anything.
+     *
+     * @param userId the id of the newly created {@link User}
+     * @param userCreateRequest the original {@link UserCreateRequest}
+     * @return the auto-created {@link Profile}, or null if none was created
+     */
+    protected Profile autoCreateExplicitProfileIfRequested(final String userId,
+                                                            final UserCreateRequest userCreateRequest) {
+
+        final var applicationNameOrId = userCreateRequest.getAutoCreateProfileApplicationNameOrId();
+
+        if (applicationNameOrId == null) {
+            return null;
+        }
+
+        final var application = getApplicationDao().getApplication(applicationNameOrId);
+
+        final var requestedProfiles = userCreateRequest.getProfiles();
+
+        if (requestedProfiles != null) {
+            final var conflicts = requestedProfiles.stream().anyMatch(requested ->
+                    applicationNameOrId.equals(requested.getApplicationId())
+                            || application.getId().equals(requested.getApplicationId()));
+
+            if (conflicts) {
+                throw new BadRequestException(
+                        "Cannot both explicitly request a profile and request auto-create for application " +
+                        applicationNameOrId);
+            }
+        }
+
+        final var maxProfiles = application.getMaxProfiles();
+
+        if (!Boolean.TRUE.equals(application.getAutoCreateProfile()) || maxProfiles == null || maxProfiles < 1) {
+            return null;
+        }
+
+        final var signupRequest = new CreateProfileSignupRequest();
+        signupRequest.setApplicationId(application.getId());
+
+        return createProfile(userId, signupRequest);
+
     }
 
 }

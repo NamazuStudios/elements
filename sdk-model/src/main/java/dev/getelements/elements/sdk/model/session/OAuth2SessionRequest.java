@@ -34,6 +34,11 @@ public class OAuth2SessionRequest {
             "NOTE: This will not be run if a profileId is specified.")
     private String profileSelector;
 
+    @Schema(description = "The name or ID of an application whose primary profile should be attached to the " +
+            "session. Only used if profileId and profileSelector are not specified. If the application or the " +
+            "user's primary profile for it cannot be resolved, the session is created without a profile.")
+    private String applicationNameOrId;
+
     /**
      * Returns the request parameters for the token validation request.
      *
@@ -128,17 +133,35 @@ public class OAuth2SessionRequest {
         this.profileSelector = profileSelector;
     }
 
+    /**
+     * Returns the name or ID of the application whose primary profile should be attached to the session.
+     *
+     * @return the application name or ID
+     */
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    /**
+     * Sets the name or ID of the application whose primary profile should be attached to the session.
+     *
+     * @param applicationNameOrId the application name or ID
+     */
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OAuth2SessionRequest that = (OAuth2SessionRequest) o;
-        return Objects.equals(getRequestParameters(), that.getRequestParameters()) && Objects.equals(getRequestHeaders(), that.getRequestHeaders()) && Objects.equals(getSchemeId(), that.getSchemeId()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector());
+        return Objects.equals(getRequestParameters(), that.getRequestParameters()) && Objects.equals(getRequestHeaders(), that.getRequestHeaders()) && Objects.equals(getSchemeId(), that.getSchemeId()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getRequestParameters(), getRequestHeaders(), getSchemeId(), getProfileId(), getProfileSelector());
+        return Objects.hash(getRequestParameters(), getRequestHeaders(), getSchemeId(), getProfileId(), getProfileSelector(), getApplicationNameOrId());
     }
 
     @Override
@@ -149,6 +172,7 @@ public class OAuth2SessionRequest {
                 "schemeId='" + schemeId + '\'' +
                 ", profileId='" + profileId + '\'' +
                 ", profileSelector='" + profileSelector + '\'' +
+                ", applicationNameOrId='" + applicationNameOrId + '\'' +
                 '}';
     }
 

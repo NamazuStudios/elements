@@ -4,6 +4,7 @@ package dev.getelements.elements.service.profile;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
+import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -19,6 +20,7 @@ import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.isNull;
 
 /**
@@ -55,6 +58,8 @@ public class UserProfileService implements ProfileService {
     private LargeObjectDao largeObjectDao;
 
     private ElementRegistry elementRegistry;
+
+    private Provider<Transaction> transactionProvider;
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -109,10 +114,16 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile updateProfile(final String profileId, final UpdateProfileRequest profileRequest) {
 
-        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
+        final var existing = getProfileDao().getActiveProfile(profileId);
+        checkUserAndProfile(existing.getUser().getId());
         profileRequest.setMetadata(null);
 
-        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        if (!isNullOrEmpty(profileRequest.getImageUrl())) {
+            checkProfilePictureNotAuthoritative(existing.getApplication().getId());
+        }
+
+        final var profile = getProfileServiceUtils()
+                .getProfileForUpdate(profileId, profileRequest, existing.getApplication().getId());
         return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
 
     }
@@ -148,10 +159,19 @@ public class UserProfileService implements ProfileService {
         }
     }
 
+    private void checkProfilePictureNotAuthoritative(final String applicationId) {
+        final var application = getApplicationDao().getApplication(applicationId);
+        if (Boolean.TRUE.equals(application.getAuthoritativeProfilePicture())) {
+            throw new InvalidDataException(
+                    "This application's profile picture is authoritative and cannot be edited via the API.");
+        }
+    }
+
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
         final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
         profileRequest.setMetadata(null);
-        return getProfileDao().createOrReactivateProfile(profile);
+        return getTransactionProvider().get().performAndClose(tx ->
+                tx.getDao(ProfileDao.class).createSlottedProfile(profile, profile.getMetadata()));
     }
 
     @Override
@@ -169,6 +189,7 @@ public class UserProfileService implements ProfileService {
         final var profile = getCurrentProfile();
 
         checkUserAndProfile(getProfileDao().getActiveProfile(profile.getId()).getUser().getId());
+        checkProfilePictureNotAuthoritative(profile.getApplication().getId());
 
         if (isNull(profile.getImageObject())) {
             logger.warn("Requested update profile which does not have large object assigned yet. Creating new LargeObject");
@@ -279,6 +300,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

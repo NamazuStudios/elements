@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.auth;
 
+import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
@@ -37,6 +38,8 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private ProfileDao profileDao;
 
+    private ApplicationDao applicationDao;
+
     private ValidationHelper validationHelper;
 
     private long sessionTimeoutSeconds;
@@ -51,8 +54,12 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final var profileId = usernamePasswordSessionRequest.getProfileId();
         final var profileSelector = usernamePasswordSessionRequest.getProfileSelector();
 
+        final var applicationId = usernamePasswordSessionRequest.getApplicationNameOrId();
+
         final var user = getUserDao().validateUserPassword(userId, password);
-        final var profile = getProfileIfSpecified(profileId).or(() -> selectProfileIfSpecified(user, profileSelector));
+        final var profile = getProfileIfSpecified(profileId)
+                .or(() -> selectProfileIfSpecified(user, profileSelector))
+                .or(() -> selectPrimaryProfileIfApplicationSpecified(user, applicationId));
 
         profile.ifPresent(p -> {
             if (!Objects.equals(user, p.getUser())) {
@@ -99,6 +106,19 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     }
 
+    private Optional<Profile> selectPrimaryProfileIfApplicationSpecified(final User user,
+                                                                          final String applicationNameOrId) {
+
+        if (applicationNameOrId == null) {
+            return Optional.empty();
+        }
+
+        return getApplicationDao()
+                .findApplication(applicationNameOrId)
+                .flatMap(application -> getProfileDao().findPrimaryProfile(user.getId(), application.getId()));
+
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -124,6 +144,15 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
+    }
+
+    @Inject
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     public long getSessionTimeoutSeconds() {

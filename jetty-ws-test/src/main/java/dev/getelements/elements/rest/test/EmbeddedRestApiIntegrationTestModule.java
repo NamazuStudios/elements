@@ -58,6 +58,11 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             final var application = new Application();
             application.setName("CXTTAPP");
             application.setDescription("Context Test Application");
+            // This is a shared fixture reused across the whole test suite, including tests that
+            // intentionally create multiple profiles for the same user (e.g. header-convention
+            // matrices). Give it a generous limit so it doesn't inherit the production-safety
+            // default of 1.
+            application.setMaxProfiles(1000);
             final var applicationDao = applicationDaoProvider.get();
             return applicationDao.createOrUpdateInactiveApplication(application);
         }).asEagerSingleton();

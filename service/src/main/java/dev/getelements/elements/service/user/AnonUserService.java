@@ -3,6 +3,7 @@ package dev.getelements.elements.service.user;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.*;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
@@ -11,8 +12,9 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
 
+import java.util.ArrayList;
+
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Collections.emptyList;
 
 public class AnonUserService extends AbstractUserService implements UserService {
 
@@ -58,12 +60,17 @@ public class AnonUserService extends AbstractUserService implements UserService 
 
         final var profiles = userCreateRequest.getProfiles();
 
-        if (profiles == null) {
-            response.setProfiles(emptyList());
-        } else {
-            final var createdProfiles = createProfiles(created.getId(), userCreateRequest.getProfiles());
-            response.setProfiles(createdProfiles);
+        final var createdProfiles = profiles == null
+                ? new ArrayList<Profile>()
+                : new ArrayList<>(createProfiles(created.getId(), profiles));
+
+        final var autoCreatedProfile = autoCreateExplicitProfileIfRequested(created.getId(), userCreateRequest);
+
+        if (autoCreatedProfile != null) {
+            createdProfiles.add(autoCreatedProfile);
         }
+
+        response.setProfiles(createdProfiles);
 
         return response;
 

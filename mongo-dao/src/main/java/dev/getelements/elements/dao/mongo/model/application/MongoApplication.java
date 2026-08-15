@@ -27,6 +27,18 @@ public class MongoApplication {
     @Property
     private Map<String, Object> attributes;
 
+    @Property
+    private Integer maxProfiles;
+
+    @Property
+    private Boolean autoCreateProfile;
+
+    @Property
+    private Boolean authoritativeProfilePicture;
+
+    @Property
+    private String displayNameRegex;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -57,6 +69,38 @@ public class MongoApplication {
 
     public void setAttributes(Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    public Integer getMaxProfiles() {
+        return maxProfiles;
+    }
+
+    public void setMaxProfiles(Integer maxProfiles) {
+        this.maxProfiles = maxProfiles;
+    }
+
+    public Boolean getAutoCreateProfile() {
+        return autoCreateProfile;
+    }
+
+    public void setAutoCreateProfile(Boolean autoCreateProfile) {
+        this.autoCreateProfile = autoCreateProfile;
+    }
+
+    public Boolean getAuthoritativeProfilePicture() {
+        return authoritativeProfilePicture;
+    }
+
+    public void setAuthoritativeProfilePicture(Boolean authoritativeProfilePicture) {
+        this.authoritativeProfilePicture = authoritativeProfilePicture;
+    }
+
+    public String getDisplayNameRegex() {
+        return displayNameRegex;
+    }
+
+    public void setDisplayNameRegex(String displayNameRegex) {
+        this.displayNameRegex = displayNameRegex;
     }
 
 }

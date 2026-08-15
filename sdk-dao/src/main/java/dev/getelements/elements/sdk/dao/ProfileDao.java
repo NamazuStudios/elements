@@ -4,6 +4,8 @@ import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.exception.profile.ProfileLimitExceededException;
+import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
@@ -117,7 +119,13 @@ public interface ProfileDao {
      * and updates will be keyed using the {@link User} and {@link Application}.
      *
      * @return the {@link Profile} as it was written into the database
+     *
+     * @deprecated This creates/reactivates a profile without assigning a profile slot or enforcing
+     * {@link Application#getMaxProfiles()}. It is retained only for reactivating a previously soft-deleted profile,
+     * where slot/limit accounting must not be re-run. New code creating a profile should use
+     * {@link #createSlottedProfile(Profile, Map)} instead.
      */
+    @Deprecated
     default Profile createOrReactivateProfile(Profile profile) {
         return createOrReactivateProfile(profile, profile.getMetadata());
     }
@@ -130,7 +138,13 @@ public interface ProfileDao {
      *
      * @param metadata the profile metadata
      * @return the {@link Profile} as it was written into the database
+     *
+     * @deprecated This creates/reactivates a profile without assigning a profile slot or enforcing
+     * {@link Application#getMaxProfiles()}. It is retained only for reactivating a previously soft-deleted profile,
+     * where slot/limit accounting must not be re-run. New code creating a profile should use
+     * {@link #createSlottedProfile(Profile, Map)} instead.
      */
+    @Deprecated
     Profile createOrReactivateProfile(Profile profile, Map<String, Object> metadata);
 
     /**
@@ -143,8 +157,49 @@ public interface ProfileDao {
      *
      * @param profile the user
      * @return the {@link Profile}, as written to the database
+     *
+     * @deprecated This upserts a profile without assigning a profile slot or enforcing
+     * {@link Application#getMaxProfiles()}. It is retained for the OIDC login get-or-create path, where slot/limit
+     * accounting is deliberately not applied. New code should prefer {@link #findPrimaryProfile(String, String)}
+     * together with {@link #createSlottedProfile(Profile, Map)}.
      */
+    @Deprecated
     Profile createOrRefreshProfile(final Profile profile);
+
+    /**
+     * Finds the user's primary (slot {@code 0}) profile for the given application, if one exists.
+     *
+     * @param userId the user ID
+     * @param applicationNameOrId the application name or ID
+     * @return an {@link Optional} containing the primary {@link Profile}, or empty if none exists
+     */
+    Optional<Profile> findPrimaryProfile(String userId, String applicationNameOrId);
+
+    /**
+     * Gets the user's primary (slot {@code 0}) profile for the given application, or throws a
+     * {@link ProfileNotFoundException} if none exists.
+     *
+     * @param userId the user ID
+     * @param applicationNameOrId the application name or ID
+     * @return the primary {@link Profile}, never null
+     */
+    default Profile getPrimaryProfile(String userId, String applicationNameOrId) {
+        return findPrimaryProfile(userId, applicationNameOrId)
+                .orElseThrow(() -> new ProfileNotFoundException(
+                        "No primary profile for user " + userId + " and application " + applicationNameOrId));
+    }
+
+    /**
+     * Creates a new profile, atomically assigning it the next available profile slot for the profile's
+     * {@link User} and {@link Application}. Slot {@code 0} is the primary profile. Throws
+     * {@link ProfileLimitExceededException} if the user already has {@link Application#getMaxProfiles()} profiles
+     * for that application.
+     *
+     * @param profile the profile to create
+     * @param metadata the profile metadata
+     * @return the {@link Profile} as it was written into the database
+     */
+    Profile createSlottedProfile(Profile profile, Map<String, Object> metadata);
 
     /**
      * Deletes a profile by marking it as inactive.  Data is otherwise retained in the database.

@@ -3,6 +3,7 @@ package dev.getelements.elements.service.profile;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
+import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
@@ -17,6 +18,7 @@ import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.profile.ProfileService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.inject.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +59,8 @@ public class SuperUserProfileService implements ProfileService {
 
     private ElementRegistry elementRegistry;
 
+    private Provider<Transaction> transactionProvider;
+
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
@@ -92,7 +96,9 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        final var existing = getProfileDao().getActiveProfile(profileId);
+        final var profile = getProfileServiceUtils()
+                .getProfileForUpdate(profileId, profileRequest, existing.getApplication().getId());
         return profileWithImageUrl(getProfileDao().updateActiveProfile(profile));
     }
 
@@ -119,7 +125,8 @@ public class SuperUserProfileService implements ProfileService {
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
         final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
-        return getProfileDao().createOrReactivateProfile(profile);
+        return getTransactionProvider().get().performAndClose(tx ->
+                tx.getDao(ProfileDao.class).createSlottedProfile(profile, profile.getMetadata()));
     }
 
     @Override
@@ -242,6 +249,15 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setElementRegistry(ElementRegistry elementRegistry) {
         this.elementRegistry = elementRegistry;
+    }
+
+    public Provider<Transaction> getTransactionProvider() {
+        return transactionProvider;
+    }
+
+    @Inject
+    public void setTransactionProvider(Provider<Transaction> transactionProvider) {
+        this.transactionProvider = transactionProvider;
     }
 
 }

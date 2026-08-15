@@ -7,10 +7,13 @@ import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.application.MongoApplication;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
+import dev.getelements.elements.dao.mongo.model.profile.MongoProfileSlot;
+import dev.getelements.elements.dao.mongo.model.profile.MongoProfileSlotId;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
 import dev.getelements.elements.sdk.model.exception.BadQueryException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.exception.profile.ProfileLimitExceededException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
@@ -110,6 +113,30 @@ public class MongoProfileDao implements ProfileDao {
 
         final MongoProfile mongoProfile = query.first();
         return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
+
+    }
+
+    @Override
+    public Optional<Profile> findPrimaryProfile(final String userId, final String applicationNameOrId) {
+
+        if (userId == null || !ObjectId.isValid(userId)) return Optional.empty();
+
+        final var mongoApplication = getMongoApplicationDao()
+                .findMongoApplicationOptional(applicationNameOrId)
+                .orElse(null);
+
+        if (mongoApplication == null) return Optional.empty();
+
+        final var slotId = new MongoProfileSlotId(new ObjectId(userId), mongoApplication.getObjectId(), 0);
+
+        final var mongoProfileSlot = getDatastore()
+                .find(MongoProfileSlot.class)
+                .filter(eq("_id", slotId))
+                .first();
+
+        if (mongoProfileSlot == null) return Optional.empty();
+
+        return findActiveMongoProfile(mongoProfileSlot.getProfileId()).map(this::transform);
 
     }
 
@@ -449,6 +476,56 @@ public class MongoProfileDao implements ProfileDao {
                 setOnInsert(insertMap)
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        return transform(mongoProfile);
+
+    }
+
+    @Override
+    public Profile createSlottedProfile(final Profile profile, final Map<String, Object> metadata) {
+
+        getValidationHelper().validateModel(profile, Insert.class);
+
+        final var user = getMongoUserFromProfile(profile);
+        final var application = getMongoApplicationFromProfile(profile);
+        final var imageObject = getMongoLargeObjectFromProfile(profile);
+
+        final var slotCountQuery = getDatastore().find(MongoProfileSlot.class);
+
+        slotCountQuery.filter(and(
+                eq("_id.userId", user.getObjectId()),
+                eq("_id.applicationId", application.getObjectId())
+        ));
+
+        final var nextSlot = slotCountQuery.count();
+
+        // Mirrors the null-coalesced default applied by MongoApplicationDao#transform for legacy applications
+        // that predate this field.
+        final var maxProfiles = application.getMaxProfiles() == null ? 1 : application.getMaxProfiles();
+
+        if (nextSlot >= maxProfiles) {
+            throw new ProfileLimitExceededException(
+                    "User " + user.getObjectId() + " already has the maximum number of profiles (" +
+                    maxProfiles + ") for application " + application.getObjectId());
+        }
+
+        final var mongoProfile = new MongoProfile();
+        mongoProfile.setActive(true);
+        mongoProfile.setUser(user);
+        mongoProfile.setApplication(application);
+        mongoProfile.setImageUrl(nullToEmpty(profile.getImageUrl()).trim());
+        mongoProfile.setDisplayName(nullToEmpty(profile.getDisplayName()).trim());
+        mongoProfile.setImageObject(imageObject);
+        mongoProfile.setMetadata(metadata);
+
+        getDatastore().insert(mongoProfile);
+
+        final var slotId = new MongoProfileSlotId(user.getObjectId(), application.getObjectId(), (int) nextSlot);
+        final var mongoProfileSlot = new MongoProfileSlot();
+        mongoProfileSlot.setObjectId(slotId);
+        mongoProfileSlot.setProfileId(mongoProfile.getObjectId());
+
+        getDatastore().insert(mongoProfileSlot);
 
         return transform(mongoProfile);
 

@@ -168,9 +168,9 @@ public class OidcAuthServiceOperations {
 
             if(applicationOptional.isPresent()) {
                 final var application = applicationOptional.get();
-                final var profile = getProfileDao().createOrRefreshProfile(
-                        map(user, application)
-                );
+                final var profile = getProfileDao()
+                        .findPrimaryProfile(user.getId(), application.getId())
+                        .orElseGet(() -> getProfileDao().createOrRefreshProfile(map(user, application)));
 
                 session.setProfile(profile);
                 session.setApplication(application);
