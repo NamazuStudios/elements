@@ -30,7 +30,7 @@ public class UnixFSIntegrationTestModule extends AbstractIntegrationTestModule {
         final var supplier = new DefaultConfigurationSupplier();
         final var properties = supplier.getDefaultProperties();
 
-        properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d", mongoPort));
+        properties.put(MONGO_CLIENT_URI, format("mongodb://127.0.0.1:%d/?socketTimeoutMS=30000", mongoPort));
 
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 

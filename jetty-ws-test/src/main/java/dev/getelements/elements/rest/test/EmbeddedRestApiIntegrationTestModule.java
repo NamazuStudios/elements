@@ -36,7 +36,10 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 properties.put(TEST_API_ROOT, "http://localhost:8080/api/rest");
                 properties.put(TEST_APP_SERVE_WS_ROOT, "ws://localhost:8080/app/ws");
                 properties.put(TEST_APP_SERVE_RS_ROOT, "http://localhost:8080/app/rest");
-                properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+                // socketTimeoutMS bounds every driver operation -- without it
+                // (the driver default is unlimited) a stalled mongod blocks
+                // the calling thread forever instead of failing the test.
+                properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d/?socketTimeoutMS=30000", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
                 return properties;
             }
         };

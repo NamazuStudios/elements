@@ -61,7 +61,12 @@ public class IntegrationTestModule extends AbstractModule {
 
         install(new ConfigurationModule(() -> {
             final var properties = defaultConfigurationSupplier.get();
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
+            // socketTimeoutMS bounds every driver operation -- without it (the
+            // driver default is unlimited) a stalled mongod (e.g. from CPU
+            // contention between many concurrently-running per-test-class
+            // Docker Mongo instances in CI) blocks the calling thread forever
+            // with no exception, instead of failing the test.
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d/?socketTimeoutMS=30000", TEST_BIND_IP, port));
             return properties;
         }));
 
