@@ -99,7 +99,7 @@ public class OidcAuthServiceOperations {
         // and today's schemes carry no client id to check the audience against.
         verify(decodedJWT, scheme, null, null);
 
-        return buildSession(decodedJWT, scheme, userMapper);
+        return buildSession(decodedJWT, scheme, userMapper, oidcSessionRequest.getApplicationNameOrId());
     }
 
     /**
@@ -146,18 +146,25 @@ public class OidcAuthServiceOperations {
             final DecodedJWT decodedJWT,
             final OidcAuthScheme scheme,
             final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
-        return buildSession(decodedJWT, scheme, userMapper);
+        return buildSession(decodedJWT, scheme, userMapper, null);
     }
 
     private SessionCreation buildSession(final DecodedJWT decodedJWT,
                                           final OidcAuthScheme scheme,
-                                          final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
+                                          final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
+                                          final String requestedApplicationNameOrId) {
 
         // Maps the user, writing it to the database.
         final User user = userMapper.apply(decodedJWT, scheme);
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         final var session = new Session();
-        final var applicationId = decodedJWT.getClaim(OidcAuthServiceOperations.Claim.APPLICATION_ID.value).asString();
+
+        // The request-supplied application takes precedence over the JWT's own aud claim. It lets a caller
+        // explicitly opt into a gated auto-create (subject to autoCreateProfile/maxProfiles); the aud claim
+        // alone preserves the legacy, deliberately ungated get-or-create behavior.
+        final var applicationId = requestedApplicationNameOrId != null
+                ? requestedApplicationNameOrId
+                : decodedJWT.getClaim(OidcAuthServiceOperations.Claim.APPLICATION_ID.value).asString();
 
         session.setUser(user);
         session.setExpiry(expiry);
@@ -167,17 +174,37 @@ public class OidcAuthServiceOperations {
             final var applicationOptional = getApplicationDao().findActiveApplication(applicationId);
 
             if(applicationOptional.isPresent()) {
-                final var application = applicationOptional.get();
-                final var profile = getProfileDao()
-                        .findPrimaryProfile(user.getId(), application.getId())
-                        .orElseGet(() -> getProfileDao().createOrRefreshProfile(map(user, application)));
 
-                session.setProfile(profile);
-                session.setApplication(application);
+                final var application = applicationOptional.get();
+                final var existingProfile = getProfileDao().findPrimaryProfile(user.getId(), application.getId());
+
+                final Profile profile = existingProfile.isPresent()
+                        ? existingProfile.get()
+                        : requestedApplicationNameOrId != null
+                                ? autoCreatePrimaryProfileIfConfigured(user, application)
+                                : getProfileDao().createOrRefreshProfile(map(user, application));
+
+                if (profile != null) {
+                    session.setProfile(profile);
+                    session.setApplication(application);
+                }
+
             }
         }
 
         return getSessionDao().create(session);
+    }
+
+    private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
+
+        final var maxProfiles = application.getMaxProfiles();
+
+        if (!Boolean.TRUE.equals(application.getAutoCreateProfile()) || maxProfiles == null || maxProfiles < 1) {
+            return null;
+        }
+
+        return getProfileDao().createSlottedProfile(map(user, application), Map.of());
+
     }
 
     private void verify(final DecodedJWT jwt,

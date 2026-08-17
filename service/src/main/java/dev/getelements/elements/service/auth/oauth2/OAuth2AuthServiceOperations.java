@@ -6,11 +6,13 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
 import dev.getelements.elements.sdk.model.exception.auth.AuthSchemeValidationException;
 import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
@@ -86,15 +88,38 @@ public class OAuth2AuthServiceOperations {
 
             getApplicationDao()
                     .findApplication(oAuth2SessionRequest.getApplicationNameOrId())
-                    .flatMap(application -> getProfileDao().findPrimaryProfile(user.getId(), application.getId()))
-                    .ifPresent(profile -> {
-                        session.setProfile(profile);
-                        session.setApplication(profile.getApplication());
+                    .ifPresent(application -> {
+
+                        final var profile = getProfileDao()
+                                .findPrimaryProfile(user.getId(), application.getId())
+                                .orElseGet(() -> autoCreatePrimaryProfileIfConfigured(user, application));
+
+                        if (profile != null) {
+                            session.setProfile(profile);
+                            session.setApplication(application);
+                        }
+
                     });
 
         }
 
         return getSessionDao().create(session);
+    }
+
+    private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
+
+        final var maxProfiles = application.getMaxProfiles();
+
+        if (!Boolean.TRUE.equals(application.getAutoCreateProfile()) || maxProfiles == null || maxProfiles < 1) {
+            return null;
+        }
+
+        final var profile = new Profile();
+        profile.setUser(user);
+        profile.setApplication(application);
+
+        return getProfileDao().createSlottedProfile(profile, Map.of());
+
     }
 
     private String resolveExternalUserId(final OAuth2AuthScheme scheme,
