@@ -19,12 +19,6 @@ public class ApplicationNodeMain {
 
     private static final OptionParser OPTION_PARSER = new OptionParser();
 
-    private static final OptionSpec<String> STATUS_CHECK_OPTION = OPTION_PARSER
-        .accepts("status-check", "Performs a status check against the specified host.")
-        .withOptionalArg()
-        .ofType(String.class)
-        .defaultsTo("tcp://localhost:28883");
-
     private static final OptionSpec<ApplicationNode.StorageDriver> STORAGE_DRIVER_OPTION = OPTION_PARSER
         .accepts("storage-driver", "Runs with the UnixFS Storage Driver")
         .withRequiredArg()
@@ -40,16 +34,10 @@ public class ApplicationNodeMain {
 
             final OptionSet optionSet = OPTION_PARSER.parse(args);
 
-            if (optionSet.has(STATUS_CHECK_OPTION)) {
-                final var connectAddress = optionSet.valueOf(STATUS_CHECK_OPTION);
-                final var statusCheck = new StatusCheck(connectAddress);
-                statusCheck.run();
-            } else {
-                final var storageDriver = optionSet.valueOf(STORAGE_DRIVER_OPTION);
-                final var applicationNode = new ApplicationNode(defaultConfigurationSupplier, storageDriver);
-                applicationNode.start();
-                applicationNode.waitForShutdown();
-            }
+            final var storageDriver = optionSet.valueOf(STORAGE_DRIVER_OPTION);
+            final var applicationNode = new ApplicationNode(defaultConfigurationSupplier, storageDriver);
+            applicationNode.start();
+            applicationNode.waitForShutdown();
 
         } catch (OptionException ex) {
             logger.error("Invalid option.", ex);

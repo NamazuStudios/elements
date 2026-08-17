@@ -59,19 +59,13 @@
         <module>guice</module>
         <module>rest-guice</module>
         <module>rt-common</module>
-        <module>rt-jeromq</module>
-        <module>rt-jeromq-guice</module>
         <module>rt-server</module>
         <module>rt-server-git</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
         <module>rt-server-cluster</module>
         <module>rt-server-cluster-guice</module>
-        <module>rt-server-cluster-jeromq</module>
-        <module>rt-server-cluster-jeromq-guice</module>
         <module>rt-server-cluster-node</module>
-        <module>rt-server-cluster-node-jeromq</module>
-        <module>rt-server-cluster-node-jeromq-guice</module>
         <module>rt-server-transact</module>
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
@@ -177,7 +171,6 @@
         <jgit.version>6.10.0.202406032230-r</jgit.version>
         <mockito.version>5.13.0</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
-        <jeromq.version>0.5.2</jeromq.version>
         <beanutils.version>1.9.3</beanutils.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.version>9.7.0</firebase.admin.version>
@@ -382,32 +375,12 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jeromq-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-jersey</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-jersey-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-jeromq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -661,16 +634,6 @@
                 <artifactId>sdk-jakarta-rs</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-node-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <!-- Third-party Dependencies -->
             <dependency>
                 <groupId>${jsr.305.groupId}</groupId>
@@ -882,11 +845,6 @@
                 <groupId>io.github.classgraph</groupId>
                 <artifactId>classgraph</artifactId>
                 <version>${classgraph.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.zeromq</groupId>
-                <artifactId>jeromq</artifactId>
-                <version>${jeromq.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-beanutils</groupId>

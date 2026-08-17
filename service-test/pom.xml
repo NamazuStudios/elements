@@ -129,6 +129,10 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
+            <artifactId>rt-kryo-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-testkit</artifactId>
         </dependency>
 

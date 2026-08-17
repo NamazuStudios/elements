@@ -78,7 +78,7 @@ Most components follow a `{component}` + `{component}-guice` pair pattern. The b
 
 **Application entry point:** `jetty-ws` is the main Jetty-based entry point.
 
-**RT system:** The `rt-*` modules are a JeroMQ-based background worker system. Currently disabled (as of Elements 3.0) and undergoing renovation.
+**RT system:** The `rt-*` modules are a background worker system. The JeroMQ-based cluster RPC transport was removed (issue #10); a WebSocket-based replacement ("Fabric") is in prototype.
 
 **Test modules:** `service-test`, `mongo-test`, `jetty-ws-test`, `sdk-local-test`, `sdk-mongo-test` contain integration tests for their respective layers.
 

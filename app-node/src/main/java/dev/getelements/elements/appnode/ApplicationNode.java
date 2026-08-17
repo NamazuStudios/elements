@@ -23,7 +23,6 @@ import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.rt.remote.guice.InstanceDiscoveryServiceModule;
 import dev.getelements.elements.rt.remote.guice.PersistentInstanceIdModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
-import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.rt.remote.watchdog.WatchdogService;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
@@ -69,13 +68,7 @@ public class ApplicationNode {
             new KryoPayloadReaderWriterModule(),
             new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
             new PersistentInstanceIdModule(),
-            new ZContextModule(),
-            new JeroMQSecurityModule(),
             new MasterNodeModule(),
-            new JeroMQRemoteInvokerModule(),
-            new JeroMQAsyncConnectionServiceModule(),
-            new JeroMQInstanceConnectionServiceModule(),
-            new JeroMQControlClientModule(),
             new MongoSdkModule(),
             new MongoDaoModule(),
             new MongoGridFSLargeObjectBucketModule(),

@@ -74,11 +74,13 @@ public class TestNearSmartContractInvocationService {
 
     private SmartContractService smartContractService;
 
+    // JeroMQ removed (issue #10); the JeroMQ-backed embedded test cluster this class
+    // depended on (via TestUtils/UnixFSIntegrationTestModule) no longer exists. Disabled
+    // pending a Fabric-backed replacement harness. All @Test methods below were already
+    // disabled independently of this.
     @Factory
     public Object[] getTests() {
-        return new Object[] {
-                TestUtils.getInstance().getUnixFSTest(TestNearSmartContractInvocationService.class)
-        };
+        return new Object[0];
     }
 
     @BeforeClass

@@ -11,7 +11,6 @@ import dev.getelements.elements.rt.remote.MasterNodeLocalInvocationDispatcher;
 import dev.getelements.elements.rt.remote.Node;
 import dev.getelements.elements.rt.remote.NodeLifecycle;
 import dev.getelements.elements.rt.remote.guice.NodeIdModule;
-import dev.getelements.elements.rt.remote.jeromq.guice.JeroMQNodeModule;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.rt.annotation.RemoteScope.*;
@@ -26,9 +25,8 @@ public class MasterNodeModule extends PrivateModule {
         install(new SimpleInstanceMetadataContextModule());
         install(NodeIdModule.forMasterNode(getProvider(InstanceId.class)));
 
-        install(new JeroMQNodeModule()
-            .withNodeName("MasterNode")
-        );
+        // JeroMQ removed (issue #10); no transport currently binds Node.class here.
+        // Pending the Fabric WS transport, this module's Node binding is incomplete.
 
         bind(Node.class)
                 .annotatedWith(named(MASTER_NODE_NAME))

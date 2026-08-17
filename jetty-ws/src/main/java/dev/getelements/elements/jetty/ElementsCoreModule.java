@@ -13,7 +13,6 @@ import dev.getelements.elements.service.guice.ServicesElementModule;
 import dev.getelements.elements.rt.jersey.guice.JerseyHttpClientModule;
 import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.*;
-import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.sdk.model.annotation.FacebookPermission;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
@@ -62,16 +61,10 @@ public class ElementsCoreModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new FileSystemCdnGitLoaderModule());
 
-        // Old cluster code which needs to be replaced
+        // Cluster infrastructure (transport-agnostic; JeroMQ removed, Fabric transport pending)
         install(new RandomInstanceIdModule());
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
-        install(new ZContextModule());
-        install(new JeroMQSecurityModule());
         install(new ClusterContextFactoryModule());
-        install(new JeroMQAsyncConnectionServiceModule());
-        install(new JeroMQInstanceConnectionServiceModule());
-        install(new JeroMQRemoteInvokerModule());
-        install(new JeroMQControlClientModule());
         install(new SimpleRemoteInvokerRegistryModule());
         install(new KryoPayloadReaderWriterModule());
         install(new SimpleInstanceModule());

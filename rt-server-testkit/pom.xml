@@ -18,11 +18,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.zeromq</groupId>
-            <artifactId>jeromq</artifactId>
-            <version>${jeromq.version}</version>
-        </dependency>
-        <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-cluster</artifactId>
             <version>${project.version}</version>
@@ -30,11 +25,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-cluster-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-jeromq-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -50,11 +40,6 @@
         <dependency>
             <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-simple-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>

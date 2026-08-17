@@ -17,8 +17,6 @@ import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
-import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
-import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
@@ -91,15 +89,8 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
                 .asEagerSingleton();
         install(new MongoDaoModule());
 
-        bind(JeroMQSecurity.class).toInstance(JeroMQSecurity.DEFAULT);
-
         install(new RootElementRegistryModule());
 
-        install(new ZContextModule());
-        install(new JeroMQAsyncConnectionServiceModule());
-        install(new JeroMQInstanceConnectionServiceModule());
-        install(new JeroMQRemoteInvokerModule());
-        install(new JeroMQControlClientModule());
         install(new ClusterContextFactoryModule());
         install(new SimpleRemoteInvokerRegistryModule());
         install(new StaticInstanceDiscoveryServiceModule());

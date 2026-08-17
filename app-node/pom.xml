@@ -122,22 +122,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-node-jeromq</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jeromq-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>rt-server-cluster-node-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -171,9 +156,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.zeromq</groupId>
-            <artifactId>jeromq</artifactId>
-            <version>${jeromq.version}</version>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>rt-kryo-guice</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
