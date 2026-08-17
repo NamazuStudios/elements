@@ -6,6 +6,8 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.JWK;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
@@ -14,11 +16,15 @@ import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import dev.getelements.elements.sdk.model.auth.TokenEndpointAuthMethod;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
 import dev.getelements.elements.service.auth.oidc.OidcDiscoveryDocument;
 import dev.getelements.elements.service.auth.oidc.OidcLoginAttemptOperations;
 import dev.getelements.elements.service.auth.oidc.OidcProviderConfigurationOperations;
+import dev.getelements.elements.service.auth.oidc.UserOidcAuthService;
+import dev.getelements.elements.sdk.ElementRegistry;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
@@ -62,6 +68,8 @@ public class OidcLoginAttemptOperationsTest {
     private OidcProviderConfigurationOperations oidcProviderConfigurationOperations;
     private OidcAuthServiceOperations oidcAuthServiceOperations;
     private AnonOidcAuthService anonOidcAuthService;
+    private UserOidcAuthService userOidcAuthService;
+    private UserDao userDao;
     private Client client;
 
     private OidcLoginAttemptOperations operations;
@@ -84,6 +92,16 @@ public class OidcLoginAttemptOperationsTest {
         anonOidcAuthService = mock(AnonOidcAuthService.class);
         client = mock(Client.class);
 
+        // Real UserOidcAuthService — exercises the actual uid-linking logic rather than mocking it away.
+        userOidcAuthService = new UserOidcAuthService();
+        final var userUidDao = mock(UserUidDao.class);
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
+        userOidcAuthService.setUserUidDao(userUidDao);
+        userOidcAuthService.setUserDao(mock(UserDao.class));
+        userOidcAuthService.setElementRegistry(mock(ElementRegistry.class));
+
+        userDao = mock(UserDao.class);
+
         // Real OidcAuthServiceOperations — exercises the actual shared validation/session-building code rather
         // than mocking it away. The token carries an 'aud' claim (needed for the audience check), which also
         // triggers buildSession's optional Application lookup, so ApplicationDao/SessionDao need mocking too.
@@ -105,6 +123,8 @@ public class OidcLoginAttemptOperationsTest {
         operations.setOidcProviderConfigurationOperations(oidcProviderConfigurationOperations);
         operations.setOidcAuthServiceOperations(oidcAuthServiceOperations);
         operations.setAnonOidcAuthService(anonOidcAuthService);
+        operations.setUserOidcAuthService(userOidcAuthService);
+        operations.setUserDao(userDao);
         operations.setClient(client);
         operations.setTtlSeconds(300L);
 
@@ -215,6 +235,31 @@ public class OidcLoginAttemptOperationsTest {
 
     }
 
+    @Test
+    public void testBeginWithoutLinkingUserLeavesLinkedUserIdNull() {
+
+        operations.begin(PROVIDER);
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertNull(attemptCaptor.getValue().getLinkedUserId());
+
+    }
+
+    @Test
+    public void testBeginWithLinkingUserStampsLinkedUserId() {
+
+        final var user = new User();
+        user.setId("current-user-id");
+
+        operations.begin(PROVIDER, user);
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertEquals(attemptCaptor.getValue().getLinkedUserId(), "current-user-id");
+
+    }
+
     // ── handleCallback() ─────────────────────────────────────────────────────
 
     @Test
@@ -314,6 +359,40 @@ public class OidcLoginAttemptOperationsTest {
 
         assertTrue(result.isSuccess());
         assertEquals(result.getRedirectUrl(), "https://game.example.com/success");
+
+    }
+
+    @Test
+    public void testHandleCallbackForLinkingAttemptLinksToStoredUserInsteadOfAnon() {
+
+        final var state = "linking-state";
+        final var nonce = "linking-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setLinkedUserId("current-user-id");
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markComplete(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var linkedUser = new User();
+        linkedUser.setId("current-user-id");
+        when(userDao.getUser("current-user-id")).thenReturn(linkedUser);
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        assertTrue(result.isSuccess());
+        verifyNoInteractions(anonOidcAuthService);
+        verify(userDao).getUser("current-user-id");
 
     }
 

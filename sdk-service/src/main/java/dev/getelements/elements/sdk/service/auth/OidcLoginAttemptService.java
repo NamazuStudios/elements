@@ -9,9 +9,10 @@ import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 
 /**
- * Orchestrates the pre-authentication, provider-agnostic browser-redirect OIDC login flow for thick clients: begin
- * a pending attempt, poll for completion, and handle the provider's callback. Always anonymous — a caller has no
- * Elements session yet when using this service, by definition.
+ * Orchestrates the provider-agnostic browser-redirect OIDC login flow for thick clients: begin a pending
+ * attempt, poll for completion, and handle the provider's callback. If the caller already has an Elements
+ * session when calling {@link #begin}, a successful attempt links the external identity to that user instead
+ * of creating/finding a user by external id; otherwise it behaves as a first-time, anonymous login.
  */
 @ElementPublic
 @ElementServiceExport
@@ -21,7 +22,8 @@ public interface OidcLoginAttemptService {
     /**
      * Begins a pending login attempt for the given provider, building the provider's authorize URL and returning
      * an opaque id used to poll for completion. The success/error redirect URLs applied on callback, if any,
-     * come from the provider's own configuration — server-authoritative, not caller-supplied.
+     * come from the provider's own configuration — server-authoritative, not caller-supplied. If the caller
+     * already has an Elements session, the attempt links to that user on success rather than creating one.
      *
      * @param provider the provider identifier (e.g. "twitch")
      * @return the pending attempt's id, authorize URL, and expiry

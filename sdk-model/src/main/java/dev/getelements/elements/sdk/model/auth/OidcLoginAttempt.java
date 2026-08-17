@@ -44,6 +44,14 @@ public class OidcLoginAttempt {
     /** Optional. If set, the callback redirects the browser here on failure instead of the default HTML page. */
     private String errorRedirectUrl;
 
+    /**
+     * The id of the already-authenticated user this attempt was started on behalf of, set at {@code begin()}
+     * time when the caller had an existing Elements session. When set, a successful callback links the external
+     * identity to this user instead of creating/finding a user by external id. {@code null} for an anonymous
+     * (first-time login) attempt.
+     */
+    private String linkedUserId;
+
     public String getId() {
         return id;
     }
@@ -122,6 +130,14 @@ public class OidcLoginAttempt {
 
     public void setErrorRedirectUrl(String errorRedirectUrl) {
         this.errorRedirectUrl = errorRedirectUrl;
+    }
+
+    public String getLinkedUserId() {
+        return linkedUserId;
+    }
+
+    public void setLinkedUserId(String linkedUserId) {
+        this.linkedUserId = linkedUserId;
     }
 
 }

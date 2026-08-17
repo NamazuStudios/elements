@@ -50,6 +50,9 @@ public class MongoOidcLoginAttempt {
     @Property
     private String errorRedirectUrl;
 
+    @Property
+    private String linkedUserId;
+
     public String getId() {
         return id;
     }
@@ -130,6 +133,14 @@ public class MongoOidcLoginAttempt {
         this.errorRedirectUrl = errorRedirectUrl;
     }
 
+    public String getLinkedUserId() {
+        return linkedUserId;
+    }
+
+    public void setLinkedUserId(String linkedUserId) {
+        this.linkedUserId = linkedUserId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -144,13 +155,15 @@ public class MongoOidcLoginAttempt {
                 && Objects.equals(getFailureReason(), that.getFailureReason())
                 && Objects.equals(getExpiry(), that.getExpiry())
                 && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
-                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl())
+                && Objects.equals(getLinkedUserId(), that.getLinkedUserId());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getProvider(), getState(), getNonce(), getStatus(),
-                getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl());
+                getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl(),
+                getLinkedUserId());
     }
 
 }
