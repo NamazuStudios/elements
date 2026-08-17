@@ -81,6 +81,10 @@ public class ProgressApiTest {
                 "Pre-condition: mission creation must succeed");
         mission = response.readEntity(Mission.class);
         assertNotNull(mission.getId(), "mission id must be set");
+        // The request above deliberately leaves `authoritative` unset: the documented default
+        // (true) must be materialized at create, not left null in the stored/serialized Mission.
+        assertEquals(mission.getAuthoritative(), Boolean.TRUE,
+                "a Mission created without the authoritative flag must default to authoritative=true");
     }
 
     @BeforeClass(dependsOnMethods = "setUp")
@@ -108,6 +112,8 @@ public class ProgressApiTest {
                 "Pre-condition: non-authoritative mission creation must succeed");
         nonAuthoritativeMission = response.readEntity(Mission.class);
         assertNotNull(nonAuthoritativeMission.getId(), "non-authoritative mission id must be set");
+        assertEquals(nonAuthoritativeMission.getAuthoritative(), Boolean.FALSE,
+                "an explicit authoritative=false must survive the create round-trip");
     }
 
     // -- createProgress regression --
