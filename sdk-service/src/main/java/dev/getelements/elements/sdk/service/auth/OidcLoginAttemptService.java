@@ -40,6 +40,21 @@ public interface OidcLoginAttemptService {
     OidcLoginAttemptStatusResponse poll(String id);
 
     /**
+     * Finalizes an account-linking attempt by presenting the {@code confirmToken} returned only in the original
+     * {@code begin()} response. The callback that validates the external identity is always hit by an
+     * unauthenticated provider redirect and cannot verify it's talking to the same party that called
+     * {@code begin()}, so the account-link mutation is deferred here instead, gated on possession of that secret.
+     * Not applicable to (and never satisfied by) an anonymous attempt — see {@link #poll}, which rejects a
+     * linking attempt outright and directs the caller here instead.
+     *
+     * @param id the opaque poll id
+     * @param confirmToken the secret returned in the original {@code begin()} response for this attempt
+     * @return the completed session, or an EXPIRED-equivalent result if the attempt is unknown, not awaiting
+     *         confirmation, already claimed, or expired
+     */
+    OidcLoginAttemptStatusResponse confirmLink(String id, String confirmToken);
+
+    /**
      * Handles the provider's redirect callback: looks up the pending attempt by state, exchanges the code for an
      * id_token, validates it, creates the Elements session, and marks the attempt COMPLETE. Fails closed (marks
      * the attempt FAILED) on any missing/expired/mismatched state, nonce mismatch, or exchange or validation

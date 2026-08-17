@@ -12,11 +12,16 @@ public class OidcLoginAttemptBegin {
      * @param id the opaque poll id
      * @param authorizeUrl the fully-built provider authorize URL
      * @param expiresAt the epoch second after which the attempt expires
+     * @param confirmToken a secret returned only to the caller of {@code begin()}, presented back on
+     *                     {@code POST .../confirm} to finalize an account-linking attempt. Present for every
+     *                     attempt, but only ever required for a linking one.
      */
-    public OidcLoginAttemptBegin(final String id, final String authorizeUrl, final long expiresAt) {
+    public OidcLoginAttemptBegin(final String id, final String authorizeUrl, final long expiresAt,
+                                  final String confirmToken) {
         this.id = id;
         this.authorizeUrl = authorizeUrl;
         this.expiresAt = expiresAt;
+        this.confirmToken = confirmToken;
     }
 
     private String id;
@@ -24,6 +29,8 @@ public class OidcLoginAttemptBegin {
     private String authorizeUrl;
 
     private long expiresAt;
+
+    private String confirmToken;
 
     public String getId() {
         return id;
@@ -47,6 +54,14 @@ public class OidcLoginAttemptBegin {
 
     public void setExpiresAt(long expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public String getConfirmToken() {
+        return confirmToken;
+    }
+
+    public void setConfirmToken(String confirmToken) {
+        this.confirmToken = confirmToken;
     }
 
 }

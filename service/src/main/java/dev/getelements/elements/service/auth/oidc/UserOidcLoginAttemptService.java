@@ -13,8 +13,9 @@ import jakarta.inject.Inject;
  * so the outcome (link to this user, rather than create/find one by external id) is decided and persisted here,
  * at the one point in the flow where the caller's session is actually known. The provider's callback request
  * itself carries no {@code Authorization} header of its own — it's a bare redirect from the IdP, not a call from
- * the original caller — so it relies entirely on that persisted decision rather than re-deriving it. {@code
- * poll}/{@code handleCallback} therefore need no user-level branching of their own.
+ * the original caller — so it relies entirely on that persisted decision rather than re-deriving it. Finalizing
+ * the mutation is gated on presenting {@code confirmToken} (see {@link #confirmLink}), not on Elements session
+ * identity, so {@code poll}/{@code confirmLink}/{@code handleCallback} need no user-level branching of their own.
  */
 public class UserOidcLoginAttemptService implements OidcLoginAttemptService {
 
@@ -30,6 +31,11 @@ public class UserOidcLoginAttemptService implements OidcLoginAttemptService {
     @Override
     public OidcLoginAttemptStatusResponse poll(final String id) {
         return getOidcLoginAttemptOperations().poll(id);
+    }
+
+    @Override
+    public OidcLoginAttemptStatusResponse confirmLink(final String id, final String confirmToken) {
+        return getOidcLoginAttemptOperations().confirmLink(id, confirmToken);
     }
 
     @Override

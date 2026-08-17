@@ -56,6 +56,42 @@ public interface OidcLoginAttemptDao {
     Optional<OidcLoginAttempt> markFailed(String state, String reason);
 
     /**
+     * Atomically transitions a PENDING attempt matching the given state to LINK_READY, storing the serialized
+     * external-identity claims validated by the callback for a linking attempt. A no-op (empty result) if no
+     * PENDING attempt matches — mirrors {@link #markComplete}'s replay-safety guarantee. Unlike
+     * {@link #markComplete}, this deliberately does not create a session; the account-link mutation is deferred
+     * to {@link #claimLinkReadyById}, gated on presenting the attempt's {@code confirmToken}.
+     *
+     * @param state the state value
+     * @param linkClaimsJson the serialized external-identity claims
+     * @return an {@link Optional} containing the updated attempt, or empty if the guard did not match
+     */
+    Optional<OidcLoginAttempt> markLinkReady(String state, String linkClaimsJson);
+
+    /**
+     * Finds a LINK_READY attempt by id, without mutating it. Used both to detect that a plain poll should be
+     * rejected in favor of the confirm flow, and by the confirm flow itself to check {@code confirmToken} before
+     * consuming anything — a wrong token must never burn the attempt.
+     *
+     * @param id the opaque poll id
+     * @return an {@link Optional} containing the attempt, or empty if missing, expired, or not LINK_READY
+     */
+    Optional<OidcLoginAttempt> findLinkReadyById(String id);
+
+    /**
+     * Atomically claims a LINK_READY attempt matching the given id, transitioning it to a terminal claimed state
+     * and clearing the stored claims so it cannot be observed again. Returns the pre-claim attempt (with
+     * {@code linkClaimsJson} still populated) to the caller that wins the race; a no-op (empty result) if no
+     * LINK_READY attempt matches — including on every subsequent call for the same id. Callers must have already
+     * verified {@code confirmToken} before calling this — it performs no token check of its own.
+     *
+     * @param id the opaque poll id
+     * @return an {@link Optional} containing the pre-claim attempt, or empty if already claimed, not yet
+     *         link-ready, expired, or unknown
+     */
+    Optional<OidcLoginAttempt> claimLinkReadyById(String id);
+
+    /**
      * Atomically claims a COMPLETE attempt matching the given id, transitioning it to a terminal claimed
      * state and clearing the stored session so it cannot be observed again. Returns the pre-claim attempt (with
      * the session still populated) to the caller that wins the race; a no-op (empty result) if no COMPLETE

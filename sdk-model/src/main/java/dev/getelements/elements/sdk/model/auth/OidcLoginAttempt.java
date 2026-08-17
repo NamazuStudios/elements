@@ -52,6 +52,22 @@ public class OidcLoginAttempt {
      */
     private String linkedUserId;
 
+    /**
+     * Serialized external-identity claims (scheme name, external user id, email, profile claims) validated by
+     * the callback for a linking attempt, set when transitioning to {@link OidcLoginAttemptStatus#LINK_READY}.
+     * Consumed exactly once, by the authenticated poll that performs the deferred account-link mutation.
+     */
+    private String linkClaimsJson;
+
+    /**
+     * A random, high-entropy token generated at {@code begin()} time and returned only in that response — never
+     * exposed to the browser/IdP leg of the flow the way {@code state}/{@code nonce} are. Presenting it back on
+     * {@code POST .../confirm} is the sole proof that the caller finalizing a linking attempt is the same party
+     * that started it, since the callback that validates the external identity is always hit by an
+     * unauthenticated provider redirect and cannot make that determination itself.
+     */
+    private String confirmToken;
+
     public String getId() {
         return id;
     }
@@ -138,6 +154,22 @@ public class OidcLoginAttempt {
 
     public void setLinkedUserId(String linkedUserId) {
         this.linkedUserId = linkedUserId;
+    }
+
+    public String getLinkClaimsJson() {
+        return linkClaimsJson;
+    }
+
+    public void setLinkClaimsJson(String linkClaimsJson) {
+        this.linkClaimsJson = linkClaimsJson;
+    }
+
+    public String getConfirmToken() {
+        return confirmToken;
+    }
+
+    public void setConfirmToken(String confirmToken) {
+        this.confirmToken = confirmToken;
     }
 
 }

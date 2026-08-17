@@ -26,6 +26,11 @@ public class AnonOidcLoginAttemptService implements OidcLoginAttemptService {
     }
 
     @Override
+    public OidcLoginAttemptStatusResponse confirmLink(final String id, final String confirmToken) {
+        return getOidcLoginAttemptOperations().confirmLink(id, confirmToken);
+    }
+
+    @Override
     public OidcLoginAttemptCallbackResult handleCallback(final String provider, final String code,
                                                            final String state, final String error) {
         return getOidcLoginAttemptOperations().handleCallback(provider, code, state, error);

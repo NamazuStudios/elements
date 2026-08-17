@@ -78,9 +78,30 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
 
         final var uid = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.USER_ID.value);
         final var email = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.EMAIL.value);
+        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
+
+        return apply(targetUser, scheme.getName(), uid, email, profileClaims);
+
+    }
+
+    /**
+     * Links the given already-authenticated user to an external OIDC identity described by plain values rather
+     * than a live token — used by the login-attempt confirm flow, where the identity was already validated by
+     * the callback and persisted (see {@code OidcLoginAttemptOperations}), and the original {@code DecodedJWT} is
+     * long gone by the time confirmation happens.
+     *
+     * @param targetUser the already-authenticated user to link the external identity to
+     * @param schemeName the scheme the identity was validated against
+     * @param externalUserId the external user id (the token's {@code sub} claim)
+     * @param email the token's {@code email} claim, or {@code null} if absent
+     * @param profileClaims the token's standard OIDC profile-scope claims, or empty if none
+     * @return {@code targetUser}
+     */
+    public User apply(final User targetUser, final String schemeName, final String externalUserId,
+                       final String email, final Map<String, String> profileClaims) {
 
         // Check if this OIDC sub is already mapped to any user
-        final var existingOidcUid = userUidDao.findUserUid(uid, scheme.getName());
+        final var existingOidcUid = userUidDao.findUserUid(externalUserId, schemeName);
 
         if (existingOidcUid.isPresent()) {
             final var linkedUserId = existingOidcUid.get().getUserId();
@@ -89,7 +110,7 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
             }
             // Already linked to current user — idempotent, fall through
         } else {
-            createNewUserUid(uid, scheme.getName(), targetUser.getId());
+            createNewUserUid(externalUserId, schemeName, targetUser.getId());
         }
 
         // Trust any email claim returned by a configured provider as verified — see AnonOidcAuthService for
@@ -112,15 +133,13 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
         // Tracking/audit snapshot of this scheme's reported profile claims — unlike email above, this isn't
         // identity-sensitive (no account-takeover concern), so it's safe to capture here too, unlike the flat
         // convenience fields on User which stay scoped to the anonymous login path (see AnonOidcAuthService).
-        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
-
-        if (!profileClaims.isEmpty()) {
+        if (profileClaims != null && !profileClaims.isEmpty()) {
             var profiles = targetUser.getLinkedAccountProfiles();
             if (profiles == null) {
                 profiles = new HashMap<String, Map<String, String>>();
                 targetUser.setLinkedAccountProfiles(profiles);
             }
-            profiles.put(scheme.getName(), profileClaims);
+            profiles.put(schemeName, profileClaims);
 
             try {
                 getUserDao().updateUserStrict(targetUser);

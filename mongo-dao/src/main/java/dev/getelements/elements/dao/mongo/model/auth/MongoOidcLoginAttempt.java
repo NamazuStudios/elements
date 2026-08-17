@@ -53,6 +53,12 @@ public class MongoOidcLoginAttempt {
     @Property
     private String linkedUserId;
 
+    @Property
+    private String linkClaimsJson;
+
+    @Property
+    private String confirmToken;
+
     public String getId() {
         return id;
     }
@@ -141,6 +147,22 @@ public class MongoOidcLoginAttempt {
         this.linkedUserId = linkedUserId;
     }
 
+    public String getLinkClaimsJson() {
+        return linkClaimsJson;
+    }
+
+    public void setLinkClaimsJson(String linkClaimsJson) {
+        this.linkClaimsJson = linkClaimsJson;
+    }
+
+    public String getConfirmToken() {
+        return confirmToken;
+    }
+
+    public void setConfirmToken(String confirmToken) {
+        this.confirmToken = confirmToken;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -156,14 +178,16 @@ public class MongoOidcLoginAttempt {
                 && Objects.equals(getExpiry(), that.getExpiry())
                 && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
                 && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl())
-                && Objects.equals(getLinkedUserId(), that.getLinkedUserId());
+                && Objects.equals(getLinkedUserId(), that.getLinkedUserId())
+                && Objects.equals(getLinkClaimsJson(), that.getLinkClaimsJson())
+                && Objects.equals(getConfirmToken(), that.getConfirmToken());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getProvider(), getState(), getNonce(), getStatus(),
                 getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl(),
-                getLinkedUserId());
+                getLinkedUserId(), getLinkClaimsJson(), getConfirmToken());
     }
 
 }

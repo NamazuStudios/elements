@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.auth;
 
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.session.OidcLoginAttemptConfirmRequest;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptRequest;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptResponse;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptState;
@@ -56,7 +57,8 @@ public class OidcSessionResource {
         }
 
         final var begin = getOidcLoginAttemptService().begin(request.getProvider());
-        final var body = OidcLoginAttemptResponse.pending(begin.getId(), begin.getAuthorizeUrl(), begin.getExpiresAt());
+        final var body = OidcLoginAttemptResponse.pending(
+                begin.getId(), begin.getAuthorizeUrl(), begin.getExpiresAt(), begin.getConfirmToken());
 
         return Response.status(Response.Status.CREATED).entity(body).build();
 
@@ -69,10 +71,37 @@ public class OidcSessionResource {
             summary = "Polls a pending OIDC login attempt",
             description = "Returns COMPLETE with the session exactly once, on the poll that first observes " +
                     "completion; a subsequent poll for the same id, or a poll for an unknown/expired " +
-                    "id, returns 404.")
+                    "id, returns 404. An account-linking attempt cannot be finalized this way -- once its " +
+                    "external identity is validated, this returns an error directing the caller to " +
+                    "POST {id}/confirm instead.")
     public OidcLoginAttemptStatusResponse pollOidcSession(@PathParam("id") final String id) {
 
         final var status = getOidcLoginAttemptService().poll(id);
+
+        if (status.getStatus() == OidcLoginAttemptState.EXPIRED) {
+            throw new NotFoundException();
+        }
+
+        return status;
+
+    }
+
+    @POST
+    @Path("{id}/confirm")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Finalizes an account-linking OIDC login attempt",
+            description = "Presents the confirmToken returned in the original POST /oidc/session response for " +
+                    "this attempt, completing the deferred account-link mutation and returning the resulting " +
+                    "session. Only applicable to a linking attempt; not needed for an anonymous one.")
+    public OidcLoginAttemptStatusResponse confirmOidcSessionLink(
+            @PathParam("id") final String id,
+            final OidcLoginAttemptConfirmRequest request) {
+
+        getValidationHelper().validateModel(request);
+
+        final var status = getOidcLoginAttemptService().confirmLink(id, request.getConfirmToken());
 
         if (status.getStatus() == OidcLoginAttemptState.EXPIRED) {
             throw new NotFoundException();
