@@ -4,6 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.servlet.GuiceFilter;
+import dev.getelements.elements.deployment.jetty.fabric.FabricWsBootstrap;
+import dev.getelements.elements.deployment.jetty.fabric.FabricWsModule;
 import dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry;
 import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
@@ -64,6 +66,13 @@ public class ElementsServletContextModule extends AbstractModule {
                 named(StaticContentLoader.HANDLER_SEQUENCE)
         ));
 
+        final var fabricWsContextHandlerProvider = getProvider(Key.get(
+                Handler.Sequence.class,
+                named(FabricWsBootstrap.HANDLER_SEQUENCE)
+        ));
+
+        install(new FabricWsModule());
+
         bind(Handler.class)
                 .toProvider(() -> {
                     final var httpContextRoot = httpContextRootProvider.get();
@@ -75,6 +84,7 @@ public class ElementsServletContextModule extends AbstractModule {
                         jakartaRsContextHandlerProvider.get(),
                         jakartaWebsocketContextHandlerProvider.get(),
                         staticContentContextHandlerProvider.get(),
+                        fabricWsContextHandlerProvider.get(),
                         guiceHandlerProvider.get()
                     );
                 })

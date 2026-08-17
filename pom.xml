@@ -66,6 +66,8 @@
         <module>rt-server-cluster</module>
         <module>rt-server-cluster-guice</module>
         <module>rt-server-cluster-node</module>
+        <module>cluster-fabric</module>
+        <module>cluster-fabric-guice</module>
         <module>rt-server-transact</module>
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
@@ -336,6 +338,16 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-cluster-node</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-fabric</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-fabric-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
