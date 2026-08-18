@@ -221,7 +221,9 @@ public class OidcAuthServiceOperations {
 
         final var kid = jwt.getHeaderClaim(OidcClaim.KID.getValue()).asString();
 
-        final var jwk = scheme.getKeys()
+        // A scheme with no keys fetched yet (or a legacy record predating the keys field) has null here rather
+        // than an empty list; treated the same as "no matching key" so it falls through to the fetch-on-miss path.
+        final var jwk = (scheme.getKeys() == null ? List.<JWK>of() : scheme.getKeys())
                 .stream()
                 .filter(k -> Objects.equals(k.getKid(), kid))
                 .findFirst()
