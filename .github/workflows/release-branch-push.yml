@@ -2,13 +2,15 @@ name: Release Branch Auto-Bump
 
 # Ordinary pushes to a release/* branch. If the branch has already had its
 # first RC cut (version has an -rc-N suffix), every non-bot push auto-bumps
-# to the next rc and tags it -- the resulting tag push is what actually
-# triggers tag-publish.yml to build/test/publish. If no RC has been cut yet
-# (branch still sitting at a plain -SNAPSHOT), the build job below runs the
-# same complete build+test+docker+javadoc publish every other branch gets
-# (via complete-build.yml) as a sanity check and to keep its published
-# snapshot docs current; cutting the first RC is a deliberate, separate
-# manual action (cut-rc.yml), never automatic.
+# to the next rc, tags it, and calls tag-publish.yml directly to build/test/
+# publish -- see tag-publish.yml's own header for why this calls it directly
+# (workflow_call) rather than relying on the tag push to trigger it, and why
+# that means this no longer needs a PAT. If no RC has been cut yet (branch
+# still sitting at a plain -SNAPSHOT), the build job below runs the same
+# complete build+test+docker+javadoc publish every other branch gets (via
+# complete-build.yml) as a sanity check and to keep its published snapshot
+# docs current; cutting the first RC is a deliberate, separate manual action
+# (cut-rc.yml), never automatic.
 #
 # The `[ci skip]` guard below is required, not optional: this workflow's own
 # bump commit is itself a push to release/*, so without the guard every bump
@@ -28,11 +30,11 @@ jobs:
     timeout-minutes: 120
     outputs:
       rc-cut: ${{ steps.check.outputs.rc-cut }}
+      next-version: ${{ steps.check.outputs.next-version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_AUTOMATION_PAT }}
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -49,6 +51,7 @@ jobs:
 
             NEXT=$(.github/scripts/compute-version.sh bump-rc "$CURRENT")
             echo "Bumping $CURRENT -> $NEXT"
+            echo "next-version=$NEXT" >> "$GITHUB_OUTPUT"
 
             make version VERSION="$NEXT"
             git config user.name "Continuous Integration"
@@ -62,6 +65,18 @@ jobs:
             echo "rc-cut=false" >> "$GITHUB_OUTPUT"
             echo "No RC cut yet on '$CURRENT' -- building/testing/publishing only, nothing tagged."
           fi
+
+  publish:
+    needs: bump
+    if: needs.bump.outputs.rc-cut == 'true'
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/tag-publish.yml
+    with:
+      tag: ${{ needs.bump.outputs.next-version }}
+    secrets: inherit
 
   build:
     needs: bump

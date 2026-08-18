@@ -12,9 +12,13 @@ name: Cut Release Branch
 # release-branch-push.yml's auto-bump job, which would otherwise see the
 # fresh -rc-1 suffix on its very first push and immediately jump to rc-2.
 #
-# This does not tag or publish anything. Once the branch exists, use Cut
-# Release Candidate / Release as normal to tag and publish RCs -- see
-# ACTIONS.md for the full release process.
+# This does not tag or publish anything, so unlike the other release
+# workflows it never needed a PAT in the first place -- it doesn't rely on
+# its own push triggering anything else (the [ci skip] guard above is enough
+# on its own with plain GITHUB_TOKEN, which can't trigger other workflows
+# from a push at all). Once the branch exists, use Cut Release Candidate /
+# Release as normal to tag and publish RCs -- see ACTIONS.md for the full
+# release process.
 
 on:
   workflow_dispatch:
@@ -44,7 +48,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_AUTOMATION_PAT }}
 
       - name: Compute release branch name
         id: branch

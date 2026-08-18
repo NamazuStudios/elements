@@ -1,22 +1,38 @@
 name: Tag Publish
 
-# The one place real release publishing happens, mirroring the existing
-# Bitbucket `tags: "*"` pipeline pattern: every version-transition workflow
-# (cut-rc, release-branch auto-bump, release) hands off by pushing a git tag,
-# and this workflow does the actual build/test/publish. It never writes to
-# git itself, so it can't loop.
+# The one place real release publishing happens. Callable two ways:
 #
-# The `on.push.tags` glob below is only a coarse pre-filter (GitHub Actions
-# tag filters don't support real regex quantifiers) -- the guard job below
-# does the real validation, and deliberately excludes anything below 3.9.x so
-# it never reacts to: the ~190 legacy `x.y.z-SNAPSHOT` tags already in this
-# repo's history, or the ongoing real `3.8.x` release tags the still-running
-# legacy Bitbucket `release/3.8` pipeline keeps depositing on this remote.
+#   1. uses: ./.github/workflows/tag-publish.yml with inputs.tag set --
+#      the normal path now. Every version-transition workflow (cut-rc,
+#      release-branch auto-bump, release) pushes its git tag *and* calls
+#      this workflow directly in the same run, rather than relying on that
+#      push recursively triggering a separate workflow run. GITHUB_TOKEN
+#      cannot trigger other workflows from a push (GitHub's anti-recursion
+#      rule), which is exactly why this used to require a PAT
+#      (RELEASE_AUTOMATION_PAT) just to make the push look human enough to
+#      trigger tag-publish.yml -- calling it directly sidesteps that
+#      entirely, so none of the callers need a PAT anymore.
+#
+#   2. on.push.tags -- kept for any tag pushed from outside this repo's own
+#      automation (e.g. a manual `git push origin refs/tags/x.y.z`). The
+#      glob below is only a coarse pre-filter (GitHub Actions tag filters
+#      don't support real regex quantifiers) -- the guard job does the real
+#      validation, and deliberately excludes anything below 3.9.x so it
+#      never reacts to: the ~190 legacy `x.y.z-SNAPSHOT` tags already in
+#      this repo's history, or the ongoing real `3.8.x` release tags the
+#      still-running legacy Bitbucket `release/3.8` pipeline keeps
+#      depositing on this remote.
 
 on:
   push:
     tags:
       - '[0-9]*.[0-9]*.[0-9]*'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'The version tag to build, test, and publish (e.g. 3.9.0 or 3.9.0-rc-1). Defaults to the pushed tag when triggered by push.'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -32,8 +48,9 @@ jobs:
       version: ${{ steps.check.outputs.version }}
     steps:
       - id: check
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          TAG="${GITHUB_REF_NAME}"
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
 
           if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-rc-[0-9]+)?$ ]]; then
@@ -64,12 +81,16 @@ jobs:
       packages: write
       id-token: write
     concurrency:
-      group: tag-publish-${{ github.ref_name }}
+      group: tag-publish-${{ needs.guard.outputs.version }}
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # Explicit so this checks out the right commit whether triggered by
+          # the tag push itself (github.ref_name would already be the tag) or
+          # by a caller workflow (still on its own branch ref otherwise).
+          ref: ${{ needs.guard.outputs.version }}
 
       - name: Build setup
         uses: ./.github/actions/build-setup
@@ -125,4 +146,4 @@ jobs:
         if: needs.guard.outputs.is_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --generate-notes
+        run: gh release create "${{ needs.guard.outputs.version }}" --title "${{ needs.guard.outputs.version }}" --generate-notes
