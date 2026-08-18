@@ -118,6 +118,8 @@ mvn install
 
 All dependent services run in Docker. See the [getting started guide](https://namazustudios.com/docs/getting-started/) for prerequisites.
 
+For maintainers: see **[ACTIONS.md](./ACTIONS.md)** for how versioning, release branches, and publishing work via GitHub Actions.
+
 ---
 
 ## Contributing
