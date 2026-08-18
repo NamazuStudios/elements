@@ -1,9 +1,12 @@
 name: Cut Release Candidate
 
 # Manual-only: turns a release branch's current plain -SNAPSHOT into its
-# first release candidate (X.Y.Z-SNAPSHOT -> X.Y.Z-rc-1), tags it, and pushes.
-# The resulting tag push triggers tag-publish.yml for the real build/publish.
-# Run this from the Actions UI against the target release/* branch.
+# first release candidate (X.Y.Z-SNAPSHOT -> X.Y.Z-rc-1), tags it, and pushes,
+# then calls tag-publish.yml directly for the real build/publish -- see
+# tag-publish.yml's own header for why this calls it directly rather than
+# relying on the tag push to trigger it, and why that means this no longer
+# needs a PAT. Run this from the Actions UI against the target release/*
+# branch.
 #
 # The commit this creates carries [ci skip] specifically so it doesn't also
 # get picked up and immediately re-bumped by release-branch-push.yml, which
@@ -19,6 +22,8 @@ jobs:
   cut-rc:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      next-version: ${{ steps.cut.outputs.next-version }}
     steps:
       - name: Verify this is a release branch
         run: |
@@ -30,17 +35,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.RELEASE_AUTOMATION_PAT }}
 
       - name: Build setup
         uses: ./.github/actions/build-setup
 
       - name: Cut the release candidate
+        id: cut
         run: |
           set -euo pipefail
           CURRENT=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           NEXT=$(.github/scripts/compute-version.sh cut-rc "$CURRENT")
           echo "Cutting RC: $CURRENT -> $NEXT"
+          echo "next-version=$NEXT" >> "$GITHUB_OUTPUT"
 
           make version VERSION="$NEXT"
           git config user.name "Continuous Integration"
@@ -50,3 +56,14 @@ jobs:
 
           git push origin "HEAD:${GITHUB_REF_NAME}"
           git push origin "refs/tags/$NEXT"
+
+  publish:
+    needs: cut-rc
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/tag-publish.yml
+    with:
+      tag: ${{ needs.cut-rc.outputs.next-version }}
+    secrets: inherit
