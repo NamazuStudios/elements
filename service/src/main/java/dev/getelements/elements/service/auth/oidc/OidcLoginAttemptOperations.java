@@ -132,6 +132,15 @@ public class OidcLoginAttemptOperations {
 
     }
 
+    /**
+     * Polls a pending attempt by id. Returns {@code COMPLETE} with the session exactly once, on the poll that
+     * first observes completion; every subsequent poll for the same id returns {@code EXPIRED}. A non-mutating
+     * peek: a linking attempt that has become link-ready is rejected outright, since finalizing it here would
+     * mean trusting whoever presents {@code id} alone with the account-link mutation — see {@link #confirmLink}.
+     *
+     * @param id the opaque poll id
+     * @return the current status of the attempt
+     */
     public OidcLoginAttemptStatusResponse poll(final String id) {
 
         final var claimed = getOidcLoginAttemptDao().claimCompleteById(id);
@@ -207,6 +216,23 @@ public class OidcLoginAttemptOperations {
 
     }
 
+    /**
+     * Handles the provider's redirect callback: looks up the pending attempt by state, exchanges the code for an
+     * id_token, and validates it. For an anonymous attempt, builds and stores the session directly, exactly as
+     * before. For a linking attempt, deliberately does <em>not</em> perform the account-link mutation — this
+     * callback is always hit by an unauthenticated provider redirect with no way to verify it's talking to the
+     * same party that called {@link #begin(String, User)} — and instead persists the validated claims and marks
+     * the attempt {@link OidcLoginAttemptStatus#LINK_READY}, deferring the mutation to {@link #confirmLink}. Fails
+     * closed (marks the attempt FAILED) on any missing/expired/mismatched state, nonce mismatch, or exchange or
+     * validation failure; never throws for an expected failure mode, so the REST layer stays a thin dispatcher
+     * over the returned result.
+     *
+     * @param provider the provider identifier from the callback path
+     * @param code the authorization code from the provider, or {@code null} if the provider reported an error
+     * @param state the state value from the provider, matched against the pending attempt
+     * @param error the provider's {@code error} query parameter, or {@code null} on a normal code-bearing callback
+     * @return the outcome, including the caller-configured redirect URL for that outcome, if any
+     */
     public OidcLoginAttemptCallbackResult handleCallback(final String provider, final String code,
                                                           final String state, final String error) {
 
@@ -279,7 +305,7 @@ public class OidcLoginAttemptOperations {
             // Never log the code, id_token, or attempt id — only enough context to debug which provider/attempt failed.
             // Every expected failure mode is caught here so the REST layer never has to interpret an exception —
             // it only sees a plain failure result.
-            logger.debug("OIDC callback failed for provider {}", provider, ex);
+            logger.error("OIDC callback failed for provider {}", provider, ex);
             getOidcLoginAttemptDao().markFailed(state, "Login failed");
             return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
         }

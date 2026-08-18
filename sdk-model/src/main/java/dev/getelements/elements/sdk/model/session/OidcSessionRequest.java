@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /** Request to create a session using an OIDC (OpenID Connect) JWT token. */
+@Schema(description = "Validates a possessed id_token and returns the resulting session, either creating a new " +
+        "account or linking to/reusing an existing one.")
 public class OidcSessionRequest {
 
     /** Creates a new instance. */
