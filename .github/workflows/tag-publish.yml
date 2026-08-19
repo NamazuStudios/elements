@@ -17,11 +17,14 @@ name: Tag Publish
 #      automation (e.g. a manual `git push origin refs/tags/x.y.z`). The
 #      glob below is only a coarse pre-filter (GitHub Actions tag filters
 #      don't support real regex quantifiers) -- the guard job does the real
-#      validation, and deliberately excludes anything below 3.9.x so it
-#      never reacts to: the ~190 legacy `x.y.z-SNAPSHOT` tags already in
-#      this repo's history, or the ongoing real `3.8.x` release tags the
-#      still-running legacy Bitbucket `release/3.8` pipeline keeps
-#      depositing on this remote.
+#      validation, and deliberately excludes anything below 3.9.0 or below
+#      3.8.17 so it never reacts to the ~190 legacy `x.y.z-SNAPSHOT` tags
+#      already in this repo's history. The 3.8.17 floor (rather than
+#      excluding 3.8.x entirely) is deliberate: GitHub Actions now owns the
+#      3.8 release line starting at 3.8.17, backfilling what the retired
+#      Bitbucket `release/3.8` pipeline used to publish (which stopped at
+#      3.8.16) -- 3.8.0 through 3.8.16 stay excluded since those tags are
+#      historical and were already published for real by Bitbucket.
 
 on:
   push:
@@ -53,10 +56,11 @@ jobs:
         run: |
           echo "version=$TAG" >> "$GITHUB_OUTPUT"
 
-          if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.[0-9]+(-rc-[0-9]+)?$ ]]; then
+          if [[ "$TAG" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-rc-[0-9]+)?$ ]]; then
             MAJOR="${BASH_REMATCH[1]}"
             MINOR="${BASH_REMATCH[2]}"
-            if (( MAJOR > 3 || (MAJOR == 3 && MINOR >= 9) )); then
+            PATCH="${BASH_REMATCH[3]}"
+            if (( MAJOR > 3 || (MAJOR == 3 && MINOR >= 9) || (MAJOR == 3 && MINOR == 8 && PATCH >= 17) )); then
               echo "proceed=true" >> "$GITHUB_OUTPUT"
               if [[ "$TAG" == *-rc-* ]]; then
                 echo "is_release=false" >> "$GITHUB_OUTPUT"
@@ -69,7 +73,7 @@ jobs:
 
           echo "proceed=false" >> "$GITHUB_OUTPUT"
           echo "is_release=false" >> "$GITHUB_OUTPUT"
-          echo "Tag '$TAG' is not a >=3.9 release/rc version -- ignoring." >&2
+          echo "Tag '$TAG' is not a >=3.9 or >=3.8.17 release/rc version -- ignoring." >&2
 
   publish:
     needs: guard
