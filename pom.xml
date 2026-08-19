@@ -122,6 +122,7 @@
         <module>sdk-test-element-rs</module>
         <module>sdk-test-element-ws</module>
         <module>sdk-test-element-kt</module>
+        <module>sdk-test-element-mongo</module>
         <module>sdk-local</module>
         <module>sdk-local-test</module>
         <module>sdk-local-maven</module>
@@ -642,6 +643,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-test-element-kt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>sdk-test-element-mongo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

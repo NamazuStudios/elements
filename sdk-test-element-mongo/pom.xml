@@ -1,0 +1,229 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>dev.getelements.elements</groupId>
+        <artifactId>eci-elements</artifactId>
+        <version>3.9.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>sdk-test-element-mongo</artifactId>
+    <name>${project.artifactId}</name>
+    <version>3.9.0-SNAPSHOT</version>
+    <url>https://namazustudios.com</url>
+
+    <!--
+        Test-only Element that reproduces issue #40: it declares a Morphia entity + EntityRegistry so
+        that deploying, unloading, and redeploying it gives dev.getelements.elements.rest.test.MongoRedeployApiTest
+        two distinct Class objects for the same entity name ("test_redeploy_document") across the redeploy,
+        exactly like a real redeployed Element does. The test itself supplies the eager, long-lived
+        Datastore-holding consumer (mirroring the real-world eager-singleton DAO from the original report)
+        and drives Morphia's Mapper directly against whichever generation's Class object is currently loaded.
+    -->
+
+    <dependencies>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-dao</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-test-api</artifactId>
+            <classifier>${api.classifier}</classifier>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+            provided: sdk-mongo registers a PermittedPackages SPI exposing dev.morphia/com.mongodb/org.bson
+            to Elements, so the platform's own copy of the @Entity annotation (and other Morphia/driver
+            types) is visible through the isolated classloader's delegate. Bundling a second copy here
+            would give this Element's @Entity annotation a distinct Class identity from the one the
+            platform's own Mapper checks for, so Morphia would not recognize TestRedeployDocument as an
+            entity at all.
+        -->
+        <dependency>
+            <groupId>dev.morphia.morphia</groupId>
+            <artifactId>morphia-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <!--
+                This run of the maven-dependency-plugin builds the ELM file containing the Element formatted in
+                the specific layout the loader understands.
+            -->
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <!--
+                        Copies dependent artifacts carrying the "element-api" classifier that belong to this
+                        project's groupId into the "api" directory of the staging area. These are the API jars
+                        exported to other Elements.
+                    -->
+                    <execution>
+                        <id>elm-copy-api-deps</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${elm.element.dir}/api</outputDirectory>
+                            <includeGroupIds>${project.groupId}</includeGroupIds>
+                            <includeClassifiers>${api.classifier}</includeClassifiers>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
+                    <!--
+                        Copies all non-provided dependencies into the "lib" directory of the staging area.
+                        These are the runtime libraries bundled with the Element.
+                    -->
+                    <execution>
+                        <id>elm-copy-lib-deps</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${elm.element.dir}/lib</outputDirectory>
+                            <excludeScope>provided</excludeScope>
+                            <prependGroupId>true</prependGroupId>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!--
+                        Stages compiled classes and src/main/resources contents into the "classpath" directory.
+                        Runs in prepare-package so the staging area is complete before the archive is created.
+                    -->
+                    <execution>
+                        <id>elm-stage-classpath</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy todir="${elm.element.dir}/classpath" failonerror="false">
+                                    <fileset dir="${project.build.outputDirectory}" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                                <copy todir="${elm.element.dir}/classpath" failonerror="false">
+                                    <fileset dir="${basedir}/src/main/resources" erroronmissingdir="false" includes="**/*"/>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!--
+                        Writes the element manifest properties file into the root of the element directory.
+                        The loader reads this file to obtain version metadata and required builtin SPIs.
+                    -->
+                    <execution>
+                        <id>elm-write-manifest</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${elm.element.dir}" />
+                                <exec executable="git" outputproperty="git.revision" failifexecutionfails="false" errorproperty="git.error">
+                                    <arg value="rev-parse" />
+                                    <arg value="HEAD" />
+                                </exec>
+                                <property name="git.revision" value="UNKNOWN" />
+                                <echo file="${elm.element.dir}/dev.getelements.element.manifest.properties" append="false">
+Element-Version=${project.version}
+Element-Build-Time=${maven.build.timestamp}
+Element-Revision=${git.revision}
+Element-Builtin-Spis=${elm.builtin.spis}
+                                </echo>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!--
+                        Creates the .elm archive from the fully staged directory. Ensures all three top-level
+                        directories exist so the archive structure is always consistent.
+                    -->
+                    <execution>
+                        <id>elm-create-archive</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${elm.element.dir}/api"/>
+                                <mkdir dir="${elm.element.dir}/lib"/>
+                                <mkdir dir="${elm.element.dir}/classpath"/>
+                                <mkdir dir="${elm.element.dir}/static"/>
+                                <mkdir dir="${elm.element.dir}/ui"/>
+                                <zip destfile="${elm.staging.dir}.elm" basedir="${elm.staging.dir}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Attaches the .elm archive to the build so it is installed and deployed alongside
+                the standard jar artifact.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-elm</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${elm.staging.dir}.elm</file>
+                                    <type>elm</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+
+    <properties>
+        <elm.builtin.spis>DEFAULT</elm.builtin.spis>
+        <elm.staging.dir>${project.build.directory}/${project.groupId}.${project.artifactId}-${project.version}</elm.staging.dir>
+        <elm.element.dir>${elm.staging.dir}/${project.groupId}.${project.artifactId}</elm.element.dir>
+    </properties>
+
+</project>
