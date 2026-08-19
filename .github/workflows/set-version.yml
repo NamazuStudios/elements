@@ -1,0 +1,41 @@
+name: Set Version
+
+# Manual, runnable against any branch: pure version bookkeeping, wrapping
+# `make version VERSION=...`. No build, no tag, no publish. This is how
+# main's version gets advanced when starting a new release line, and
+# generally how any branch's version gets corrected on demand.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New version to set (e.g. 3.10.0-SNAPSHOT)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  set-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Set version
+        run: |
+          set -euo pipefail
+          git config user.name "Continuous Integration"
+          git config user.email "ci@getelements.dev"
+          make version VERSION="${{ inputs.version }}"
+          make COMMIT_MSG="[ci skip] Setting Version:" commit
+          git push origin "HEAD:${GITHUB_REF_NAME}"

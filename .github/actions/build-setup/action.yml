@@ -1,0 +1,53 @@
+name: Build setup
+description: >
+  Shared setup for workflows that build this reactor with Maven: JDK, Maven
+  cache, ~/.m2/settings.xml, and an optional GPG key import for artifact
+  signing. Does NOT check out the repository -- a local `uses: ./...` action
+  can't be resolved until the repo is already checked out, so every caller
+  must run its own `actions/checkout` step (with whatever ref/token/depth it
+  needs) before invoking this action, not after.
+
+inputs:
+  java-version:
+    description: JDK version to install
+    required: false
+    default: '21'
+  import-gpg:
+    description: Whether to import a GPG private key for artifact signing
+    required: false
+    default: 'false'
+  gpg-private-key:
+    description: ASCII-armored GPG private key, e.g. `gpg --export-secret-keys --armor <key-id>` (required when import-gpg is true)
+    required: false
+    default: ''
+
+outputs:
+  maven-version:
+    description: The reactor's current project.version
+    value: ${{ steps.maven-version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        java-version: ${{ inputs.java-version }}
+        distribution: temurin
+        cache: maven
+        # setup-java imports this directly via `gpg --import` -- it wants the
+        # raw ASCII-armored key text, not a base64-encoded version of it (see
+        # https://github.com/actions/setup-java#publishing-using-apache-maven).
+        # Passing '' when import-gpg is false is a no-op; setup-java only
+        # imports a key when this is non-empty.
+        gpg-private-key: ${{ inputs.import-gpg == 'true' && inputs.gpg-private-key || '' }}
+
+    - name: Install settings.xml
+      shell: bash
+      run: |
+        mkdir -p ~/.m2
+        cp settings.xml ~/.m2/settings.xml
+
+    - name: Evaluate project.version
+      id: maven-version
+      shell: bash
+      run: echo "version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"

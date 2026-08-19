@@ -1,0 +1,24 @@
+name: Branch Build
+
+# Every push to any branch (except release/*, which has its own dedicated
+# workflow with version-bump logic -- see release-branch-push.yml) gets a
+# complete build+test, Docker image build+push, and Javadoc/OpenAPI publish
+# via complete-build.yml. Only main also publishes Maven artifacts to the
+# GitHub Packages snapshot repo (see complete-build.yml for why that's not
+# every branch). main's version is never bumped by this workflow; that only
+# ever happens via the manual "Set Version" workflow.
+
+on:
+  push:
+    branches: [ '**', '!release/**' ]
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/complete-build.yml
+    with:
+      publish-packages: ${{ github.ref == 'refs/heads/main' }}
+    secrets: inherit

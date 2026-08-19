@@ -1,0 +1,92 @@
+name: Release
+
+# Manual-only: only valid when the release branch is currently sitting on a
+# release candidate (X.Y.Z-rc-N) -- "a release can only be made from a
+# release candidate". Drops the rc suffix (formal release: annotated tag,
+# which tag-publish.yml turns into a real GitHub Release), then immediately
+# re-enters RC mode for the next patch (X.Y.Z -> X.Y.(Z+1)-rc-1), which
+# itself gets fully built/tested/published too -- both tags pushed here get
+# their own call to tag-publish.yml (see its header for why this calls it
+# directly rather than relying on the tag pushes to trigger it, and why that
+# means this no longer needs a PAT). Run from the Actions UI against the
+# target release/* branch.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    outputs:
+      release-version: ${{ steps.release.outputs.release-version }}
+      next-version: ${{ steps.release.outputs.next-version }}
+    steps:
+      - name: Verify this is a release branch
+        run: |
+          if [[ "${GITHUB_REF_NAME}" != release/* ]]; then
+            echo "::error::Release can only be run against a release/* branch (got '${GITHUB_REF_NAME}')"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+
+      - name: Release, then re-enter RC mode for the next patch
+        id: release
+        run: |
+          set -euo pipefail
+          git config user.name "Continuous Integration"
+          git config user.email "ci@getelements.dev"
+
+          CURRENT=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          RELEASE=$(.github/scripts/compute-version.sh release "$CURRENT")
+          echo "Releasing: $CURRENT -> $RELEASE"
+          echo "release-version=$RELEASE" >> "$GITHUB_OUTPUT"
+
+          make version VERSION="$RELEASE"
+          make COMMIT_MSG="[ci skip] Release:" commit
+          git tag -a "$RELEASE" -m "Release $RELEASE"
+
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "refs/tags/$RELEASE"
+
+          NEXT=$(.github/scripts/compute-version.sh next-rc "$RELEASE")
+          echo "Re-entering RC mode: $RELEASE -> $NEXT"
+          echo "next-version=$NEXT" >> "$GITHUB_OUTPUT"
+
+          make version VERSION="$NEXT"
+          make COMMIT_MSG="[ci skip] Setting Next Version:" commit
+          make tag
+
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "refs/tags/$NEXT"
+
+  publish-release:
+    needs: release
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/tag-publish.yml
+    with:
+      tag: ${{ needs.release.outputs.release-version }}
+    secrets: inherit
+
+  publish-next-rc:
+    needs: release
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+    uses: ./.github/workflows/tag-publish.yml
+    with:
+      tag: ${{ needs.release.outputs.next-version }}
+    secrets: inherit

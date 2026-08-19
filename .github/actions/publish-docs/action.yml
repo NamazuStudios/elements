@@ -1,0 +1,115 @@
+name: Publish docs
+description: >
+  Aggregates Javadoc, grabs the built OpenAPI spec, and publishes both to
+  the namazu-apidocs S3 bucket under the "elements/<version>" prefix
+  (served at apidocs.namazustudios.com/elements/), regenerating the root
+  index and invalidating the CloudFront distribution in front of it. Used
+  for every rc/release tag AND for every main snapshot build (main is
+  perpetually the same version between release cuts, so its prefix is
+  simply overwritten in place each time -- still useful, just not
+  immutable the way an rc/release prefix is). Assumes the reactor has
+  already been built (so the OpenAPI spec and compiled classes for the
+  aggregate javadoc already exist).
+
+inputs:
+  version:
+    description: Version string to publish under (e.g. 3.9.0-rc-1, or 3.9.0-SNAPSHOT for main)
+    required: true
+  role-to-assume:
+    description: IAM role ARN to assume via OIDC for namazu-apidocs S3/CloudFront access
+    required: true
+  aws-region:
+    description: AWS region the namazu-apidocs S3 bucket lives in
+    required: true
+    default: us-east-1
+  s3-bucket:
+    description: S3 bucket to publish into
+    required: true
+    default: namazu-apidocs
+  s3-prefix:
+    description: Key prefix within the bucket to publish under
+    required: true
+    default: elements
+  cloudfront-distribution-id:
+    description: CloudFront distribution ID fronting the bucket, invalidated after publish
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+
+        # sdk-local-maven's dependency:copy-dependencies execution needs a
+        # sibling reactor module's *packaged* jar, but javadoc:aggregate's
+        # internal forked builds only run modules through `compile` -- so
+        # sdk-local-maven hard-fails (MDEP-187) if it's left in the reactor
+        # for this goal. Exclude it; it has no javadoc-worthy public API of
+        # its own anyway (it's a build-time helper for the SDK archetypes).
+        mvn --no-transfer-progress -B -q -pl '!sdk-local-maven' javadoc:aggregate
+
+        # The real aggregate lands at target/reports/apidocs off the repo
+        # root -- NOT found via a recursive search, since every module also
+        # has its OWN target/reports/apidocs from the routine per-module
+        # attach-javadocs (jar) execution that runs on every install/deploy.
+        # A recursive find non-deterministically matches one of those
+        # per-module directories instead of the real aggregate.
+        APIDOCS_DIR="target/reports/apidocs"
+        if [ ! -f "$APIDOCS_DIR/allclasses-index.html" ]; then
+          echo "::error::aggregated javadoc output not found at $APIDOCS_DIR"
+          exit 1
+        fi
+
+        rm -rf "/tmp/apidocs-publish/$VERSION"
+        mkdir -p "/tmp/apidocs-publish/$VERSION/javadoc"
+        cp -r "$APIDOCS_DIR"/. "/tmp/apidocs-publish/$VERSION/javadoc/"
+        cp rest-api/target/classes/META-INF/openapi.json "/tmp/apidocs-publish/$VERSION/openapi.json"
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        BUCKET: ${{ inputs.s3-bucket }}
+        PREFIX: ${{ inputs.s3-prefix }}
+      run: |
+        set -euo pipefail
+
+        aws s3 sync "/tmp/apidocs-publish/$VERSION" "s3://$BUCKET/$PREFIX/$VERSION" --delete
+
+        # Regenerate the root index by listing every version "directory"
+        # already published under this prefix (including the one just
+        # uploaded above), newest-looking version string first.
+        VERSIONS="$(aws s3api list-objects-v2 --bucket "$BUCKET" --prefix "$PREFIX/" --delimiter "/" \
+          --query 'CommonPrefixes[].Prefix' --output text \
+          | tr '\t' '\n' \
+          | sed -E "s#^$PREFIX/##; s#/\$##" \
+          | sort -rV)"
+
+        {
+          echo "<!doctype html><html><body><h1>Namazu Elements API Docs</h1><ul>"
+          for d in $VERSIONS; do
+            echo "<li><a href=\"$d/javadoc/\">$d</a> (<a href=\"$d/openapi.json\">openapi.json</a>)</li>"
+          done
+          echo "</ul></body></html>"
+        } > /tmp/apidocs-index.html
+
+        aws s3 cp /tmp/apidocs-index.html "s3://$BUCKET/$PREFIX/index.html" --content-type text/html
+
+    - name: Invalidate CloudFront cache
+      shell: bash
+      env:
+        PREFIX: ${{ inputs.s3-prefix }}
+        DISTRIBUTION_ID: ${{ inputs.cloudfront-distribution-id }}
+      run: |
+        set -euo pipefail
+        aws cloudfront create-invalidation \
+          --distribution-id "$DISTRIBUTION_ID" \
+          --paths "/$PREFIX/*"
