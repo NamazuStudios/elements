@@ -1215,13 +1215,20 @@
                 </configuration>
             </plugin>
             <!-- Resolves the ${revision} CI-friendly version placeholder into a concrete version in the
-                 POM that install/deploy actually publish, so external consumers never see the raw property. -->
+                 POM that install/deploy actually publish, so external consumers never see the raw property.
+                 updatePomFile is required, not just the default separate .flattened-pom.xml: for pom-packaging
+                 modules (sdk-bom, and this root aggregator itself), install/deploy read the pom file directly
+                 rather than through the attached-artifact mechanism flatten's setPomFile() trick relies on for
+                 jar packaging, so without this, sdk-bom's installed/published parent reference was left as the
+                 literal, unresolved "${revision}", breaking every external consumer that resolves it from a
+                 repository instead of building inside this reactor. -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>flatten-maven-plugin</artifactId>
                 <version>1.6.0</version>
                 <configuration>
                     <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                    <updatePomFile>true</updatePomFile>
                 </configuration>
                 <executions>
                     <execution>
