@@ -8,7 +8,7 @@
     <artifactId>eci-elements</artifactId>
 
     <name>Namazu Elements</name>
-    <version>3.9.0-rc-2</version>
+    <version>${revision}</version>
     <packaging>pom</packaging>
 
     <scm>
@@ -140,6 +140,7 @@
     </modules>
 
     <properties>
+        <revision>3.9.0-rc-2</revision>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>7.0.0</guice.version>
         <guice.bridge.version>3.0.6</guice.bridge.version>
@@ -1212,6 +1213,32 @@
                 <configuration>
                     <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
+            </plugin>
+            <!-- Resolves the ${revision} CI-friendly version placeholder into a concrete version in the
+                 POM that install/deploy actually publish, so external consumers never see the raw property. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- Surefire Plugin -->
             <plugin>

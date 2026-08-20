@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.9.0-rc-2</version>
+        <version>${revision}</version>
     </parent>
 
     <artifactId>rt-jersey-guice</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.9.0-rc-2</version>
+    <version>${revision}</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>

@@ -45,11 +45,20 @@ docker:
 docker_hub:
 	make -C docker-config hub
 
+# patch/release compute the next version the normal Maven way (letting versions:set's own
+# nextSnapshot/removeSnapshot semver logic decide it), then discard the literal per-module rewrite
+# that versions:set always produces and re-apply just the computed value to the single <revision>
+# property via versions:set-property -- versions:set does not honor a property-based version even
+# with -DprocessAllModules=true, it always writes a literal version into every module.
 patch:
-	mvn versions:set -DprocessAllModules=true -DnextSnapshot=true
+	@NEXT=$$(mvn -q versions:set -DnextSnapshot=true > /dev/null && mvn -q help:evaluate -Dexpression=project.version -DforceStdout) && \
+	find . -path "*/target" -prune -o -name "pom.xml" -exec git checkout {} \; && \
+	mvn versions:set-property -Dproperty=revision -DnewVersion=$$NEXT
 
 release:
-	mvn versions:set -DprocessAllModules=true -DremoveSnapshot=true
+	@NEXT=$$(mvn -q versions:set -DremoveSnapshot=true > /dev/null && mvn -q help:evaluate -Dexpression=project.version -DforceStdout) && \
+	find . -path "*/target" -prune -o -name "pom.xml" -exec git checkout {} \; && \
+	mvn versions:set-property -Dproperty=revision -DnewVersion=$$NEXT
 
 version:
 
@@ -57,7 +66,7 @@ ifndef VERSION
 	$(error VERSION is not set)
 endif
 
-	mvn versions:set -DprocessAllModules=true -DnewVersion=$(VERSION)
+	mvn versions:set-property -Dproperty=revision -DnewVersion=$(VERSION)
 
 tag: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 tag:

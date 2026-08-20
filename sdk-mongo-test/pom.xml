@@ -6,12 +6,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.9.0-rc-2</version>
+        <version>${revision}</version>
     </parent>
 
     <groupId>dev.getelements.elements</groupId>
     <artifactId>sdk-mongo-test</artifactId>
-    <version>3.9.0-rc-2</version>
+    <version>${revision}</version>
     <name>sdk-mongo-test</name>
 
     <dependencies>
