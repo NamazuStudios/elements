@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.dao.mongo.mission.MongoScheduleProgressDao;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.goods.ItemCategory;
@@ -10,6 +11,7 @@ import dev.getelements.elements.sdk.model.mission.Schedule;
 import dev.getelements.elements.sdk.model.mission.ScheduleEvent;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
+import jakarta.inject.Named;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -20,14 +22,36 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ProgressDao.PROGRESS_CREATED;
+import static dev.getelements.elements.sdk.dao.ProgressDao.PROGRESS_DELETED;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoScheduleProgressDaoTest {
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final List<Progress> createdProgresses = new CopyOnWriteArrayList<>();
+
+    private final List<Progress> deletedProgresses = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupProgressEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case PROGRESS_CREATED -> createdProgresses.add(ev.getEventArgument(0, Progress.class));
+                case PROGRESS_DELETED -> deletedProgresses.add(ev.getEventArgument(0, Progress.class));
+            }
+        });
+    }
 
     private final int TEST_USER_COUNT = 5;
 
@@ -177,6 +201,11 @@ public class MongoScheduleProgressDaoTest {
         progresses.forEach(progress -> getProgressDao().getProgress(progress.getId()));
         checkScheduleEvent(scheduleEvent, profile);
 
+        progresses.forEach(progress -> assertTrue(
+                createdProgresses.stream().anyMatch(p -> p.getId().equals(progress.getId())),
+                "Expected PROGRESS_CREATED event for progress: " + progress.getId()
+        ));
+
     }
 
     @Test(dependsOnMethods = "activateSingleEvent", dataProvider = "profilesAndScheduleEvents")
@@ -203,6 +232,11 @@ public class MongoScheduleProgressDaoTest {
         final var scheduleEvents = scheduleEventDao.getAllScheduleEvents(schedule.getId());
         scheduleEvents.forEach(scheduleEvent -> checkScheduleEvent(scheduleEvent, profile));
         progresses.forEach(progress -> getProgressDao().getProgress(progress.getId()));
+
+        progresses.forEach(progress -> assertTrue(
+                createdProgresses.stream().anyMatch(p -> p.getId().equals(progress.getId())),
+                "Expected PROGRESS_CREATED event for progress: " + progress.getId()
+        ));
 
     }
 
@@ -258,6 +292,11 @@ public class MongoScheduleProgressDaoTest {
             );
 
         });
+
+        progresses.forEach(progress -> assertTrue(
+                deletedProgresses.stream().anyMatch(p -> p.getId().equals(progress.getId())),
+                "Expected PROGRESS_DELETED event for progress: " + progress.getId()
+        ));
 
         progresses.forEach(p -> {
 

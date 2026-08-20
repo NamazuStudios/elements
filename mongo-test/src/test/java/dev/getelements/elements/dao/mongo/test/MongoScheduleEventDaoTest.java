@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ScheduleDao;
 import dev.getelements.elements.sdk.dao.ScheduleEventDao;
 import dev.getelements.elements.sdk.model.exception.mission.ScheduleEventNotFoundException;
@@ -7,6 +8,7 @@ import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.model.mission.Schedule;
 import dev.getelements.elements.sdk.model.mission.ScheduleEvent;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
+import jakarta.inject.Named;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -16,6 +18,8 @@ import jakarta.inject.Inject;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ScheduleEventDao.*;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.FUNGIBLE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -24,6 +28,27 @@ import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoScheduleEventDaoTest {
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final List<ScheduleEvent> createdScheduleEvents = new CopyOnWriteArrayList<>();
+
+    private final List<ScheduleEvent> updatedScheduleEvents = new CopyOnWriteArrayList<>();
+
+    private final List<ScheduleEvent> deletedScheduleEvents = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupScheduleEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case SCHEDULE_EVENT_CREATED -> createdScheduleEvents.add(ev.getEventArgument(0, ScheduleEvent.class));
+                case SCHEDULE_EVENT_UPDATED -> updatedScheduleEvents.add(ev.getEventArgument(0, ScheduleEvent.class));
+                case SCHEDULE_EVENT_DELETED -> deletedScheduleEvents.add(ev.getEventArgument(0, ScheduleEvent.class));
+            }
+        });
+    }
 
     private Schedule schedule;
 
@@ -100,6 +125,11 @@ public class MongoScheduleEventDaoTest {
         final var created = getScheduleEventDao().createScheduleEvent(event);
         scheduleEvents.add(created);
 
+        assertTrue(
+                createdScheduleEvents.stream().anyMatch(e -> e.getId().equals(created.getId())),
+                "Expected SCHEDULE_EVENT_CREATED event for schedule event: " + created.getId()
+        );
+
     }
 
     @Test(groups = "update", dataProvider = "allEventIndexesAndDateBounds", dependsOnGroups = "create")
@@ -121,6 +151,11 @@ public class MongoScheduleEventDaoTest {
         assertEquals(updated.getEnd(), end);
 
         scheduleEvents.set(index, updated);
+
+        assertTrue(
+                updatedScheduleEvents.stream().anyMatch(e -> e.getId().equals(updated.getId())),
+                "Expected SCHEDULE_EVENT_UPDATED event for schedule event: " + updated.getId()
+        );
 
     }
 
@@ -185,6 +220,11 @@ public class MongoScheduleEventDaoTest {
     @Test(groups = "delete", dataProvider = "allEvents", dependsOnGroups = "fetch")
     public void deleteEvent(final ScheduleEvent scheduleEvent) {
         getScheduleEventDao().deleteScheduleEvent(scheduleEvent.getSchedule().getId(), scheduleEvent.getId());
+
+        assertTrue(
+                deletedScheduleEvents.stream().anyMatch(e -> e.getId().equals(scheduleEvent.getId())),
+                "Expected SCHEDULE_EVENT_DELETED event for schedule event: " + scheduleEvent.getId()
+        );
     }
 
     @Test(

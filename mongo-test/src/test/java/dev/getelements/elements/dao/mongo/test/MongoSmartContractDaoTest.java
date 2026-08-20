@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.SmartContractDao;
 import dev.getelements.elements.sdk.dao.VaultDao;
 import dev.getelements.elements.sdk.dao.WalletDao;
@@ -21,15 +22,19 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.dao.mongo.test.MongoWalletDaoTest.randomKey;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.SmartContractDao.*;
 import static dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static dev.getelements.elements.sdk.model.user.User.Level.SUPERUSER;
 import static java.lang.String.format;
@@ -50,6 +55,10 @@ public class MongoSmartContractDaoTest {
 
     private UserTestFactory userTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private User adminUser;
 
     private Vault adminVault;
@@ -57,6 +66,23 @@ public class MongoSmartContractDaoTest {
     private List<Wallet> wallets;
 
     private final Map<String, SmartContract> smartContracts = new ConcurrentHashMap<>();
+
+    private final List<SmartContract> createdContracts = new CopyOnWriteArrayList<>();
+
+    private final List<SmartContract> updatedContracts = new CopyOnWriteArrayList<>();
+
+    private final List<SmartContract> deletedContracts = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case SMART_CONTRACT_CREATED -> createdContracts.add(ev.getEventArgument(0, SmartContract.class));
+                case SMART_CONTRACT_UPDATED -> updatedContracts.add(ev.getEventArgument(0, SmartContract.class));
+                case SMART_CONTRACT_DELETED -> deletedContracts.add(ev.getEventArgument(0, SmartContract.class));
+            }
+        });
+    }
 
     @DataProvider
     public Object[][] testContractNames() {
@@ -170,6 +196,11 @@ public class MongoSmartContractDaoTest {
 
         smartContracts.put(created.getId(), created);
 
+        assertTrue(
+                createdContracts.stream().anyMatch(c -> c.getId().equals(created.getId())),
+                "Expected SMART_CONTRACT_CREATED event for: " + created.getId()
+        );
+
     }
 
     @Test(dataProvider = "smartContracts", groups = "update", dependsOnGroups = "create")
@@ -199,6 +230,11 @@ public class MongoSmartContractDaoTest {
 
         final var old = smartContracts.put(updated.getId(), updated);
         assertNotNull(old);
+
+        assertTrue(
+                updatedContracts.stream().anyMatch(c -> c.getId().equals(updated.getId())),
+                "Expected SMART_CONTRACT_UPDATED event for: " + updated.getId()
+        );
 
     }
 
@@ -257,6 +293,11 @@ public class MongoSmartContractDaoTest {
     @Test(dataProvider = "smartContracts", groups = "delete", dependsOnGroups = "read")
     public void deleteContract(final SmartContract smartContract) {
         getUnderTest().deleteContract(smartContract.getId());
+
+        assertTrue(
+                deletedContracts.stream().anyMatch(c -> c.getId().equals(smartContract.getId())),
+                "Expected SMART_CONTRACT_DELETED event for: " + smartContract.getId()
+        );
     }
 
     @Test(dataProvider = "smartContracts",

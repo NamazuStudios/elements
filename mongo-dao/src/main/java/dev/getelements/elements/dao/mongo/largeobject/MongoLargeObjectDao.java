@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.largeobject;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.largeobject.MongoLargeObject;
@@ -29,6 +30,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import jakarta.inject.Inject;
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -41,6 +43,8 @@ public class MongoLargeObjectDao implements LargeObjectDao {
     private MongoDBUtils mongoDBUtils;
     private Datastore datastore;
     private MapperRegistry dozerMapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     public MongoLargeObjectDao() {
     }
@@ -100,7 +104,14 @@ public class MongoLargeObjectDao implements LargeObjectDao {
             throw new DuplicateException(e);
         }
 
-        return getLargeObject(mongoLargeObject.getId().toHexString());
+        final var createdLargeObject = getLargeObject(mongoLargeObject.getId().toHexString());
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdLargeObject)
+                .named(LARGE_OBJECT_CREATED)
+                .build());
+
+        return createdLargeObject;
     }
 
     @Override
@@ -123,7 +134,18 @@ public class MongoLargeObjectDao implements LargeObjectDao {
                 )
         );
 
-        return transform(mongoLargeObject);
+        if (mongoLargeObject == null) {
+            throw new NotFoundException("LargeObject not found: " + largeObject.getId());
+        }
+
+        final var updatedLargeObject = transform(mongoLargeObject);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedLargeObject)
+                .named(LARGE_OBJECT_UPDATED)
+                .build());
+
+        return updatedLargeObject;
     }
 
     //TODO: flag it as delete with exp date (in future)
@@ -136,12 +158,21 @@ public class MongoLargeObjectDao implements LargeObjectDao {
             eq("_id", new ObjectId(objectId))
         ));
 
+        final var existing = query.first();
+
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("LargeObject not found: " + objectId);
         } else if (deleteResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(transform(existing))
+                    .named(LARGE_OBJECT_DELETED)
+                    .build());
         }
 
     }
@@ -249,5 +280,14 @@ public class MongoLargeObjectDao implements LargeObjectDao {
     @Inject
     public void setDozerMapper(MapperRegistry dozerMapperRegistry) {
         this.dozerMapperRegistry = dozerMapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

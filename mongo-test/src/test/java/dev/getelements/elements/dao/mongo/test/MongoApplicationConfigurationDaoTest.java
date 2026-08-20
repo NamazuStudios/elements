@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -7,6 +8,7 @@ import dev.getelements.elements.sdk.model.application.ApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationConfigurationNotFoundException;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -15,11 +17,14 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntSupplier;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ApplicationConfigurationDao.*;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
 
@@ -36,9 +41,33 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
     @Inject
     protected ApplicationConfigurationDao applicationConfigurationDao;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     protected Application application;
 
     protected final AtomicInteger counter = new AtomicInteger();
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case APPLICATION_CONFIGURATION_CREATED ->
+                        createdEventIds.add(ev.getEventArgument(0, ApplicationConfiguration.class).getId());
+                case APPLICATION_CONFIGURATION_UPDATED ->
+                        updatedEventIds.add(ev.getEventArgument(0, ApplicationConfiguration.class).getId());
+                case APPLICATION_CONFIGURATION_DELETED ->
+                        deletedEventIds.add(ev.getEventArgument(0, ApplicationConfiguration.class).getId());
+            }
+        });
+    }
 
     protected abstract Class<UnderTestT> getTestType();
 
@@ -181,6 +210,9 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
 
         intermediates.put(created.getId(), created);
 
+        assertTrue(createdEventIds.contains(created.getId()),
+                "Expected APPLICATION_CONFIGURATION_CREATED event for " + created.getId());
+
     }
 
     @Test(
@@ -222,6 +254,9 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
         assertEquals(updated.getType(), config.getType(), "Type fields are not equal");
         assertEquals(updated.getParent(), config.getParent(), "Parent fields are not equal");
         intermediates.put(intermediate.getId(), updated);
+
+        assertTrue(updatedEventIds.contains(updated.getId()),
+                "Expected APPLICATION_CONFIGURATION_UPDATED event for " + updated.getId());
 
     }
 
@@ -276,11 +311,17 @@ public abstract class MongoApplicationConfigurationDaoTest<UnderTestT extends Ap
     )
     public void testDelete(final String applicationScope,
                            final String applicationConfigurationScope) {
+
+        final var sizeBefore = deletedEventIds.size();
+
         applicationConfigurationDao.deleteApplicationConfiguration(
                 getTestType(),
                 applicationScope,
                 applicationConfigurationScope
         );
+
+        assertTrue(deletedEventIds.size() > sizeBefore,
+                "Expected APPLICATION_CONFIGURATION_DELETED event to fire for " + applicationConfigurationScope);
     }
 
     @Test(

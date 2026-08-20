@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.largeobject.MongoLargeObjectDao;
@@ -31,6 +32,7 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -65,6 +67,8 @@ public class MongoProfileDao implements ProfileDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
@@ -353,7 +357,14 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("application not found: " + profile.getId());
         }
 
-        return transform(mongoProfile);
+        final var updatedProfile = transform(mongoProfile);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedProfile)
+                .named(PROFILE_UPDATED)
+                .build());
+
+        return updatedProfile;
 
     }
 
@@ -394,7 +405,14 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("application not found: " + objectId);
         }
 
-        return transform(mongoProfile);
+        final var updatedProfile = transform(mongoProfile);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedProfile)
+                .named(PROFILE_UPDATED)
+                .build());
+
+        return updatedProfile;
 
     }
 
@@ -440,7 +458,14 @@ public class MongoProfileDao implements ProfileDao {
             throw new ProfileNotFoundException("profile not found: " + profile.getId());
         }
 
-        return transform(mongoProfile);
+        final var createdProfile = transform(mongoProfile);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdProfile)
+                .named(PROFILE_CREATED)
+                .build());
+
+        return createdProfile;
 
     }
 
@@ -477,7 +502,14 @@ public class MongoProfileDao implements ProfileDao {
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
-        return transform(mongoProfile);
+        final var createdProfile = transform(mongoProfile);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdProfile)
+                .named(PROFILE_CREATED)
+                .build());
+
+        return createdProfile;
 
     }
 
@@ -527,7 +559,14 @@ public class MongoProfileDao implements ProfileDao {
 
         getDatastore().insert(mongoProfileSlot);
 
-        return transform(mongoProfile);
+        final var createdProfile = transform(mongoProfile);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdProfile)
+                .named(PROFILE_CREATED)
+                .build());
+
+        return createdProfile;
 
     }
 
@@ -560,12 +599,17 @@ public class MongoProfileDao implements ProfileDao {
         final var builder = new UpdateBuilder().with(set("active", false));
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds ->
-            builder.execute(query, new ModifyOptions().upsert(false))
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + profileId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(transform(mongoProfile))
+                .named(PROFILE_DELETED)
+                .build());
 
     }
 
@@ -675,6 +719,15 @@ public class MongoProfileDao implements ProfileDao {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

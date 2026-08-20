@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.goods.ItemCategory;
@@ -7,12 +8,17 @@ import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
 import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
 import dev.getelements.elements.sdk.model.user.User;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ItemLedgerDao.ITEM_LEDGER_ENTRY_CREATED;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -30,6 +36,21 @@ public class MongoItemLedgerDaoTest {
 
     /** A synthetic inventory-item ID shared across sequential tests. */
     private String testInventoryItemId;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdEntryIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            if (ITEM_LEDGER_ENTRY_CREATED.equals(ev.getEventName())) {
+                createdEntryIds.add(ev.getEventArgument(0, ItemLedgerEntry.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void setup() {
@@ -53,6 +74,7 @@ public class MongoItemLedgerDaoTest {
         final var persisted = getItemLedgerDao().createLedgerEntry(entry);
 
         assertNotNull(persisted.getId());
+        assertTrue(createdEntryIds.contains(persisted.getId()), "Expected ITEM_LEDGER_ENTRY_CREATED event for " + persisted.getId());
         assertEquals(persisted.getInventoryItemId(), testInventoryItemId);
         assertEquals(persisted.getItemCategory(), ItemCategory.FUNGIBLE);
         assertEquals(persisted.getItemId(), testItem.getId());

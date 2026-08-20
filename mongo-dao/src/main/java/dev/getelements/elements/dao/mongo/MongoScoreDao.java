@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.MongoCommandException;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ScoreDao;
 import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.dao.mongo.model.MongoScoreId;
@@ -16,6 +17,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.sql.Timestamp;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.model.leaderboard.Leaderboard.TimeStrategyType.EPOCHAL;
@@ -35,6 +37,8 @@ public class MongoScoreDao implements ScoreDao {
     private MapperRegistry beanMapperRegistry;
 
     private MongoDBUtils mongoDBUtils;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Score createOrUpdateScore(final String leaderboardNameOrId, final Score score) {
@@ -87,7 +91,14 @@ public class MongoScoreDao implements ScoreDao {
                 .returnDocument(AFTER)
             );
 
-            return getBeanMapper().map(result, Score.class);
+            final var savedScore = getBeanMapper().map(result, Score.class);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(savedScore)
+                    .named(SCORE_CREATED_OR_UPDATED)
+                    .build());
+
+            return savedScore;
 
         } catch (MongoCommandException ex) {
 
@@ -163,6 +174,15 @@ public class MongoScoreDao implements ScoreDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

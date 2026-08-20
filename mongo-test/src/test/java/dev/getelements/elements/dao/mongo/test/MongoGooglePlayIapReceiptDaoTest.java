@@ -1,11 +1,13 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import static dev.getelements.elements.sdk.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_PURCHASED;
+import jakarta.inject.Named;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -14,6 +16,12 @@ import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_CREATED;
+import static dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_DELETED;
 import static java.lang.System.currentTimeMillis;
 import static org.testng.Assert.*;
 
@@ -29,9 +37,31 @@ public class MongoGooglePlayIapReceiptDaoTest {
 
     private UserTestFactory userTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdOrderIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedOrderIds = ConcurrentHashMap.newKeySet();
+
     @BeforeClass
     public void createTestUser() {
         testUser = getUserTestFactory().createTestUser();
+    }
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case GOOGLE_PLAY_IAP_RECEIPT_CREATED -> createdOrderIds.add(
+                        ev.getEventArgument(0, GooglePlayIapReceipt.class).getOrderId()
+                );
+                case GOOGLE_PLAY_IAP_RECEIPT_DELETED -> deletedOrderIds.add(
+                        ev.getEventArgument(0, GooglePlayIapReceipt.class).getOrderId()
+                );
+            }
+        });
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
@@ -65,6 +95,11 @@ public class MongoGooglePlayIapReceiptDaoTest {
         // TODO: this fails for some unknown reason using mvn, possibly due to duplicate times running the test
         //assertEquals(googlePlayIapReceipt.getPurchaseTimeMillis(), resultGooglePlayIapReceipt.getPurchaseTimeMillis());
         assertEquals(googlePlayIapReceipt.getPurchaseType(), resultGooglePlayIapReceipt.getPurchaseType());
+
+        assertTrue(
+                createdOrderIds.contains(googlePlayIapReceipt.getOrderId()),
+                "Expected " + GOOGLE_PLAY_IAP_RECEIPT_CREATED + " event for " + googlePlayIapReceipt.getOrderId()
+        );
     }
 
     @DataProvider
@@ -129,6 +164,11 @@ public class MongoGooglePlayIapReceiptDaoTest {
             })
     public void testDeleteGooglePlayIapReceipt(final GooglePlayIapReceipt googlePlayIapReceipt) {
         getGooglePlayIapReceiptDao().deleteGooglePlayIapReceipt(googlePlayIapReceipt.getOrderId());
+
+        assertTrue(
+                deletedOrderIds.contains(googlePlayIapReceipt.getOrderId()),
+                "Expected " + GOOGLE_PLAY_IAP_RECEIPT_DELETED + " event for " + googlePlayIapReceipt.getOrderId()
+        );
 
         try {
             final GooglePlayIapReceipt resultGooglePlayIapReceipt =

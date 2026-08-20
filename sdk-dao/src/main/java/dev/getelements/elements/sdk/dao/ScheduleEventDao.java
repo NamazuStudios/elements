@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.exception.mission.ScheduleEventNotFoun
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Schedule;
 import dev.getelements.elements.sdk.model.mission.ScheduleEvent;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.List;
@@ -15,7 +16,43 @@ import static java.lang.System.currentTimeMillis;
  * Manges {@link ScheduleEvent} instances within the database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_CREATED,
+        parameters = ScheduleEvent.class,
+        description = "Called when a schedule event was created."
+)
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_CREATED,
+        parameters = {ScheduleEvent.class, Transaction.class},
+        description = "Called when a schedule event was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_UPDATED,
+        parameters = ScheduleEvent.class,
+        description = "Called when a schedule event was updated."
+)
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_UPDATED,
+        parameters = {ScheduleEvent.class, Transaction.class},
+        description = "Called when a schedule event was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_DELETED,
+        parameters = ScheduleEvent.class,
+        description = "Called when a schedule event was deleted."
+)
+@ElementEventProducer(
+        value = ScheduleEventDao.SCHEDULE_EVENT_DELETED,
+        parameters = {ScheduleEvent.class, Transaction.class},
+        description = "Called when a schedule event was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ScheduleEventDao {
+
+    String SCHEDULE_EVENT_CREATED = "dev.getelements.elements.sdk.model.dao.schedule.event.created";
+
+    String SCHEDULE_EVENT_UPDATED = "dev.getelements.elements.sdk.model.dao.schedule.event.updated";
+
+    String SCHEDULE_EVENT_DELETED = "dev.getelements.elements.sdk.model.dao.schedule.event.deleted";
 
     /**
      * Creates a new {@link ScheduleEvent}.

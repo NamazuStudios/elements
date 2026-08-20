@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
@@ -9,7 +10,43 @@ import dev.getelements.elements.sdk.model.goods.ProductBundle;
 import java.util.List;
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_CREATED,
+        parameters = ProductBundle.class,
+        description = "Called when a new product bundle is created."
+)
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_CREATED,
+        parameters = {ProductBundle.class, Transaction.class},
+        description = "Called when a new product bundle is created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_UPDATED,
+        parameters = ProductBundle.class,
+        description = "Called when a product bundle is updated."
+)
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_UPDATED,
+        parameters = {ProductBundle.class, Transaction.class},
+        description = "Called when a product bundle is updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_DELETED,
+        parameters = ProductBundle.class,
+        description = "Called when a product bundle is deleted."
+)
+@ElementEventProducer(
+        value = ProductBundleDao.PRODUCT_BUNDLE_DELETED,
+        parameters = {ProductBundle.class, Transaction.class},
+        description = "Called when a product bundle is deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ProductBundleDao {
+
+    String PRODUCT_BUNDLE_CREATED = "dev.getelements.elements.sdk.model.dao.productbundle.created";
+
+    String PRODUCT_BUNDLE_UPDATED = "dev.getelements.elements.sdk.model.dao.productbundle.updated";
+
+    String PRODUCT_BUNDLE_DELETED = "dev.getelements.elements.sdk.model.dao.productbundle.deleted";
 
     /**
      * Returns all {@link ProductBundle} records within the given range.

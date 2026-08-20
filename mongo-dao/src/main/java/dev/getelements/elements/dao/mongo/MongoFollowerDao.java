@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.FollowerDao;
 import dev.getelements.elements.dao.mongo.model.MongoFollower;
 import dev.getelements.elements.dao.mongo.model.MongoFollowerId;
@@ -16,6 +17,8 @@ import dev.morphia.aggregation.expressions.ComparisonExpressions;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
+
+import java.util.function.Consumer;
 
 import static dev.morphia.aggregation.expressions.Expressions.field;
 import static dev.morphia.aggregation.expressions.Expressions.value;
@@ -35,6 +38,8 @@ public class MongoFollowerDao implements FollowerDao {
     private MapperRegistry dozerMapperRegistry;
 
     private MongoProfileDao mongoProfileDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Profile> getFollowersForProfile(final String profileId,
@@ -129,6 +134,13 @@ public class MongoFollowerDao implements FollowerDao {
 
         getMongoDBUtils().performV(ds -> getDatastore().insert(mongoFollower));
 
+        final var followedProfile = getDozerMapper().map(followed, Profile.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(followedProfile)
+                .named(FOLLOWER_CREATED)
+                .build());
+
     }
 
     @Override
@@ -140,6 +152,12 @@ public class MongoFollowerDao implements FollowerDao {
 
         query.filter(eq("_id", mongoFollowerId));
 
+        final var existing = query.first();
+
+        if (existing == null) {
+            throw new NotFoundException("Follower not found: " + profileToUnfollowId);
+        }
+
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0) {
@@ -147,6 +165,13 @@ public class MongoFollowerDao implements FollowerDao {
         } else if (result.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
+
+        final var unfollowedProfile = getDozerMapper().map(existing.getFollowedProfile(), Profile.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(unfollowedProfile)
+                .named(FOLLOWER_DELETED)
+                .build());
 
     }
 
@@ -184,6 +209,15 @@ public class MongoFollowerDao implements FollowerDao {
     @Inject
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

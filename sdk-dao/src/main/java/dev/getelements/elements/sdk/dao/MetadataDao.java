@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
@@ -13,7 +14,43 @@ import java.util.Optional;
  * This is the MetadataDao which is used to create, update, and retrieve metadata objects in the database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = MetadataDao.METADATA_CREATED,
+        parameters = Metadata.class,
+        description = "Called when metadata was created."
+)
+@ElementEventProducer(
+        value = MetadataDao.METADATA_CREATED,
+        parameters = {Metadata.class, Transaction.class},
+        description = "Called when metadata was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MetadataDao.METADATA_UPDATED,
+        parameters = Metadata.class,
+        description = "Called when metadata was updated."
+)
+@ElementEventProducer(
+        value = MetadataDao.METADATA_UPDATED,
+        parameters = {Metadata.class, Transaction.class},
+        description = "Called when metadata was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MetadataDao.METADATA_DELETED,
+        parameters = Metadata.class,
+        description = "Called when metadata was soft-deleted."
+)
+@ElementEventProducer(
+        value = MetadataDao.METADATA_DELETED,
+        parameters = {Metadata.class, Transaction.class},
+        description = "Called when metadata was soft-deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface MetadataDao {
+
+    String METADATA_CREATED = "dev.getelements.elements.sdk.model.dao.metadata.created";
+
+    String METADATA_UPDATED = "dev.getelements.elements.sdk.model.dao.metadata.updated";
+
+    String METADATA_DELETED = "dev.getelements.elements.sdk.model.dao.metadata.deleted";
 
     /**
      * Lists all {@link Metadata} instances with the specified pagination constraints.

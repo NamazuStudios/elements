@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -12,7 +13,31 @@ import dev.getelements.elements.sdk.model.profile.Profile;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = MatchDao.MATCH_CREATED,
+        parameters = Match.class,
+        description = "Called when a match was created."
+)
+@ElementEventProducer(
+        value = MatchDao.MATCH_CREATED,
+        parameters = {Match.class, Transaction.class},
+        description = "Called when a match was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MatchDao.MATCH_DELETED,
+        parameters = Match.class,
+        description = "Called when a match was deleted."
+)
+@ElementEventProducer(
+        value = MatchDao.MATCH_DELETED,
+        parameters = {Match.class, Transaction.class},
+        description = "Called when a match was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface MatchDao {
+
+    String MATCH_CREATED = "dev.getelements.elements.sdk.model.dao.match.created";
+
+    String MATCH_DELETED = "dev.getelements.elements.sdk.model.dao.match.deleted";
 
     /**
      * Fetches a {@link Match} with the given profile ID, and match ID.  If no such

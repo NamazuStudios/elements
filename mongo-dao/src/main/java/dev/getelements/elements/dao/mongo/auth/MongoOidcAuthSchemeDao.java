@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.auth;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -17,6 +18,7 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
@@ -32,6 +34,8 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
     private MapperRegistry beanMapperRegistry;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<OidcAuthScheme> getAuthSchemes(final int offset,
@@ -79,7 +83,14 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
         getValidationHelper().validateModel(authScheme, ValidationGroups.Insert.class);
         final var mongoOidcAuthScheme = getBeanMapper().map(authScheme, MongoOidcAuthScheme.class);
         final var result = getMongoDBUtils().perform(ds -> getDatastore().save(mongoOidcAuthScheme));
-        return transform(result);
+        final var created = transform(result);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(created)
+                .named(OIDC_AUTH_SCHEME_CREATED)
+                .build());
+
+        return created;
     }
 
     @Override
@@ -110,7 +121,14 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authScheme.getId());
         }
 
-        return transform(mongoOidcAuthScheme);
+        final var updated = transform(mongoOidcAuthScheme);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(OIDC_AUTH_SCHEME_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -136,6 +154,11 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
         if (mongoOidcAuthScheme == null) {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(transform(mongoOidcAuthScheme))
+                .named(OIDC_AUTH_SCHEME_DELETED)
+                .build());
 
     }
 
@@ -177,6 +200,15 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

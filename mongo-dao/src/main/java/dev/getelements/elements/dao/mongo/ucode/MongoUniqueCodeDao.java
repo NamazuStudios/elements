@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UniqueCodeDao;
 import dev.getelements.elements.sdk.model.exception.TooBusyException;
 import dev.getelements.elements.sdk.model.ucode.UniqueCode;
@@ -18,6 +19,7 @@ import jakarta.inject.Inject;
 
 import java.sql.Timestamp;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.gt;
@@ -38,9 +40,20 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
 
     private UniqueCodeGenerator uniqueCodeGenerator;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public UniqueCode generateCode(final GenerationParameters parameters) {
-        return getMapperRegistry().map(generateMongoCode(parameters), UniqueCode.class);
+
+        final var generatedCode = getMapperRegistry().map(generateMongoCode(parameters), UniqueCode.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(generatedCode)
+                .named(UNIQUE_CODE_CREATED)
+                .build());
+
+        return generatedCode;
+
     }
 
     public MongoUniqueCode generateMongoCode(final GenerationParameters parameters) {
@@ -108,7 +121,17 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
                             .with(set("expiry", expiry))
                             .execute(query, new UpdateOptions());
 
-                    return updates.getModifiedCount() > 0;
+                    final var success = updates.getModifiedCount() > 0;
+
+                    if (success) {
+                        mc.setExpiry(expiry);
+                        getEventPublisher().accept(Event.builder()
+                                .argument(getMapperRegistry().map(mc, UniqueCode.class))
+                                .named(UNIQUE_CODE_UPDATED)
+                                .build());
+                    }
+
+                    return success;
 
                 })
                 .orElse(false);
@@ -131,7 +154,18 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
                             .with(set("active", false))
                             .execute(query, new UpdateOptions());
 
-                    return updates.getModifiedCount() > 0;
+                    final var success = updates.getModifiedCount() > 0;
+
+                    if (success) {
+                        mc.setExpiry(expiry);
+                        mc.setActive(false);
+                        getEventPublisher().accept(Event.builder()
+                                .argument(getMapperRegistry().map(mc, UniqueCode.class))
+                                .named(UNIQUE_CODE_DELETED)
+                                .build());
+                    }
+
+                    return success;
 
                 })
                 .orElse(false);
@@ -204,6 +238,15 @@ public class MongoUniqueCodeDao implements UniqueCodeDao {
     @Inject
     public void setUniqueCodeGenerator(UniqueCodeGenerator uniqueCodeGenerator) {
         this.uniqueCodeGenerator = uniqueCodeGenerator;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

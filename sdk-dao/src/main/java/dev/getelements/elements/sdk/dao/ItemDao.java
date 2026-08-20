@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -11,7 +12,43 @@ import java.util.List;
 
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = ItemDao.ITEM_CREATED,
+        parameters = Item.class,
+        description = "Called when an item was created."
+)
+@ElementEventProducer(
+        value = ItemDao.ITEM_CREATED,
+        parameters = {Item.class, Transaction.class},
+        description = "Called when an item was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ItemDao.ITEM_UPDATED,
+        parameters = Item.class,
+        description = "Called when an item was updated."
+)
+@ElementEventProducer(
+        value = ItemDao.ITEM_UPDATED,
+        parameters = {Item.class, Transaction.class},
+        description = "Called when an item was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ItemDao.ITEM_DELETED,
+        parameters = Item.class,
+        description = "Called when an item was deleted."
+)
+@ElementEventProducer(
+        value = ItemDao.ITEM_DELETED,
+        parameters = {Item.class, Transaction.class},
+        description = "Called when an item was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ItemDao {
+
+    String ITEM_CREATED = "dev.getelements.elements.sdk.model.dao.item.created";
+
+    String ITEM_UPDATED = "dev.getelements.elements.sdk.model.dao.item.updated";
+
+    String ITEM_DELETED = "dev.getelements.elements.sdk.model.dao.item.deleted";
 
     /**
      * Retrieves a single Item from the database by its id property or name property.

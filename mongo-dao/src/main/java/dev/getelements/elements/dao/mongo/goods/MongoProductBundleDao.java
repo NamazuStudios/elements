@@ -5,6 +5,7 @@ import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.goods.MongoProductBundle;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ProductBundleDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
@@ -22,6 +23,7 @@ import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -41,6 +43,8 @@ public class MongoProductBundleDao implements ProductBundleDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<ProductBundle> getProductBundles(final int offset, final int count) {
@@ -197,7 +201,14 @@ public class MongoProductBundleDao implements ProductBundleDao {
             throw e;
         }
 
-        return getDozerMapperRegistry().map(mongo, ProductBundle.class);
+        final var createdBundle = getDozerMapperRegistry().map(mongo, ProductBundle.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdBundle)
+                .named(PRODUCT_BUNDLE_CREATED)
+                .build());
+
+        return createdBundle;
     }
 
     @Override
@@ -223,7 +234,14 @@ public class MongoProductBundleDao implements ProductBundleDao {
 
         final var saved = getDatastore().save(mongo);
 
-        return getDozerMapperRegistry().map(saved, ProductBundle.class);
+        final var updatedBundle = getDozerMapperRegistry().map(saved, ProductBundle.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedBundle)
+                .named(PRODUCT_BUNDLE_UPDATED)
+                .build());
+
+        return updatedBundle;
     }
 
     @Override
@@ -233,6 +251,10 @@ public class MongoProductBundleDao implements ProductBundleDao {
             throw new NotFoundException("Unable to find Product Bundle with id: " + id);
         }
 
+        final var mongo = getDatastore().find(MongoProductBundle.class)
+                .filter(eq("_id", new ObjectId(id)))
+                .first();
+
         final DeleteResult deleteResult = getDatastore().find(MongoProductBundle.class)
                 .filter(eq("_id", new ObjectId(id)))
                 .delete();
@@ -240,6 +262,11 @@ public class MongoProductBundleDao implements ProductBundleDao {
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Product Bundle not found: " + id);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getDozerMapperRegistry().map(mongo, ProductBundle.class))
+                .named(PRODUCT_BUNDLE_DELETED)
+                .build());
     }
 
     public Datastore getDatastore() {
@@ -285,6 +312,15 @@ public class MongoProductBundleDao implements ProductBundleDao {
     @Inject
     public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
         this.mongoApplicationDao = mongoApplicationDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

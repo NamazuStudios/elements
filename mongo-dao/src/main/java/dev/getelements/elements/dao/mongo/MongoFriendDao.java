@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.FriendDao;
 import dev.getelements.elements.dao.mongo.model.MongoFriendship;
 import dev.getelements.elements.dao.mongo.model.MongoFriendshipId;
@@ -21,6 +22,7 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import static dev.getelements.elements.sdk.model.friend.Friendship.*;
 import static java.util.stream.Collectors.toList;
@@ -38,6 +40,8 @@ public class MongoFriendDao implements FriendDao {
     private MongoUserDao mongoUserDao;
 
     private MongoProfileDao mongoProfileDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Friend> getFriendsForUser(final User user, final int offset, final int count) {
@@ -133,6 +137,12 @@ public class MongoFriendDao implements FriendDao {
                 Filters.eq(property, true)
         ));
 
+        final MongoFriendship mongoFriendship = query.first();
+
+        if (mongoFriendship == null) {
+            throw new FriendNotFoundException("Friend not found: " + friendId);
+        }
+
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
@@ -140,6 +150,13 @@ public class MongoFriendDao implements FriendDao {
         } else if (deleteResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
+
+        final var deletedFriend = transform(mongoUser, mongoFriendship);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedFriend)
+                .named(FRIEND_DELETED)
+                .build());
 
     }
 
@@ -226,6 +243,15 @@ public class MongoFriendDao implements FriendDao {
     @Inject
     public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
         this.mongoProfileDao = mongoProfileDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,5 +1,7 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.dao.ProgressDao;
 import dev.getelements.elements.sdk.dao.ScheduleProgressDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
@@ -54,6 +57,8 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     private MongoScheduleEventDao mongoScheduleEventDao;
 
     private MongoConcurrentUtils mongoConcurrentUtils;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Progress> getProgresses(
@@ -90,7 +95,7 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
 
         final var mongoProfile = mongoProfileOptional.get();
 
-        return events.stream()
+        final var assigned = events.stream()
                 .map(ev -> getValidationHelper().validateModel(ev, Read.class))
                 .map(ev -> getMongoScheduleEventDao().findMongoScheduleEventById(scheduleNameOrId, ev.getId()))
                 .filter(Optional::isPresent)
@@ -101,6 +106,13 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
                         .map(mongoMission -> doCreateProgress(mongoProfile, mongoEvent, mongoMission)))
                 .map(mp -> getDozerMapper().map(mp, Progress.class))
                 .collect(toList());
+
+        assigned.forEach(progress -> getEventPublisher().accept(Event.builder()
+                .argument(progress)
+                .named(ProgressDao.PROGRESS_CREATED)
+                .build()));
+
+        return assigned;
 
     }
 
@@ -180,8 +192,10 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
                 .filter(in("scheduleEvents", mongoScheduleEvents).not())
                 .stream();
 
+        final List<Progress> unassigned;
+
         try (progressStream) {
-            return progressStream
+            unassigned = progressStream
                     .map(mongoProgress -> doUnassignProgressesForMissionsNotIn(
                             mongoProgress,
                             mongoSchedule,
@@ -190,6 +204,13 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
                     .map(mongoProgress -> getMapper().map(mongoProgress, Progress.class))
                     .collect(toList());
         }
+
+        unassigned.forEach(progress -> getEventPublisher().accept(Event.builder()
+                .argument(progress)
+                .named(ProgressDao.PROGRESS_DELETED)
+                .build()));
+
+        return unassigned;
 
     }
 
@@ -343,6 +364,15 @@ public class MongoScheduleProgressDao implements ScheduleProgressDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

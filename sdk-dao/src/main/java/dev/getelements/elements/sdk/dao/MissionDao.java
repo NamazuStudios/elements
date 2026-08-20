@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Mission;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.mission.UpdateMissionRequest;
 
@@ -17,7 +18,43 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = MissionDao.MISSION_CREATED,
+        parameters = Mission.class,
+        description = "Called when a mission was created."
+)
+@ElementEventProducer(
+        value = MissionDao.MISSION_CREATED,
+        parameters = {Mission.class, Transaction.class},
+        description = "Called when a mission was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MissionDao.MISSION_UPDATED,
+        parameters = Mission.class,
+        description = "Called when a mission was updated."
+)
+@ElementEventProducer(
+        value = MissionDao.MISSION_UPDATED,
+        parameters = {Mission.class, Transaction.class},
+        description = "Called when a mission was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MissionDao.MISSION_DELETED,
+        parameters = Mission.class,
+        description = "Called when a mission was deleted."
+)
+@ElementEventProducer(
+        value = MissionDao.MISSION_DELETED,
+        parameters = {Mission.class, Transaction.class},
+        description = "Called when a mission was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface MissionDao {
+
+    String MISSION_CREATED = "dev.getelements.elements.sdk.model.dao.mission.created";
+
+    String MISSION_UPDATED = "dev.getelements.elements.sdk.model.dao.mission.updated";
+
+    String MISSION_DELETED = "dev.getelements.elements.sdk.model.dao.mission.deleted";
 
     /**
      * Gets missions specifying the offset and the count.
