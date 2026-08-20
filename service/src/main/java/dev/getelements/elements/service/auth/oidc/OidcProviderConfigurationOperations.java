@@ -5,6 +5,8 @@ import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import jakarta.inject.Inject;
 
+import java.util.List;
+
 /**
  * Resolves an {@link OidcProviderConfiguration}'s discovery document and finds-or-creates the matching
  * {@link OidcAuthScheme} by issuer, so that registering a single provider configuration is enough to fully
@@ -54,6 +56,9 @@ public class OidcProviderConfigurationOperations {
         scheme.setName(config.getName());
         scheme.setIssuer(discoveryDocument.getIssuer());
         scheme.setKeysUrl(discoveryDocument.getJwksUri());
+        // keys is @NotNull and is read via scheme.getKeys().stream() before ever being fetched -- must start
+        // as an empty list, not null, so validation passes and the lazy cache-on-miss fetch has something to miss.
+        scheme.setKeys(List.of());
 
         return getOidcAuthSchemeDao().createAuthScheme(scheme);
 

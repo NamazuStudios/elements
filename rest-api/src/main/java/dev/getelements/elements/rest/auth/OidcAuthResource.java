@@ -6,12 +6,20 @@ import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.service.auth.OidcAuthService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
+/**
+ * Direct, synchronous OIDC login: the client already possesses an {@code id_token} (e.g. from a native platform
+ * Sign-In SDK) and validates it against a statically-configured OIDC Auth Scheme in one call. For a client that
+ * has no other way to obtain an {@code id_token}, see {@link OidcSessionResource}'s browser-redirect flow instead;
+ * that resource's {@code idToken} shortcut shares this validation code path.
+ */
 @Path("auth/oidc")
 public class OidcAuthResource {
 
@@ -19,6 +27,14 @@ public class OidcAuthResource {
 
     private OidcAuthService oidcAuthService;
 
+    /**
+     * Validates the supplied {@code id_token} and returns the resulting session, implicitly creating a new
+     * account if no user is associated with the supplied credentials yet, or linking to the scheme if the
+     * caller's existing session/account was not previously linked to it.
+     *
+     * @param oidcSessionRequest the JWT to validate
+     * @return the resulting session
+     */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -30,6 +46,10 @@ public class OidcAuthResource {
                     "will include that account information in the response. If there is an account, or this method " +
                     "receives an existing session key, this will link to the existing scheme if the account was " +
                     "not previously linked.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "The JWT was valid; the resulting session is returned."),
+            @ApiResponse(responseCode = "400", description = "The request failed validation, or is missing the JWT.")
+    })
     public SessionCreation createOidcSession(final OidcSessionRequest oidcSessionRequest) {
 
         getValidationHelper().validateModel(oidcSessionRequest);

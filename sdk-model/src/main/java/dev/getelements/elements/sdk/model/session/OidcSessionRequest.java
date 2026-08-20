@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import java.util.Objects;
 
 /** Request to create a session using an OIDC (OpenID Connect) JWT token. */
+@Schema(description = "Validates a possessed id_token and returns the resulting session, either creating a new " +
+        "account or linking to/reusing an existing one.")
 public class OidcSessionRequest {
 
     /** Creates a new instance. */
@@ -21,6 +23,12 @@ public class OidcSessionRequest {
     @Schema(description = "A query string to select the profile to use. " +
             "NOTE: This will not be run if a profileId is specified.")
     private String profileSelector;
+
+    @Schema(description = "The name or ID of an application whose primary profile should be attached to the " +
+            "session, auto-creating it (subject to the application's autoCreateProfile/maxProfiles settings) if " +
+            "it does not exist. Only used if profileId and profileSelector are not specified. If unspecified, " +
+            "the application encoded in the JWT's own claims (if any) is used instead, without auto-create.")
+    private String applicationNameOrId;
 
     /**
      * Returns the JWT to parse.
@@ -76,17 +84,35 @@ public class OidcSessionRequest {
         this.profileSelector = profileSelector;
     }
 
+    /**
+     * Returns the name or ID of the application whose primary profile should be attached to the session.
+     *
+     * @return the application name or ID
+     */
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    /**
+     * Sets the name or ID of the application whose primary profile should be attached to the session.
+     *
+     * @param applicationNameOrId the application name or ID
+     */
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OidcSessionRequest that = (OidcSessionRequest) o;
-        return Objects.equals(getJwt(), that.getJwt()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector());
+        return Objects.equals(getJwt(), that.getJwt()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getJwt(), getProfileId(), getProfileSelector());
+        return Objects.hash(getJwt(), getProfileId(), getProfileSelector(), getApplicationNameOrId());
     }
 
     @Override
@@ -95,6 +121,7 @@ public class OidcSessionRequest {
                 "jwt='" + jwt + '\'' +
                 ", profileId='" + profileId + '\'' +
                 ", profileSelector='" + profileSelector + '\'' +
+                ", applicationNameOrId='" + applicationNameOrId + '\'' +
                 '}';
     }
 

@@ -118,6 +118,12 @@ public class TemporaryFiles {
      */
     public TemporaryFiles(final String prefix) {
 
+        // Any directory already sitting under TEMPORARY_ROOT with this prefix predates this instance
+        // (our own lazily-created root doesn't exist yet), meaning it was left behind by a prior JVM
+        // run that didn't shut down cleanly (the shutdown hook below never fired). Purge it now so
+        // disk usage doesn't grow unbounded across crashes/restarts.
+        purgeStaleDirectories(prefix);
+
         this.root = new ThreadSafeLazyValue<>(() -> {
             try {
                 return Files.createTempDirectory(TEMPORARY_ROOT, prefix).toAbsolutePath().normalize();
@@ -130,6 +136,65 @@ public class TemporaryFiles {
         shutdownHooks.add(this::deleteTempFilesAndDirectories);
         shutdownHooks.add(() -> { if (AUTO_PURGE_TEMP) deleteIfExists(root.get()); });
 
+    }
+
+    private static void purgeStaleDirectories(final String prefix) {
+
+        if (!AUTO_PURGE_TEMP) {
+            return;
+        }
+
+        try (var stream = Files.list(TEMPORARY_ROOT)) {
+            stream.filter(Files::isDirectory)
+                    .filter(p -> p.getFileName().toString().startsWith(prefix))
+                    .forEach(TemporaryFiles::deleteRecursively);
+        } catch (FileNotFoundException | NoSuchFileException ex) {
+            logger.trace("Temporary root {} does not exist yet", TEMPORARY_ROOT, ex);
+        } catch (IOException ex) {
+            logger.warn("Could not scan temporary root {} for stale directories with prefix {}",
+                    TEMPORARY_ROOT, prefix, ex);
+        }
+
+    }
+
+    /**
+     * Recursively deletes the supplied path (file or directory tree), logging rather than throwing on failure.
+     * Safe to call on paths that no longer exist.
+     *
+     * @param path the path to delete
+     */
+    public static void deleteRecursively(final Path path) {
+        try {
+            walkFileTree(path, new SimpleFileVisitor<>() {
+
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
+                    staticSafeDelete(file);
+                    return CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) {
+                    staticSafeDelete(dir);
+                    return CONTINUE;
+                }
+
+            });
+        } catch (FileNotFoundException | NoSuchFileException ex) {
+            logger.trace("Could not delete path: {}", path, ex);
+        } catch (IOException ex) {
+            logger.warn("Could not delete path: {}", path, ex);
+        }
+    }
+
+    private static void staticSafeDelete(final Path path) {
+        try {
+            deleteIfExists(path);
+        } catch (FileNotFoundException | NoSuchFileException ex) {
+            logger.trace("Could not delete temp file: {}", path, ex);
+        } catch (IOException ex) {
+            logger.warn("Could not delete temp file: {}", path, ex);
+        }
     }
 
     /**

@@ -7,6 +7,7 @@ import com.mongodb.connection.SslSettings;
 import dev.getelements.elements.sdk.mongo.MongoConfigurationService;
 import dev.getelements.elements.sdk.mongo.provider.MongoClientProvider;
 import dev.getelements.elements.sdk.mongo.provider.MongoDatabaseProvider;
+import dev.getelements.elements.sdk.mongo.provider.LiveDatastore;
 import dev.getelements.elements.sdk.mongo.provider.MongoSslSettingsProvider;
 import dev.getelements.elements.sdk.mongo.StandardMongoConfigurationService;
 import dev.morphia.Datastore;
@@ -38,18 +39,34 @@ public class MongoSdkModule extends AbstractModule {
         // Datastore is created and managed by MongoDaoModule's MongoElementEntityRegistrar
         // via AtomicReference<Datastore> (exposed to the outer scope). We delegate here so that
         // elements declaring @ElementDependency("dev.getelements.elements.sdk.mongo") can inject
-        // Datastore and always see the live reference updated by entity registration.
+        // Datastore and always see the live reference updated by entity registration -- including
+        // a consumer that captures the injected Datastore in a singleton field/constructor param,
+        // since what's handed out is a live-delegating proxy (LiveDatastore), never a frozen
+        // snapshot. See LiveDatastore's javadoc for why that matters.
         binder().bind(Datastore.class).toProvider(DatastoreFromRef.class);
 
     }
 
     private static class DatastoreFromRef implements Provider<Datastore> {
+
         @Inject private AtomicReference<Datastore> datastoreRef;
+
+        private volatile Datastore proxy;
 
         @Override
         public Datastore get() {
-            return datastoreRef.get();
+            var result = proxy;
+            if (result == null) {
+                synchronized (this) {
+                    result = proxy;
+                    if (result == null) {
+                        proxy = result = LiveDatastore.wrap(datastoreRef);
+                    }
+                }
+            }
+            return result;
         }
+
     }
 
 }

@@ -34,7 +34,10 @@ import java.util.function.Supplier;
  *
  * <p>Morphia caches entity models by class name. A full datastore rebuild is performed on each
  * register/unregister so that reloaded elements (same class name, new classloader) replace the
- * stale cached model rather than being silently ignored.
+ * stale cached model rather than being silently ignored. This rebuild replaces (never mutates)
+ * the shared {@link Datastore}/{@code Mapper} referenced by {@link #getDatastoreAtomicReference()}
+ * — see {@code dev.getelements.elements.sdk.mongo.provider.LiveDatastore} for why a consumer can
+ * safely hold the injected {@link Datastore} in a singleton across any number of these rebuilds.
  *
  * <p>An internal {@link java.util.concurrent.locks.ReentrantLock} guards the element list and
  * datastore rebuild. This provides a safety net even if the caller does not hold an outer lock.

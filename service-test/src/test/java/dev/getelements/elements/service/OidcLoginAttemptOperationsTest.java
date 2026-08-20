@@ -6,19 +6,27 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.JWK;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttemptStatus;
 import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import dev.getelements.elements.sdk.model.auth.TokenEndpointAuthMethod;
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
 import dev.getelements.elements.service.auth.oidc.OidcDiscoveryDocument;
 import dev.getelements.elements.service.auth.oidc.OidcLoginAttemptOperations;
 import dev.getelements.elements.service.auth.oidc.OidcProviderConfigurationOperations;
+import dev.getelements.elements.service.auth.oidc.UserOidcAuthService;
+import dev.getelements.elements.sdk.ElementRegistry;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
@@ -62,6 +70,8 @@ public class OidcLoginAttemptOperationsTest {
     private OidcProviderConfigurationOperations oidcProviderConfigurationOperations;
     private OidcAuthServiceOperations oidcAuthServiceOperations;
     private AnonOidcAuthService anonOidcAuthService;
+    private UserOidcAuthService userOidcAuthService;
+    private UserDao userDao;
     private Client client;
 
     private OidcLoginAttemptOperations operations;
@@ -84,6 +94,16 @@ public class OidcLoginAttemptOperationsTest {
         anonOidcAuthService = mock(AnonOidcAuthService.class);
         client = mock(Client.class);
 
+        // Real UserOidcAuthService — exercises the actual uid-linking logic rather than mocking it away.
+        userOidcAuthService = new UserOidcAuthService();
+        final var userUidDao = mock(UserUidDao.class);
+        when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
+        userOidcAuthService.setUserUidDao(userUidDao);
+        userOidcAuthService.setUserDao(mock(UserDao.class));
+        userOidcAuthService.setElementRegistry(mock(ElementRegistry.class));
+
+        userDao = mock(UserDao.class);
+
         // Real OidcAuthServiceOperations — exercises the actual shared validation/session-building code rather
         // than mocking it away. The token carries an 'aud' claim (needed for the audience check), which also
         // triggers buildSession's optional Application lookup, so ApplicationDao/SessionDao need mocking too.
@@ -105,6 +125,8 @@ public class OidcLoginAttemptOperationsTest {
         operations.setOidcProviderConfigurationOperations(oidcProviderConfigurationOperations);
         operations.setOidcAuthServiceOperations(oidcAuthServiceOperations);
         operations.setAnonOidcAuthService(anonOidcAuthService);
+        operations.setUserOidcAuthService(userOidcAuthService);
+        operations.setUserDao(userDao);
         operations.setClient(client);
         operations.setTtlSeconds(300L);
 
@@ -173,6 +195,8 @@ public class OidcLoginAttemptOperationsTest {
 
         assertNotNull(begin.getId());
         assertTrue(begin.getExpiresAt() > currentTimeMillis() / 1000);
+        assertNotNull(begin.getConfirmToken());
+        assertFalse(begin.getConfirmToken().isBlank());
 
         final var url = begin.getAuthorizeUrl();
         assertTrue(url.startsWith(AUTHORIZATION_ENDPOINT));
@@ -183,6 +207,8 @@ public class OidcLoginAttemptOperationsTest {
         assertTrue(url.contains("scope=openid"));
         assertTrue(url.contains("claims=email"));
         assertFalse(url.contains(CLIENT_SECRET), "authorize URL must never contain the client secret");
+        assertFalse(url.contains(begin.getConfirmToken()),
+                "confirmToken must never travel through the browser/IdP leg of the flow");
 
         final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
         verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
@@ -193,6 +219,7 @@ public class OidcLoginAttemptOperationsTest {
         assertEquals(persisted.getStatus(), OidcLoginAttemptStatus.PENDING);
         assertNotNull(persisted.getState());
         assertNotNull(persisted.getNonce());
+        assertEquals(persisted.getConfirmToken(), begin.getConfirmToken());
 
     }
 
@@ -212,6 +239,31 @@ public class OidcLoginAttemptOperationsTest {
         final var persisted = attemptCaptor.getValue();
         assertEquals(persisted.getSuccessRedirectUrl(), "https://game.example.com/success");
         assertEquals(persisted.getErrorRedirectUrl(), "https://game.example.com/error");
+
+    }
+
+    @Test
+    public void testBeginWithoutLinkingUserLeavesLinkedUserIdNull() {
+
+        operations.begin(PROVIDER);
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertNull(attemptCaptor.getValue().getLinkedUserId());
+
+    }
+
+    @Test
+    public void testBeginWithLinkingUserStampsLinkedUserId() {
+
+        final var user = new User();
+        user.setId("current-user-id");
+
+        operations.begin(PROVIDER, user);
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertEquals(attemptCaptor.getValue().getLinkedUserId(), "current-user-id");
 
     }
 
@@ -315,6 +367,132 @@ public class OidcLoginAttemptOperationsTest {
         assertTrue(result.isSuccess());
         assertEquals(result.getRedirectUrl(), "https://game.example.com/success");
 
+    }
+
+    @Test
+    public void testHandleCallbackForLinkingAttemptMarksLinkReadyWithoutMutating() {
+
+        final var state = "linking-state";
+        final var nonce = "linking-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setLinkedUserId("current-user-id");
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markLinkReady(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        assertTrue(result.isSuccess());
+        verify(oidcLoginAttemptDao).markLinkReady(eq(state), anyString());
+        verify(oidcLoginAttemptDao, never()).markComplete(any(), any());
+        verifyNoInteractions(anonOidcAuthService);
+        verifyNoInteractions(userDao);
+
+        final var claimsCaptor = ArgumentCaptor.forClass(String.class);
+        verify(oidcLoginAttemptDao).markLinkReady(eq(state), claimsCaptor.capture());
+        assertTrue(claimsCaptor.getValue().contains("twitch-sub"));
+
+    }
+
+    // ── poll() ───────────────────────────────────────────────────────────────
+
+    @Test(expectedExceptions = ForbiddenException.class)
+    public void testPollOnLinkReadyAttemptThrows() {
+        when(oidcLoginAttemptDao.claimCompleteById("link-ready-id")).thenReturn(Optional.empty());
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id"))
+                .thenReturn(Optional.of(linkReadyAttempt()));
+        operations.poll("link-ready-id");
+    }
+
+    // ── confirmLink() ────────────────────────────────────────────────────────
+
+    @Test
+    public void testConfirmLinkWithCorrectTokenPerformsLinkAndReturnsSession() {
+
+        final var attempt = linkReadyAttempt();
+
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.claimLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+
+        final var linkedUser = new User();
+        linkedUser.setId("current-user-id");
+        when(userDao.getUser("current-user-id")).thenReturn(linkedUser);
+
+        final var result = operations.confirmLink("link-ready-id", "correct-token");
+
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.COMPLETE);
+        assertNotNull(result.getSession());
+        verify(userDao).getUser("current-user-id");
+        verify(oidcLoginAttemptDao).claimLinkReadyById("link-ready-id");
+
+    }
+
+    @Test(expectedExceptions = ForbiddenException.class)
+    public void testConfirmLinkWithWrongTokenThrowsAndDoesNotConsume() {
+
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id"))
+                .thenReturn(Optional.of(linkReadyAttempt()));
+
+        try {
+            operations.confirmLink("link-ready-id", "wrong-token");
+        } finally {
+            verify(oidcLoginAttemptDao, never()).claimLinkReadyById(any());
+        }
+
+    }
+
+    @Test(expectedExceptions = ForbiddenException.class)
+    public void testConfirmLinkWithNullTokenThrowsAndDoesNotConsume() {
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id"))
+                .thenReturn(Optional.of(linkReadyAttempt()));
+        try {
+            operations.confirmLink("link-ready-id", null);
+        } finally {
+            verify(oidcLoginAttemptDao, never()).claimLinkReadyById(any());
+        }
+    }
+
+    @Test
+    public void testConfirmLinkOnUnknownIdReturnsExpired() {
+        when(oidcLoginAttemptDao.findLinkReadyById("unknown-id")).thenReturn(Optional.empty());
+        final var result = operations.confirmLink("unknown-id", "any-token");
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.EXPIRED);
+    }
+
+    @Test
+    public void testConfirmLinkLosingClaimRaceReturnsExpired() {
+
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id"))
+                .thenReturn(Optional.of(linkReadyAttempt()));
+        when(oidcLoginAttemptDao.claimLinkReadyById("link-ready-id")).thenReturn(Optional.empty());
+
+        final var result = operations.confirmLink("link-ready-id", "correct-token");
+
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.EXPIRED);
+        verifyNoInteractions(userDao);
+
+    }
+
+    private OidcLoginAttempt linkReadyAttempt() {
+        final var attempt = pendingAttempt("linking-state", "linking-nonce");
+        attempt.setId("link-ready-id");
+        attempt.setStatus(OidcLoginAttemptStatus.LINK_READY);
+        attempt.setLinkedUserId("current-user-id");
+        attempt.setConfirmToken("correct-token");
+        attempt.setLinkClaimsJson(
+                "{\"schemeName\":\"twitch\",\"externalUserId\":\"twitch-sub\",\"email\":null,\"profileClaims\":{}}");
+        return attempt;
     }
 
     @Test

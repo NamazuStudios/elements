@@ -41,6 +41,11 @@ public enum TestElementArtifact {
             "dev.getelements.elements:sdk-test-element-ws:%s",
             "dev.getelements.elements:sdk-test-element-ws:elm:%s",
             "dev.getelements.elements.sdk.test.element.ws"
+    ),
+    MONGO(
+            "dev.getelements.elements:sdk-test-element-mongo:%s",
+            "dev.getelements.elements:sdk-test-element-mongo:elm:%s",
+            "dev.getelements.elements.sdk.test.element.mongo"
     );
 
     private final String coordinates;

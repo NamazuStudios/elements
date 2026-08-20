@@ -14,8 +14,6 @@ import static dev.morphia.query.filters.Filters.*;
 
 public class ForwardNameBooleanQueryOperator implements BooleanQueryOperator {
 
-    private Mapper mapper;
-
     private Datastore datastore;
 
     @Override
@@ -122,7 +120,10 @@ public class ForwardNameBooleanQueryOperator implements BooleanQueryOperator {
     }
 
     public Mapper getMapper() {
-        return mapper;
+        // Resolved fresh on every call, not cached: datastore is a live-delegating proxy (see
+        // LiveDatastore) whose Mapper can change out from under a long-lived reference after an
+        // Element register/unregister rebuilds it.
+        return datastore == null ? null : datastore.getMapper();
     }
 
     public Datastore getDatastore() {
@@ -131,15 +132,7 @@ public class ForwardNameBooleanQueryOperator implements BooleanQueryOperator {
 
     @Inject
     public void setDatastore(final Datastore datastore) {
-
-        if (datastore == null) {
-            mapper = null;
-        } else {
-            this.mapper = datastore.getMapper();
-        }
-
         this.datastore = datastore;
-
     }
 
 }

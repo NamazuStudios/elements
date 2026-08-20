@@ -11,6 +11,8 @@ import dev.getelements.elements.sdk.service.auth.OidcLinkService;
 import dev.getelements.elements.sdk.service.user.EmailPasswordLinkService;
 import dev.getelements.elements.sdk.service.user.UsernamePasswordLinkService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -41,6 +43,16 @@ public class UserLinkResource {
         return getOAuth2LinkService().createSession(request);
     }
 
+    /**
+     * Links an external OIDC identity from a possessed {@code id_token} to the calling user, validated the same
+     * way an OIDC login is. If the token's external identity is already linked to a different user, the request
+     * fails; linking to the calling user's own already-linked identity is a no-op success. For a client with no
+     * other way to obtain an {@code id_token}, the browser-redirect flow can also link — see
+     * {@link dev.getelements.elements.rest.auth.OidcSessionResource}.
+     *
+     * @param request the OIDC session request containing the id_token to validate and link
+     * @return the resulting session
+     */
     @POST
     @Path("oidc")
     @Consumes(MediaType.APPLICATION_JSON)
@@ -49,6 +61,12 @@ public class UserLinkResource {
             summary = "Link OIDC Identity",
             description = "Links an external OIDC identity to the currently authenticated user. " +
                     "Requires an active user session. Returns the updated session information.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "The identity was linked (or already was); the " +
+                    "resulting session is returned."),
+            @ApiResponse(responseCode = "403", description = "No active USER/SUPERUSER session, or the external " +
+                    "identity is already linked to a different user.")
+    })
     public SessionCreation linkOidc(final OidcSessionRequest request) {
         return getOidcLinkService().createSession(request);
     }

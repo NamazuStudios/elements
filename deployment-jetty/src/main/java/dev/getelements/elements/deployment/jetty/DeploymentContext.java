@@ -33,6 +33,7 @@ record DeploymentContext(
         ElementDeployment deployment,
         MutableElementRegistry registry,
         List<Path> deploymentFiles,
+        List<Path> deploymentDirectories,
         List<FileSystem> fileSystems,
         List<String> logs,
         List<String> warnings,
@@ -71,6 +72,7 @@ record DeploymentContext(
         return new DeploymentContext(
                 deployment,
                 registry,
+                new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -241,6 +243,7 @@ record DeploymentContext(
     public Path createDeploymentDirectory() {
         final var deploymentDir = temporaryFiles.createTempDirectory("deployment-%s-".formatted(deployment.id()));
         elementPaths().add(deploymentDir);
+        deploymentDirectories().add(deploymentDir);
         return deploymentDir;
     }
 
