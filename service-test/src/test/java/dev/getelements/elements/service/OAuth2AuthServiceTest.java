@@ -8,11 +8,13 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.auth.BodyType;
 import dev.getelements.elements.sdk.model.auth.HttpMethod;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
 import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
@@ -56,6 +58,12 @@ public class OAuth2AuthServiceTest {
 
     @Inject
     private SessionDao sessionDao;
+
+    @Inject
+    private ApplicationDao applicationDao;
+
+    @Inject
+    private ProfileDao profileDao;
 
     @BeforeMethod
     public void setup() {
@@ -134,6 +142,97 @@ public class OAuth2AuthServiceTest {
             // should not create session on failure
             verify(sessionDao, never()).create(any(Session.class));
         }
+    }
+
+    @Test
+    public void testAutoCreatesPrimaryProfileWhenConfigured() throws Exception {
+
+        final var scheme = baseScheme("steam_game1");
+        scheme.setMethod(HttpMethod.GET);
+        scheme.setResponseIdMapping("steamid");
+        scheme.setValidStatusCodes(List.of(200));
+
+        final var req = baseReq("scheme-auto", Map.of(), Map.of());
+        req.setApplicationNameOrId("app-1");
+
+        when(schemeDao.getAuthScheme(req.getSchemeId())).thenReturn(scheme);
+
+        final var body = "{\"steamid\":\"abc\"}";
+        when(invoker.execute(eq(scheme), any(ResolvedRequest.class)))
+                .thenReturn(new ParsedResponse(200, body, MAPPER.readTree(body)));
+
+        final var user = new User();
+        user.setId("user-1");
+
+        @SuppressWarnings("unchecked")
+        final BiFunction<String, String, User> userMapper = mock(BiFunction.class);
+        when(userMapper.apply(anyString(), anyString())).thenReturn(user);
+
+        final var application = new Application();
+        application.setId("app-1");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findApplication("app-1")).thenReturn(java.util.Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-1", "app-1")).thenReturn(java.util.Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("profile-1");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        ops.createOrUpdateUserWithToken(req, userMapper);
+
+        final var profileCaptor = ArgumentCaptor.forClass(Profile.class);
+        verify(profileDao).createSlottedProfile(profileCaptor.capture(), anyMap());
+        assertEquals(profileCaptor.getValue().getUser(), user);
+        assertEquals(profileCaptor.getValue().getApplication(), application);
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
+        assertEquals(sessionCaptor.getValue().getApplication(), application);
+    }
+
+    @Test
+    public void testDoesNotAutoCreatePrimaryProfileWhenNotConfigured() throws Exception {
+
+        final var scheme = baseScheme("steam_game1");
+        scheme.setMethod(HttpMethod.GET);
+        scheme.setResponseIdMapping("steamid");
+        scheme.setValidStatusCodes(List.of(200));
+
+        final var req = baseReq("scheme-auto-off", Map.of(), Map.of());
+        req.setApplicationNameOrId("app-2");
+
+        when(schemeDao.getAuthScheme(req.getSchemeId())).thenReturn(scheme);
+
+        final var body = "{\"steamid\":\"abc\"}";
+        when(invoker.execute(eq(scheme), any(ResolvedRequest.class)))
+                .thenReturn(new ParsedResponse(200, body, MAPPER.readTree(body)));
+
+        final var user = new User();
+        user.setId("user-2");
+
+        @SuppressWarnings("unchecked")
+        final BiFunction<String, String, User> userMapper = mock(BiFunction.class);
+        when(userMapper.apply(anyString(), anyString())).thenReturn(user);
+
+        final var application = new Application();
+        application.setId("app-2");
+        application.setAutoCreateProfile(false);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findApplication("app-2")).thenReturn(java.util.Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-2", "app-2")).thenReturn(java.util.Optional.empty());
+
+        ops.createOrUpdateUserWithToken(req, userMapper);
+
+        verify(profileDao, never()).createSlottedProfile(any(Profile.class), anyMap());
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertNull(sessionCaptor.getValue().getProfile());
+        assertNull(sessionCaptor.getValue().getApplication());
     }
 
     // ---------- Case builders ----------
