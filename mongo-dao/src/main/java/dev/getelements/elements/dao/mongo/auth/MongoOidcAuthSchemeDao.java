@@ -120,6 +120,7 @@ public class MongoOidcAuthSchemeDao implements OidcAuthSchemeDao {
         final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
 
         final var query = getDatastore().find(MongoOidcAuthScheme.class);
+        query.filter(exists("issuer"));
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder();
