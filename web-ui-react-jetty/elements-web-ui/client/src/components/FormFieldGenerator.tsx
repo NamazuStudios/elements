@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { TagsInput } from '@/components/TagsInput';
 import { OAuth2HeaderParamEditor } from '@/components/OAuth2HeaderParamEditor';
+import { JwkListEditor } from '@/components/JwkListEditor';
 import { type FieldSchema } from '@/lib/schema-parser';
 import { type UseFormReturn } from 'react-hook-form';
 import { Copy } from 'lucide-react';
@@ -179,6 +180,16 @@ function renderInput(
           form={form}
           fieldName={schema.name}
           value={formField.value}
+          onChange={formField.onChange}
+        />
+      );
+    }
+
+    // Special handling for OIDC's JWK "keys" field
+    if (schema.name === 'keys' && schema.type === 'object') {
+      return (
+        <JwkListEditor
+          value={Array.isArray(formField.value) ? formField.value : []}
           onChange={formField.onChange}
         />
       );
