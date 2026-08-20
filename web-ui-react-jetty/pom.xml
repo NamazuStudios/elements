@@ -7,12 +7,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.9.0-rc-2</version>
+        <version>3.9.0-rc-3</version>
     </parent>
 
     <name>${project.artifactId}</name>
     <artifactId>web-ui-react-jetty</artifactId>
-    <version>3.9.0-rc-2</version>
+    <version>3.9.0-rc-3</version>
 
     <properties>
         <!-- Set true to skip the npm build (e.g. for a skipTests prepass that
