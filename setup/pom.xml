@@ -8,7 +8,7 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>3.9.0-rc-3</version>
+        <version>${revision}</version>
     </parent>
 
     <properties>
@@ -17,7 +17,7 @@
 
     <artifactId>setup</artifactId>
     <name>${project.artifactId}</name>
-    <version>3.9.0-rc-3</version>
+    <version>${revision}</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
