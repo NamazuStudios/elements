@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt;
 
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 
 import jakarta.inject.Named;
 
@@ -87,23 +87,23 @@ public interface Context {
     interface Factory {
 
         /**
-         * Gets the {@link Context} for the supplied string representing the {@link ApplicationId}.
+         * Gets the {@link Context} for the supplied string representing the {@link DeploymentId}.
          *
-         * @param applicationIdString The unique application name {@see {@link ApplicationId#forUniqueName(String)}}
+         * @param applicationIdString The unique application name {@see {@link DeploymentId#forUniqueName(String)}}
          * @return the {@link Context}
          */
         default Context getContextForApplication(final String applicationIdString) {
-            final var applicationId = ApplicationId.forUniqueName(applicationIdString);
-            return getContextForApplication(applicationId);
+            final var deploymentId = DeploymentId.forUniqueName(applicationIdString);
+            return getContextForApplication(deploymentId);
         }
 
         /**
          * Gets a {@link Context} which can communicate with the remote application.
          *
-         * @param applicationId the {@link ApplicationId} of the remote application
+         * @param deploymentId the {@link DeploymentId} of the remote application
          * @return the {@link Context}
          */
-        Context getContextForApplication(ApplicationId applicationId);
+        Context getContextForApplication(DeploymentId deploymentId);
 
     }
 

@@ -1,7 +1,7 @@
 package dev.getelements.elements.test;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.remote.Instance;
 import dev.getelements.elements.rt.remote.Node;
@@ -35,7 +35,7 @@ public interface EmbeddedWorkerInstanceContainer extends EmbeddedInstanceContain
 
     /**
      * Returns the default Worker IoC resolver. The definition of the default worker is implementation specific.
-     * Typically, this is the fist configured {@link ApplicationId}
+     * Typically, this is the fist configured {@link DeploymentId}
      *
      * @return the default worker IoC resolver.
      */
@@ -44,25 +44,25 @@ public interface EmbeddedWorkerInstanceContainer extends EmbeddedInstanceContain
     /**
      * Gets the {@link ServiceLocator} for the {@link Node} associated with the supplied {@link NodeId}
      *
-     * @param applicationId
+     * @param nodeId
      * @return the {@link NodeId}
      */
-    ServiceLocator getIocResolver(NodeId applicationId);
+    ServiceLocator getIocResolver(NodeId nodeId);
 
     /**
      * Gets the {@link ServiceLocator} for the {@link Node} associated with the supplied {@link NodeId}
      *
-     * @param applicationId the {@link ApplicationId} of the application to fetch
+     * @param deploymentId the {@link DeploymentId} of the application to fetch
      * @return the {@link NodeId}
      */
-    default ServiceLocator getIocResolver(final ApplicationId applicationId) {
-        final var nodeId = NodeId.forInstanceAndApplication(getInstanceId(), applicationId);
+    default ServiceLocator getIocResolver(final DeploymentId deploymentId) {
+        final var nodeId = NodeId.forInstanceAndDeployment(getInstanceId(), deploymentId);
         return getIocResolver(nodeId);
     }
 
     /**
      * Fetches the default {@link NodeId} installed in this container. The definition of the default worker is
-     * implementation specific. Typically, this is the fist configured {@link ApplicationId}.
+     * implementation specific. Typically, this is the fist configured {@link DeploymentId}.
      *
      * @return the {@link NodeId}
      */
@@ -71,13 +71,13 @@ public interface EmbeddedWorkerInstanceContainer extends EmbeddedInstanceContain
     }
 
     /**
-     * Fetches the default {@link ApplicationId} installed in this container. The definition of the default worker is
-     * implementation specific. Typically, this is the fist configured {@link ApplicationId}.
+     * Fetches the default {@link DeploymentId} installed in this container. The definition of the default worker is
+     * implementation specific. Typically, this is the fist configured {@link DeploymentId}.
      *
      * @return the {@link NodeId}
      */
-    default ApplicationId getApplicationId() {
-        return getNodeId().getApplicationId();
+    default DeploymentId getDeploymentId() {
+        return getNodeId().getDeploymentId();
     }
 
 }

@@ -4,7 +4,7 @@ import dev.getelements.elements.rt.InstanceMetadata;
 import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceConnection;
@@ -101,21 +101,21 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
-    public List<RemoteInvokerStatus> getAllRemoteInvokerStatuses(ApplicationId applicationId) {
+    public List<RemoteInvokerStatus> getAllRemoteInvokerStatuses(DeploymentId deploymentId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
-        return snapshot.getAllRemoteInvokerStatuses(applicationId);
+        return snapshot.getAllRemoteInvokerStatuses(deploymentId);
     }
 
     @Override
-    public RemoteInvokerStatus getBestRemoteInvokerStatus(ApplicationId applicationId) {
+    public RemoteInvokerStatus getBestRemoteInvokerStatus(DeploymentId deploymentId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
-        return snapshot.getBestInvokerStatusForApplication(applicationId);
+        return snapshot.getBestInvokerStatusForDeployment(deploymentId);
     }
 
     @Override
-    public List<RemoteInvoker> getAllRemoteInvokers(final ApplicationId applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokers(final DeploymentId deploymentId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
-        return snapshot.getAllRemoteInvokersForApplication(applicationId);
+        return snapshot.getAllRemoteInvokersForDeployment(deploymentId);
     }
 
     @Override

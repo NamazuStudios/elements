@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.routing;
 
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractAggregateRoutingStrategy.class);
 
-    private ApplicationId applicationId;
+    private DeploymentId deploymentId;
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
@@ -127,7 +127,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      */
     protected List<RemoteInvoker> getRemoteInvokers(final List<Object> address) {
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-        return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
+        return getRemoteInvokerRegistry().getAllRemoteInvokers(getDeploymentId());
     }
 
     /**
@@ -176,13 +176,13 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
         return ra;
     }
 
-    public ApplicationId getApplicationId() {
-        return applicationId;
+    public DeploymentId getDeploymentId() {
+        return deploymentId;
     }
 
     @Inject
-    public void setApplicationId(ApplicationId applicationId) {
-        this.applicationId = applicationId;
+    public void setDeploymentId(DeploymentId deploymentId) {
+        this.deploymentId = deploymentId;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {

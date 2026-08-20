@@ -30,10 +30,10 @@ public class NodeHealthWorkerWatchdog implements WorkerWatchdog {
             final var unhealthy = mutator.getNodeSet()
                 .stream()
                 .filter(node -> UNHEALTHY.equals(node.getState()))
-                .map(n -> n.getNodeId().getApplicationId())
+                .map(n -> n.getNodeId().getDeploymentId())
                 .collect(toSet());
 
-            unhealthy.forEach(applicationId -> logger.error("Node {} is unhealthy. Restarting.", applicationId));
+            unhealthy.forEach(deploymentId -> logger.error("Node {} is unhealthy. Restarting.", deploymentId));
             mutator.restartNode(unhealthy);
             mutator.commit();
 

@@ -34,6 +34,8 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
 
     private transient volatile InstanceId instanceId;
 
+    private transient volatile DeploymentId deploymentId;
+
     private transient volatile ApplicationId applicationId;
 
     private NodeId() { v1CompoundId = null; }
@@ -56,10 +58,21 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     /**
+     * Gets the {@link DeploymentId} for this {@link NodeId}.
+     *
+     * @return the {@link DeploymentId}
+     */
+    public DeploymentId getDeploymentId() {
+        return (deploymentId == null) ? (deploymentId = new DeploymentId(v1CompoundId)) : deploymentId;
+    }
+
+    /**
      * Gets the {@link UUID} for this {@link NodeId}.
      *
      * @return the {@link UUID}
+     * @deprecated use {@link #getDeploymentId()}
      */
+    @Deprecated
     public ApplicationId getApplicationId() {
         return (applicationId == null) ? (applicationId = new ApplicationId(v1CompoundId)) : applicationId;
     }
@@ -215,23 +228,36 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     /**
-     * Constructs a {@link NodeId} for the given {@link InstanceId} as well as {@link ApplicationId}.
+     * Constructs a {@link NodeId} for the given {@link InstanceId} as well as {@link DeploymentId}.
      *
      * @param instanceId the {@link InstanceId}
-     * @param applicationId the {@link ApplicationId}
+     * @param deploymentId the {@link DeploymentId}
      * @return a new {@link NodeId}
      */
-    public static NodeId forInstanceAndApplication(final InstanceId instanceId, final ApplicationId applicationId) {
+    public static NodeId forInstanceAndDeployment(final InstanceId instanceId, final DeploymentId deploymentId) {
         try {
             return new NodeId(new V1CompoundId.Builder()
                 .with(instanceId.v1CompoundId)
-                .with(applicationId.v1CompoundId.getComponent(APPLICATION))
+                .with(deploymentId.v1CompoundId.getComponent(APPLICATION))
                 .only(INSTANCE, APPLICATION)
                 .build()
             );
         } catch (IllegalArgumentException ex) {
             throw new InvalidNodeIdException(ex);
         }
+    }
+
+    /**
+     * Constructs a {@link NodeId} for the given {@link InstanceId} as well as {@link ApplicationId}.
+     *
+     * @param instanceId the {@link InstanceId}
+     * @param applicationId the {@link ApplicationId}
+     * @return a new {@link NodeId}
+     * @deprecated use {@link #forInstanceAndDeployment(InstanceId, DeploymentId)}
+     */
+    @Deprecated
+    public static NodeId forInstanceAndApplication(final InstanceId instanceId, final ApplicationId applicationId) {
+        return forInstanceAndDeployment(instanceId, applicationId);
     }
 
     /**

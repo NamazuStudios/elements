@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.remote;
 
 import dev.getelements.elements.rt.exception.NodeNotFoundException;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.remote.RemoteInvokerRegistry.RemoteInvokerStatus;
@@ -53,15 +53,15 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public RemoteInvokerStatus getBestInvokerStatusForApplication(final ApplicationId applicationId) {
+    public RemoteInvokerStatus getBestInvokerStatusForDeployment(final DeploymentId deploymentId) {
 
         final Lock lock = readWriteLock.readLock();
 
         try {
             lock.lock();
-            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<SnapshotEntry> byLoad = storage.invokersByDeployment.get(deploymentId);
             if (byLoad == null || byLoad.isEmpty())
-                throw new NodeNotFoundException("Unknown Application: " + applicationId);
+                throw new NodeNotFoundException("Unknown Deployment: " + deploymentId);
             return byLoad.getFirst();
         } finally {
             lock.unlock();
@@ -69,15 +69,15 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public List<RemoteInvoker> getAllRemoteInvokersForApplication(final ApplicationId applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokersForDeployment(final DeploymentId deploymentId) {
 
         final Lock lock = readWriteLock.readLock();
 
         try {
             lock.lock();
-            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<SnapshotEntry> byLoad = storage.invokersByDeployment.get(deploymentId);
             if (byLoad == null || byLoad.isEmpty())
-                throw new NodeNotFoundException("Unknown Application: " + applicationId);
+                throw new NodeNotFoundException("Unknown Deployment: " + deploymentId);
             return byLoad.stream().map(SnapshotEntry::getInvoker).collect(toList());
         } finally {
             lock.unlock();
@@ -85,15 +85,15 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public List<RemoteInvokerStatus> getAllRemoteInvokerStatuses(final ApplicationId applicationId) {
+    public List<RemoteInvokerStatus> getAllRemoteInvokerStatuses(final DeploymentId deploymentId) {
 
         final Lock lock = readWriteLock.readLock();
 
         try {
             lock.lock();
-            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<SnapshotEntry> byLoad = storage.invokersByDeployment.get(deploymentId);
             if (byLoad == null || byLoad.isEmpty())
-                throw new NodeNotFoundException("Unknown Application: " + applicationId);
+                throw new NodeNotFoundException("Unknown Deployment: " + deploymentId);
             return byLoad.stream().collect(toList());
         } finally {
             lock.unlock();
@@ -226,7 +226,7 @@ class RemoteInvokerRegistrySnapshot {
 
         private final Map<NodeId, SnapshotEntry> invokersByNode = new LinkedHashMap<>();
 
-        private final Map<ApplicationId, List<SnapshotEntry>> invokersByApplication = new LinkedHashMap<>();
+        private final Map<DeploymentId, List<SnapshotEntry>> invokersByDeployment = new LinkedHashMap<>();
 
         private void add(final NodeId nodeId, final double quality,
                          final Supplier<RemoteInvoker> remoteInvokerSupplier) {
@@ -239,8 +239,8 @@ class RemoteInvokerRegistrySnapshot {
                 }
             });
 
-            final var applicationId = nodeId.getApplicationId();
-            final var remoteInvokerList = invokersByApplication.computeIfAbsent(applicationId, nid -> new ArrayList<>());
+            final var deploymentId = nodeId.getDeploymentId();
+            final var remoteInvokerList = invokersByDeployment.computeIfAbsent(deploymentId, nid -> new ArrayList<>());
 
             remoteInvokerList.removeIf(pri -> pri.isSameInvoker(entry));
             remoteInvokerList.add(entry);
@@ -252,7 +252,7 @@ class RemoteInvokerRegistrySnapshot {
             final var removed = invokersByNode.remove(nodeId);
             if (removed != null) invokersToPurge.add(removed.getInvoker());
 
-            final var iterator = invokersByApplication
+            final var iterator = invokersByDeployment
                 .values()
                 .iterator();
 
@@ -295,7 +295,7 @@ class RemoteInvokerRegistrySnapshot {
 
         private void sort() {
             final Comparator<SnapshotEntry> comparator = comparingDouble(SnapshotEntry::getPriority).reversed();
-            invokersByApplication.forEach((id, invokers) -> invokers.sort(comparator));
+            invokersByDeployment.forEach((id, invokers) -> invokers.sort(comparator));
         }
 
         private void clear() {
@@ -311,7 +311,7 @@ class RemoteInvokerRegistrySnapshot {
         private Storage begin() {
             final Storage copy = new Storage();
             copy.invokersByNode.putAll(invokersByNode);
-            invokersByApplication.forEach((k,v) -> copy.invokersByApplication.put(k, new ArrayList<>(v)));
+            invokersByDeployment.forEach((k,v) -> copy.invokersByDeployment.put(k, new ArrayList<>(v)));
             return copy;
         }
 

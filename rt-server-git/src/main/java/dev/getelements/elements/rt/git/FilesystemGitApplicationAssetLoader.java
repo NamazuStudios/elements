@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.model.exception.ApplicationCodeNotFoundExcep
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -32,14 +32,14 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 
 /**
- * A special class which will load an {@link ApplicationId}'s code to a local temporary directory where it can be
+ * A special class which will load an {@link DeploymentId}'s code to a local temporary directory where it can be
  * processed and run.
  *
  * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore it clones from
  * a git repository stored elsewhere on disk.  This is specified using the {@link FileSystemScriptStorageGitLoaderProvider#ELEMENT_STORAGE_DIRECTORY}
  * configuration parameter.
  *
- * Note that the {@link GitApplicationAssetLoader} interface essentially calls for unpacking of the {@link ApplicationId} code to a
+ * Note that the {@link GitApplicationAssetLoader} interface essentially calls for unpacking of the {@link DeploymentId} code to a
  * local directory.  The designation "Filesystem" refers to the source of the repository as opposed to the id
  * of the working directory.
  *
@@ -55,39 +55,39 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
 
     private File gitStorageDirectory;
 
-    private final ConcurrentMap<String, Lock> applicationIdLockConcurrentMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Lock> deploymentIdLockConcurrentMap = new ConcurrentHashMap<>();
 
-    private final ConcurrentMap<String, Path> applicationIdFileConcurrentMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, Path> deploymentIdFileConcurrentMap = new ConcurrentHashMap<>();
 
     /**
      *
      * Used by the {@link GitApplicationAssetLoader} instances to determine the bare storage directory for a
-     * particular {@link ApplicationId}.  This derives the path in a unique and consistent
+     * particular {@link DeploymentId}.  This derives the path in a unique and consistent
      * manner.
      *
      * @param parent the parent directory as expressed by a {@link File}
-     * @param applicationId the {@link ApplicationId}
+     * @param deploymentId the {@link DeploymentId}
      *
-     * @return a {@link File} representing the bare storage directory for the {@link ApplicationId}
+     * @return a {@link File} representing the bare storage directory for the {@link DeploymentId}
      *
      */
-    public static File getBareStorageDirectory(final File parent, final ApplicationId applicationId) {
-        final var gitDirectory = new File(parent, format("%s.%s", applicationId.asString(), GIT_SUFFIX)).toPath();
+    public static File getBareStorageDirectory(final File parent, final DeploymentId deploymentId) {
+        final var gitDirectory = new File(parent, format("%s.%s", deploymentId.asString(), GIT_SUFFIX)).toPath();
         return gitDirectory.toFile();
     }
 
     @Override
-    public void performInGit(final ApplicationId applicationId,
+    public void performInGit(final DeploymentId deploymentId,
                              final BiConsumer<Git, Path> gitConsumer) {
-        try (var monitor = Monitor.enter(lockFor(applicationId))){
-            doPerformInGit(applicationId, gitConsumer);
+        try (var monitor = Monitor.enter(lockFor(deploymentId))){
+            doPerformInGit(deploymentId, gitConsumer);
         }
     }
 
-    private void doPerformInGit(final ApplicationId applicationId,
+    private void doPerformInGit(final DeploymentId deploymentId,
                                 final BiConsumer<Git, Path> gitConsumer) {
 
-        final var assetDirectory = getAssetPath(applicationId);
+        final var assetDirectory = getAssetPath(deploymentId);
 
         try (final Git git = Git.open(assetDirectory.toFile())) {
             gitConsumer.accept(git, assetDirectory);
@@ -99,35 +99,35 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
 
 
     @Override
-    public Path getAssetPath(final ApplicationId applicationId) {
-        try (var monitor = Monitor.enter(lockFor(applicationId))) {
-            return doGetCodeDirectory(applicationId);
+    public Path getAssetPath(final DeploymentId deploymentId) {
+        try (var monitor = Monitor.enter(lockFor(deploymentId))) {
+            return doGetCodeDirectory(deploymentId);
         }
     }
 
-    private Lock lockFor(final ApplicationId applicationId) {
-        return applicationIdLockConcurrentMap.computeIfAbsent(applicationId.asString(), k -> new ReentrantLock());
+    private Lock lockFor(final DeploymentId deploymentId) {
+        return deploymentIdLockConcurrentMap.computeIfAbsent(deploymentId.asString(), k -> new ReentrantLock());
     }
 
-    private Path doGetCodeDirectory(final ApplicationId applicationId) {
+    private Path doGetCodeDirectory(final DeploymentId deploymentId) {
 
-        final var workTree = applicationIdFileConcurrentMap.computeIfAbsent(
-                applicationId.asString(),
+        final var workTree = deploymentIdFileConcurrentMap.computeIfAbsent(
+                deploymentId.asString(),
                 this::computeWorkTreeDirectory
         );
 
-        cloneIfNecessary(applicationId, workTree);
+        cloneIfNecessary(deploymentId, workTree);
         return workTree;
 
     }
 
-    private Path computeWorkTreeDirectory(final String applicationId) {
+    private Path computeWorkTreeDirectory(final String deploymentId) {
 
         final Path assets;
 
         try {
 
-            final String prefix = format("%s.%s-", applicationId, GIT_SUFFIX);
+            final String prefix = format("%s.%s-", deploymentId, GIT_SUFFIX);
             assets = temporaryFiles.createTempDirectory(prefix).toAbsolutePath();
         } catch (UncheckedIOException ex) {
             throw new InternalException(ex.getCause());
@@ -137,7 +137,7 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
 
     }
 
-    private void cloneIfNecessary(final ApplicationId applicationId, final Path workTreePath) {
+    private void cloneIfNecessary(final DeploymentId deploymentId, final Path workTreePath) {
 
         final var workTree = workTreePath.toFile();
 
@@ -149,18 +149,18 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
         try (final Repository repository = fileRepositoryBuilder.build()) {
             logger.info("Found {} for application {} at {}.",
                 repository,
-                applicationId.asString(),
+                deploymentId.asString(),
                 workTreePath.toAbsolutePath());
         } catch (RepositoryNotFoundException ex) {
-            clone(applicationId, workTree);
+            clone(deploymentId, workTree);
         } catch (IOException ex) {
             throw new InternalException(ex);
         }
 
     }
 
-    private void clone(final ApplicationId applicationId, final File destinationDirectory) {
-        try (final Git git = openCloneCommand(applicationId, destinationDirectory).call()) {
+    private void clone(final DeploymentId deploymentId, final File destinationDirectory) {
+        try (final Git git = openCloneCommand(deploymentId, destinationDirectory).call()) {
 
             final List<Ref> branches = git.branchList().call();
             logger.info("Branches available [{}]", join(","), branches);
@@ -175,15 +175,15 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
         }
     }
 
-    private CloneCommand openCloneCommand(final ApplicationId applicationId, final File destinationDirectory) {
+    private CloneCommand openCloneCommand(final DeploymentId deploymentId, final File destinationDirectory) {
 
-        final var gitDirectory = getBareStorageDirectory(applicationId);
+        final var gitDirectory = getBareStorageDirectory(deploymentId);
 
         if (!gitDirectory.isDirectory()) {
-            throw new ApplicationCodeNotFoundException("git directory not found for application: " + applicationId.asString());
+            throw new ApplicationCodeNotFoundException("git directory not found for application: " + deploymentId.asString());
         }
 
-        final var prefix = String.format("%s git", applicationId.asString());
+        final var prefix = String.format("%s git", deploymentId.asString());
 
         return Git.cloneRepository()
             .setURI(gitDirectory.toURI().toString())
@@ -212,8 +212,8 @@ public class FilesystemGitApplicationAssetLoader implements GitApplicationAssetL
 
     }
 
-    private File getBareStorageDirectory(final ApplicationId applicationId) {
-        return getBareStorageDirectory(getGitStorageDirectory(), applicationId);
+    private File getBareStorageDirectory(final DeploymentId deploymentId) {
+        return getBareStorageDirectory(getGitStorageDirectory(), deploymentId);
     }
 
     public File getGitStorageDirectory() {

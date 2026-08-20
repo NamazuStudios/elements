@@ -1,14 +1,14 @@
 package dev.getelements.elements.rt.remote.guice;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 
 import jakarta.inject.Provider;
 
-import static dev.getelements.elements.sdk.cluster.id.ApplicationId.forUniqueName;
-import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndApplication;
+import static dev.getelements.elements.sdk.cluster.id.DeploymentId.forUniqueName;
+import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndDeployment;
 
 public class NodeIdModule extends PrivateModule {
 
@@ -29,8 +29,8 @@ public class NodeIdModule extends PrivateModule {
     }
 
     /**
-     * Supplies a {@link NodeId} for a master node using {@link ApplicationId#forUniqueName(String)} and further
-     * constructing the using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
+     * Supplies a {@link NodeId} for a master node using {@link DeploymentId#forUniqueName(String)} and further
+     * constructing the using{@link NodeId#forInstanceAndDeployment(InstanceId, DeploymentId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      * @return the {@link NodeIdModule}
@@ -40,25 +40,25 @@ public class NodeIdModule extends PrivateModule {
     }
 
     /**
-     * Supplies a {@link NodeId} for a node using {@link ApplicationId#forUniqueName(String)} and further constructing
-     * the {@link NodeId} using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
+     * Supplies a {@link NodeId} for a node using {@link DeploymentId#forUniqueName(String)} and further constructing
+     * the {@link NodeId} using{@link NodeId#forInstanceAndDeployment(InstanceId, DeploymentId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      */
-    public static NodeIdModule forApplicationUniqueName(final Provider<InstanceId> instanceIdProvider,
-                                                        final String applicationUniqueName) {
-        return forApplication(instanceIdProvider, forUniqueName(applicationUniqueName));
+    public static NodeIdModule forDeploymentUniqueName(final Provider<InstanceId> instanceIdProvider,
+                                                        final String deploymentUniqueName) {
+        return forDeployment(instanceIdProvider, forUniqueName(deploymentUniqueName));
     }
 
     /**
      * Supplies a {@link NodeId} for a master node using using
-     * {@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
+     * {@link NodeId#forInstanceAndDeployment(InstanceId, DeploymentId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      */
-    public static NodeIdModule forApplication(final Provider<InstanceId> instanceIdProvider,
-                                              final ApplicationId applicationId) {
-        return new NodeIdModule(() -> forInstanceAndApplication(instanceIdProvider.get(), applicationId));
+    public static NodeIdModule forDeployment(final Provider<InstanceId> instanceIdProvider,
+                                              final DeploymentId deploymentId) {
+        return new NodeIdModule(() -> forInstanceAndDeployment(instanceIdProvider.get(), deploymentId));
     }
 
 }

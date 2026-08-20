@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.remote;
 
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceBinding;
 import dev.getelements.elements.rt.remote.Worker.Mutator;
@@ -144,13 +144,13 @@ public interface Node {
     interface Factory {
 
         /**
-         * Creates a {@link Node} for the supplied {@link ApplicationId}
+         * Creates a {@link Node} for the supplied {@link DeploymentId}
          *
-         * @param applicationId the {@link ApplicationId} which will be used to create the {@link Node}
+         * @param deploymentId the {@link DeploymentId} which will be used to create the {@link Node}
          *
          * @return the {@link Node}
          */
-        Node create(ApplicationId applicationId);
+        Node create(DeploymentId deploymentId);
 
         /**
          * Indicates that factory support is currently disabled or otherwise unsupported.

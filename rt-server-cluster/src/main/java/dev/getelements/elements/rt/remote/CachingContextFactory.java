@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt.remote;
 
 import dev.getelements.elements.rt.Context;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
 
 import jakarta.inject.Inject;
@@ -14,26 +14,26 @@ public class CachingContextFactory implements Context.Factory {
 
     private final ShutdownHooks shutdownHooks = new ShutdownHooks(CachingContextFactory.class);
 
-    private final Map<ApplicationId, Context> cache = new ConcurrentHashMap<>();
+    private final Map<DeploymentId, Context> cache = new ConcurrentHashMap<>();
 
-    private Function<ApplicationId, Context> applicationContextSupplier;
+    private Function<DeploymentId, Context> deploymentContextSupplier;
 
     @Override
-    public Context getContextForApplication(final ApplicationId applicationId) {
-        return cache.computeIfAbsent(applicationId, k -> {
-            final Context context = getApplicationContextSupplier().apply(k);
+    public Context getContextForApplication(final DeploymentId deploymentId) {
+        return cache.computeIfAbsent(deploymentId, k -> {
+            final Context context = getDeploymentContextSupplier().apply(k);
             shutdownHooks.add(context, context::shutdown);
             return context;
         });
     }
 
-    public Function<ApplicationId, Context> getApplicationContextSupplier() {
-        return applicationContextSupplier;
+    public Function<DeploymentId, Context> getDeploymentContextSupplier() {
+        return deploymentContextSupplier;
     }
 
     @Inject
-    public void setApplicationContextSupplier(final Function<ApplicationId, Context> applicationContextSupplier) {
-        this.applicationContextSupplier = applicationContextSupplier;
+    public void setDeploymentContextSupplier(final Function<DeploymentId, Context> deploymentContextSupplier) {
+        this.deploymentContextSupplier = deploymentContextSupplier;
     }
 
 }

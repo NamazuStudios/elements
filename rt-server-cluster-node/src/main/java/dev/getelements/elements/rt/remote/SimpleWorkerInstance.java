@@ -2,7 +2,7 @@ package dev.getelements.elements.rt.remote;
 
 import dev.getelements.elements.rt.PersistenceEnvironment;
 import dev.getelements.elements.rt.exception.MultiException;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.slf4j.Logger;
@@ -275,13 +275,13 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
             boolean locked = true;
 
-            final Set<ApplicationId> toAdd = new HashSet<>();
+            final Set<DeploymentId> toAdd = new HashSet<>();
 
-            final Set<ApplicationId> toRemove = new HashSet<>();
+            final Set<DeploymentId> toRemove = new HashSet<>();
 
-            final Set<ApplicationId> existing = nodeSet
+            final Set<DeploymentId> existing = nodeSet
                 .stream()
-                .map(n -> n.getNodeId().getApplicationId())
+                .map(n -> n.getNodeId().getDeploymentId())
                 .collect(toSet());
 
             @Override
@@ -296,14 +296,14 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
-            public Mutator addNode(final ApplicationId applicationId) {
+            public Mutator addNode(final DeploymentId deploymentId) {
 
                 check();
 
-                if (existing.contains(applicationId)) {
-                    throw new IllegalArgumentException("Application already exists: " + applicationId);
-                } else if (!toAdd.add(applicationId)) {
-                    throw new IllegalArgumentException("Application already added for this Mutation: " + applicationId);
+                if (existing.contains(deploymentId)) {
+                    throw new IllegalArgumentException("Application already exists: " + deploymentId);
+                } else if (!toAdd.add(deploymentId)) {
+                    throw new IllegalArgumentException("Application already added for this Mutation: " + deploymentId);
                 }
 
                 return this;
@@ -311,18 +311,18 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
-            public Mutator restartNode(final ApplicationId applicationId) {
+            public Mutator restartNode(final DeploymentId deploymentId) {
 
                 check();
 
-                if (!existing.contains(applicationId)) {
-                    throw new IllegalArgumentException("Application does not exist: "  + applicationId);
-                } else if (toAdd.contains(applicationId)) {
-                    throw new IllegalArgumentException("Application already slated for addition: "  + applicationId);
-                } else if (!toRemove.add(applicationId)) {
-                    throw new IllegalArgumentException("Application already slated for removal: " + applicationId);
+                if (!existing.contains(deploymentId)) {
+                    throw new IllegalArgumentException("Application does not exist: "  + deploymentId);
+                } else if (toAdd.contains(deploymentId)) {
+                    throw new IllegalArgumentException("Application already slated for addition: "  + deploymentId);
+                } else if (!toRemove.add(deploymentId)) {
+                    throw new IllegalArgumentException("Application already slated for removal: " + deploymentId);
                 } else {
-                    toAdd.add(applicationId);
+                    toAdd.add(deploymentId);
                 }
 
                 return this;
@@ -330,16 +330,16 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
-            public Mutator removeNode(final ApplicationId applicationId) {
+            public Mutator removeNode(final DeploymentId deploymentId) {
 
                 check();
 
-                if (!existing.contains(applicationId)) {
-                    throw new IllegalArgumentException("Application does not exist: "  + applicationId);
-                } else if (toAdd.contains(applicationId)) {
-                    throw new IllegalArgumentException("Application already slated for addition: "  + applicationId);
-                } else if (!toRemove.add(applicationId)) {
-                    throw new IllegalArgumentException("Application already slated for removal: " + applicationId);
+                if (!existing.contains(deploymentId)) {
+                    throw new IllegalArgumentException("Application does not exist: "  + deploymentId);
+                } else if (toAdd.contains(deploymentId)) {
+                    throw new IllegalArgumentException("Application already slated for addition: "  + deploymentId);
+                } else if (!toRemove.add(deploymentId)) {
+                    throw new IllegalArgumentException("Application already slated for removal: " + deploymentId);
                 }
 
                 return this;
@@ -355,7 +355,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
                 final var toStop = nodeSet
                     .stream()
-                    .filter(n -> toRemove.contains(n.getNodeId().getApplicationId()))
+                    .filter(n -> toRemove.contains(n.getNodeId().getDeploymentId()))
                     .collect(toList());
 
                 doShutdownNodes(toStop.stream(), exceptions::add);
@@ -391,7 +391,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 toAdd.clear();
                 toRemove.clear();
                 existing.clear();
-                nodeSet.forEach(n -> existing.add(n.getNodeId().getApplicationId()));
+                nodeSet.forEach(n -> existing.add(n.getNodeId().getDeploymentId()));
             }
 
             private void check() {

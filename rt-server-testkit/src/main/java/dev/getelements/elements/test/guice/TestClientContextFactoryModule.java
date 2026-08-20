@@ -3,7 +3,7 @@ package dev.getelements.elements.test.guice;
 import com.google.inject.*;
 import dev.getelements.elements.rt.Context;
 import dev.getelements.elements.sdk.guice.GuiceServiceLocatorModule;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.rt.remote.CachingContextFactory;
 import dev.getelements.elements.rt.remote.RemoteInvocationDispatcher;
 import dev.getelements.elements.rt.remote.SimpleRemoteInvocationDispatcher;
@@ -26,7 +26,7 @@ public class TestClientContextFactoryModule extends PrivateModule {
 
         final var injectorProvider = getProvider(Injector.class);
 
-        bind(new TypeLiteral<Function<ApplicationId, Context>>(){}).toProvider(() -> applicationId -> {
+        bind(new TypeLiteral<Function<DeploymentId, Context>>(){}).toProvider(() -> deploymentId -> {
 
             final var module = new AbstractModule() {
                 @Override
@@ -34,7 +34,7 @@ public class TestClientContextFactoryModule extends PrivateModule {
 
                     install(new ClusterContextModule());
                     install(new GuiceServiceLocatorModule());
-                    bind(ApplicationId.class).toInstance(applicationId);
+                    bind(DeploymentId.class).toInstance(deploymentId);
 
                     bind(RemoteInvocationDispatcher.class)
                             .to(SimpleRemoteInvocationDispatcher.class)

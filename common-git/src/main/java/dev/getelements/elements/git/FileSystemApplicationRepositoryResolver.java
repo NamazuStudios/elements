@@ -1,7 +1,7 @@
 package dev.getelements.elements.git;
 
 import dev.getelements.elements.sdk.model.application.Application;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
@@ -49,8 +49,8 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
             throw new IllegalStateException();
         }
 
-        final var applicationId = ApplicationId.forUniqueName(application.getId());
-        final var repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), applicationId);
+        final var deploymentId = DeploymentId.forUniqueName(application.getId());
+        final var repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), deploymentId);
 
         if (!repositoryDirectory.exists() && !repositoryDirectory.mkdirs()) {
             throw new ServiceMayNotContinueException("cannot create " + repositoryDirectory.getAbsolutePath());
