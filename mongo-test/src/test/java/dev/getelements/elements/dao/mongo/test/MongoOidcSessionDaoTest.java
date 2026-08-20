@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
@@ -15,16 +16,38 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.SessionDao.SESSION_CREATED;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.singletonMap;
 import static java.time.LocalDateTime.now;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoOidcSessionDaoTest {
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final List<Session> createdEvents = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            if (SESSION_CREATED.equals(ev.getEventName())) {
+                createdEvents.add(ev.getEventArgument(0, Session.class));
+            }
+        });
+    }
 
     private UserDao userDao;
 
@@ -83,6 +106,11 @@ public class MongoOidcSessionDaoTest {
         assertNotNull(creation.getSessionSecret());
         assertEquals(creation.getSession().getUser(), testUser);
         assertEquals(creation.getSession().getApplication(), testApplication);
+
+        assertTrue(
+                createdEvents.stream().anyMatch(s -> s.getUser().equals(testUser)),
+                "Expected SESSION_CREATED event for user: " + testUser.getId()
+        );
 
     }
 

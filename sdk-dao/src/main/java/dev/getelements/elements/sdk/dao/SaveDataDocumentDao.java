@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.dao;
 import dev.getelements.elements.sdk.model.exception.savedata.SaveDataNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.savedata.SaveDataDocument;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Optional;
@@ -11,7 +12,43 @@ import java.util.Optional;
  * Accesses save data documents from the database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_CREATED,
+        parameters = SaveDataDocument.class,
+        description = "Called when a save data document was created."
+)
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_CREATED,
+        parameters = {SaveDataDocument.class, Transaction.class},
+        description = "Called when a save data document was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_UPDATED,
+        parameters = SaveDataDocument.class,
+        description = "Called when a save data document was updated."
+)
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_UPDATED,
+        parameters = {SaveDataDocument.class, Transaction.class},
+        description = "Called when a save data document was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_DELETED,
+        parameters = SaveDataDocument.class,
+        description = "Called when a save data document was deleted."
+)
+@ElementEventProducer(
+        value = SaveDataDocumentDao.SAVE_DATA_DOCUMENT_DELETED,
+        parameters = {SaveDataDocument.class, Transaction.class},
+        description = "Called when a save data document was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface SaveDataDocumentDao {
+
+    String SAVE_DATA_DOCUMENT_CREATED = "dev.getelements.elements.sdk.model.dao.save.data.document.created";
+
+    String SAVE_DATA_DOCUMENT_UPDATED = "dev.getelements.elements.sdk.model.dao.save.data.document.updated";
+
+    String SAVE_DATA_DOCUMENT_DELETED = "dev.getelements.elements.sdk.model.dao.save.data.document.deleted";
 
     /**
      * Gets a {@link SaveDataDocument} from the supplied id.

@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.inventory.DistinctInventoryItem;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
@@ -12,7 +13,43 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_CREATED,
+        parameters = DistinctInventoryItem.class,
+        description = "Called when a distinct inventory item was created."
+)
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_CREATED,
+        parameters = {DistinctInventoryItem.class, Transaction.class},
+        description = "Called when a distinct inventory item was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_UPDATED,
+        parameters = DistinctInventoryItem.class,
+        description = "Called when a distinct inventory item was updated."
+)
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_UPDATED,
+        parameters = {DistinctInventoryItem.class, Transaction.class},
+        description = "Called when a distinct inventory item was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_DELETED,
+        parameters = DistinctInventoryItem.class,
+        description = "Called when a distinct inventory item was deleted."
+)
+@ElementEventProducer(
+        value = DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_DELETED,
+        parameters = {DistinctInventoryItem.class, Transaction.class},
+        description = "Called when a distinct inventory item was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface DistinctInventoryItemDao {
+
+    String DISTINCT_INVENTORY_ITEM_CREATED = "dev.getelements.elements.sdk.model.dao.distinctinventoryitem.created";
+
+    String DISTINCT_INVENTORY_ITEM_UPDATED = "dev.getelements.elements.sdk.model.dao.distinctinventoryitem.updated";
+
+    String DISTINCT_INVENTORY_ITEM_DELETED = "dev.getelements.elements.sdk.model.dao.distinctinventoryitem.deleted";
 
     /**
      * Creates a distinct inventory item.

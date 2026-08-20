@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.application;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -20,6 +21,7 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -49,6 +51,8 @@ public class MongoApplicationDao implements ApplicationDao {
 
     private MapperRegistry mapperRegistry;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public Application createApplication(final Application application) {
 
@@ -70,7 +74,14 @@ public class MongoApplicationDao implements ApplicationDao {
 
         getDatastore().insert(mongoApplication);
 
-        return transform(mongoApplication);
+        final var createdApplication = transform(mongoApplication);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdApplication)
+                .named(APPLICATION_CREATED)
+                .build());
+
+        return createdApplication;
 
     }
 
@@ -179,7 +190,14 @@ public class MongoApplicationDao implements ApplicationDao {
             throw new ApplicationNotFoundException("application not found: " + (application.getId() != null ? application.getId() : application.getName()));
         }
 
-        return transform(mongoApplication);
+        final var updatedApplication = transform(mongoApplication);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedApplication)
+                .named(APPLICATION_UPDATED)
+                .build());
+
+        return updatedApplication;
 
     }
 
@@ -211,6 +229,11 @@ public class MongoApplicationDao implements ApplicationDao {
         if (mongoApplication == null) {
             throw new ApplicationNotFoundException("application not found: " + nameOrId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(transform(mongoApplication))
+                .named(APPLICATION_DELETED)
+                .build());
 
     }
 
@@ -317,6 +340,15 @@ public class MongoApplicationDao implements ApplicationDao {
     @Inject
     public void setMapperRegistry(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

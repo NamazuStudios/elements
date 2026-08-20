@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.savedata;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocument;
@@ -23,6 +24,7 @@ import jakarta.inject.Inject;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -43,6 +45,8 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
     private ValidationHelper validationHelper;
 
     private MongoPasswordUtils mongoPasswordUtils;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Optional<SaveDataDocument> findSaveDataDocument(final String saveDataDocumentId) {
@@ -174,7 +178,14 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
             sign(msd, document.getContents());
 
             final var result = getMongoDBUtils().perform(ds -> getDatastore().save(msd));
-            return getMapper().map(result, SaveDataDocument.class);
+            final var createdDocument = getMapper().map(result, SaveDataDocument.class);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(createdDocument)
+                    .named(SAVE_DATA_DOCUMENT_CREATED)
+                    .build());
+
+            return createdDocument;
 
         } catch (UserNotFoundException | ProfileNotFoundException ex) {
             throw new InvalidDataException(ex);
@@ -223,7 +234,14 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
         if (result == null)
             throw new SaveDataNotFoundException("No save data with id: " + document.getId());
 
-        return getMapper().map(result, SaveDataDocument.class);
+        final var updatedDocument = getMapper().map(result, SaveDataDocument.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedDocument)
+                .named(SAVE_DATA_DOCUMENT_UPDATED)
+                .build());
+
+        return updatedDocument;
 
     }
 
@@ -272,7 +290,14 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
         if (result == null)
             throw new SaveDataNotFoundException("No save data with id: " + document.getId());
 
-        return getMapper().map(result, SaveDataDocument.class);
+        final var updatedDocument = getMapper().map(result, SaveDataDocument.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedDocument)
+                .named(SAVE_DATA_DOCUMENT_UPDATED)
+                .build());
+
+        return updatedDocument;
 
     }
 
@@ -287,13 +312,23 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
             return;
         }
 
-        final var result = getDatastore()
+        final var query = getDatastore()
             .find(MongoSaveDataDocument.class)
-            .filter(eq("_id", id))
-            .delete();
+            .filter(eq("_id", id));
+
+        final var existing = query.first();
+
+        final var result = query.delete();
 
         if (result.getDeletedCount() == 0) {
             throw new SaveDataNotFoundException("No save data with id: " + saveDataDocumentId);
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(getMapper().map(existing, SaveDataDocument.class))
+                    .named(SAVE_DATA_DOCUMENT_DELETED)
+                    .build());
         }
 
     }
@@ -360,6 +395,15 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
     @Inject
     public void setMongoPasswordUtils(MongoPasswordUtils mongoPasswordUtils) {
         this.mongoPasswordUtils = mongoPasswordUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

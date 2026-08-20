@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.model.exception.profile.ProfileLimitExceeded
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Map;
@@ -17,7 +18,43 @@ import java.util.Optional;
  * Created by patricktwohig on 6/28/17.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_CREATED,
+        parameters = Profile.class,
+        description = "Called when a profile was created."
+)
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_CREATED,
+        parameters = {Profile.class, Transaction.class},
+        description = "Called when a profile was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_UPDATED,
+        parameters = Profile.class,
+        description = "Called when a profile was updated."
+)
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_UPDATED,
+        parameters = {Profile.class, Transaction.class},
+        description = "Called when a profile was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_DELETED,
+        parameters = Profile.class,
+        description = "Called when a profile was soft-deleted."
+)
+@ElementEventProducer(
+        value = ProfileDao.PROFILE_DELETED,
+        parameters = {Profile.class, Transaction.class},
+        description = "Called when a profile was soft-deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ProfileDao {
+
+    String PROFILE_CREATED = "dev.getelements.elements.sdk.model.dao.profile.created";
+
+    String PROFILE_UPDATED = "dev.getelements.elements.sdk.model.dao.profile.updated";
+
+    String PROFILE_DELETED = "dev.getelements.elements.sdk.model.dao.profile.deleted";
 
     /**
      * Finds the profile with the supplied profile ID.  Returning null if no profile matches the requested profile ID.

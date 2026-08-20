@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.FCMRegistrationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.MongoFCMRegistration;
@@ -18,6 +19,7 @@ import org.bson.types.ObjectId;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -38,6 +40,8 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
     private MongoDBUtils mongoDBUtils;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public FCMRegistration createRegistration(final FCMRegistration fcmRegistration) {
 
@@ -51,7 +55,14 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
         datastore.save(mongoFCMRegistration);
 
-        return getMapper().map(mongoFCMRegistration, FCMRegistration.class);
+        final var createdRegistration = getMapper().map(mongoFCMRegistration, FCMRegistration.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdRegistration)
+                .named(FCM_REGISTRATION_CREATED)
+                .build());
+
+        return createdRegistration;
 
     }
 
@@ -75,7 +86,14 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistration.getId());
         }
 
-        return getMapper().map(mongoFCMRegistration, FCMRegistration.class);
+        final var updatedRegistration = getMapper().map(mongoFCMRegistration, FCMRegistration.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedRegistration)
+                .named(FCM_REGISTRATION_UPDATED)
+                .build());
+
+        return updatedRegistration;
 
     }
 
@@ -83,11 +101,26 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     public void deleteRegistration(final String fcmRegistrationId) {
 
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistrationId);
-        final DeleteResult deleteResult = getDatastore().find(MongoFCMRegistration.class).filter(eq("_id", registrationId)).delete();
+        final var query = getDatastore().find(MongoFCMRegistration.class).filter(eq("_id", registrationId));
+
+        final var existing = query.first();
+
+        if (existing == null) {
+            throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
+        }
+
+        final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
         }
+
+        final var deletedRegistration = getMapper().map(existing, FCMRegistration.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedRegistration)
+                .named(FCM_REGISTRATION_DELETED)
+                .build());
 
     }
 
@@ -100,11 +133,24 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
         final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
         query.filter(Filters.and(eq("_id", registrationId), eq("profile", mongoProfile)));
 
+        final var existing = query.first();
+
+        if (existing == null) {
+            throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
+        }
+
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
         }
+
+        final var deletedRegistration = getMapper().map(existing, FCMRegistration.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedRegistration)
+                .named(FCM_REGISTRATION_DELETED)
+                .build());
 
     }
 
@@ -183,6 +229,15 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

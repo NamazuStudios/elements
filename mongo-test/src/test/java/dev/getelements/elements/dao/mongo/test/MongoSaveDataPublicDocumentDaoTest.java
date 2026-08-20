@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.SaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.model.savedata.MongoSaveDataDocumentId;
 import dev.getelements.elements.sdk.model.exception.savedata.SaveDataNotFoundException;
@@ -22,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.dao.mongo.test.IntegrationTestModule.TEST_COMPONENT;
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.SaveDataDocumentDao.*;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.IntStream.range;
@@ -32,6 +35,30 @@ import static org.testng.AssertJUnit.*;
 public class MongoSaveDataPublicDocumentDaoTest {
 
     private MapperRegistry mapperRegistry;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case SAVE_DATA_DOCUMENT_CREATED ->
+                        createdEventIds.add(ev.getEventArgument(0, SaveDataDocument.class).getId());
+                case SAVE_DATA_DOCUMENT_UPDATED ->
+                        updatedEventIds.add(ev.getEventArgument(0, SaveDataDocument.class).getId());
+                case SAVE_DATA_DOCUMENT_DELETED ->
+                        deletedEventIds.add(ev.getEventArgument(0, SaveDataDocument.class).getId());
+            }
+        });
+    }
 
     private UserTestFactory userTestFactory;
 
@@ -133,6 +160,9 @@ public class MongoSaveDataPublicDocumentDaoTest {
         assertNull(result.getProfile());
         assertTrue(result.getTimestamp() >= now);
 
+        assertTrue("Expected SAVE_DATA_DOCUMENT_CREATED event for " + result.getId(),
+                createdEventIds.contains(result.getId()));
+
         putIntermediateDocument(user.getId(), slot, result);
 
     }
@@ -155,6 +185,9 @@ public class MongoSaveDataPublicDocumentDaoTest {
         assertEquals(slot, result.getSlot());
         assertEquals(profile, result.getProfile());
         assertTrue(result.getTimestamp() >= now);
+
+        assertTrue("Expected SAVE_DATA_DOCUMENT_CREATED event for " + result.getId(),
+                createdEventIds.contains(result.getId()));
 
         putIntermediateDocument(profile.getId(), slot, result);
 
@@ -181,6 +214,9 @@ public class MongoSaveDataPublicDocumentDaoTest {
         assertNotEquals(version, result.getVersion());
         assertNull(result.getProfile());
         assertTrue(result.getTimestamp() >= now);
+
+        assertTrue("Expected SAVE_DATA_DOCUMENT_UPDATED event for " + result.getId(),
+                updatedEventIds.contains(result.getId()));
 
         putIntermediateDocument(user.getId(), slot, result);
 
@@ -292,6 +328,9 @@ public class MongoSaveDataPublicDocumentDaoTest {
         assertEquals(slot, result.getSlot());
         assertNull(result.getProfile());
         assertTrue(result.getTimestamp() >= now);
+
+        assertTrue("Expected SAVE_DATA_DOCUMENT_UPDATED event for " + result.getId(),
+                updatedEventIds.contains(result.getId()));
 
         putIntermediateDocument(user.getId(), slot, result);
 
@@ -569,6 +608,8 @@ public class MongoSaveDataPublicDocumentDaoTest {
         for (var doc : intermediateDocuments.values()) {
             getSaveDataDocumentDao().deleteSaveDocument(doc.getId());
             assertTrue(getSaveDataDocumentDao().findSaveDataDocument(doc.getId()).isEmpty());
+            assertTrue("Expected SAVE_DATA_DOCUMENT_DELETED event for " + doc.getId(),
+                    deletedEventIds.contains(doc.getId()));
         }
 
         final var pagination = getSaveDataDocumentDao()

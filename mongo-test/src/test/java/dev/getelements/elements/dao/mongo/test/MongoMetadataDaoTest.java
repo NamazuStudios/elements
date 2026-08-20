@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.sdk.model.exception.metadata.MetadataNotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
@@ -9,6 +10,7 @@ import dev.getelements.elements.sdk.model.metadata.Metadata;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MetadataSpecBuilder;
+import jakarta.inject.Named;
 import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -21,8 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.MetadataDao.*;
 import static dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType.*;
 import static org.testng.Assert.*;
 
@@ -35,7 +40,28 @@ public class MongoMetadataDaoTest {
 
     private MetadataSpecTestFactory metadataSpecTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private final List<Metadata> metadataList = new CopyOnWriteArrayList<>();
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case METADATA_CREATED -> createdEventIds.add(ev.getEventArgument(0, Metadata.class).getId());
+                case METADATA_UPDATED -> updatedEventIds.add(ev.getEventArgument(0, Metadata.class).getId());
+                case METADATA_DELETED -> deletedEventIds.add(ev.getEventArgument(0, Metadata.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void setupMetadataSpec() {
@@ -120,6 +146,9 @@ public class MongoMetadataDaoTest {
         assertEquals(createdMetadata.getAccessLevel(), metadata.getAccessLevel());
         assertEquals(createdMetadata.getMetadata().size(), metadata.getMetadata().size());
 
+        assertTrue(createdEventIds.contains(createdMetadata.getId()),
+                "Expected METADATA_CREATED event for " + createdMetadata.getId());
+
     }
 
     @Test(groups = "update", dependsOnGroups = "create", dataProvider = "intermediateMetadataDataProvider")
@@ -142,6 +171,9 @@ public class MongoMetadataDaoTest {
         assertEquals(updatedMetadata.getAccessLevel(), metadataUpdate.getAccessLevel());
         assertEquals(updatedMetadata.getMetadata().size(), metadataUpdate.getMetadata().size());
         assertEquals(updatedMetadata.getMetadata().get("UpdateKey"), metadataUpdate.getMetadata().get("UpdateKey"));
+
+        assertTrue(updatedEventIds.contains(updatedMetadata.getId()),
+                "Expected METADATA_UPDATED event for " + updatedMetadata.getId());
 
         metadataList.stream().filter(m -> m.getId().equals(updatedMetadata.getId())).findFirst().ifPresent(m -> {
             m.setMetadata(updatedMetadata.getMetadata());
@@ -201,6 +233,8 @@ public class MongoMetadataDaoTest {
     @Test(groups = "delete", dependsOnGroups = "fetch", dataProvider = "intermediateMetadataDataProvider")
     public void testDelete(final Metadata metadata) {
         getMetadataDao().softDeleteMetadata(metadata.getId());
+        assertTrue(deletedEventIds.contains(metadata.getId()),
+                "Expected METADATA_DELETED event for " + metadata.getId());
     }
 
     @Test(groups = "delete",

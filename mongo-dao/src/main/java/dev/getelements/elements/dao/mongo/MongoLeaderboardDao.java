@@ -4,6 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.model.MongoLeaderboard;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.LeaderboardDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
@@ -19,6 +20,7 @@ import dev.morphia.query.filters.Filters;
 import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -35,6 +37,8 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     private Datastore datastore;
 
     private MapperRegistry beanMapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Leaderboard createLeaderboard(final Leaderboard leaderboard) {
@@ -80,7 +84,14 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new DuplicateException(ex);
         }
 
-        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+        final var createdLeaderboard = getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdLeaderboard)
+                .named(LEADERBOARD_CREATED)
+                .build());
+
+        return createdLeaderboard;
 
     }
 
@@ -168,7 +179,14 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new LeaderboardNotFoundException("Leaderboard not found: " + (leaderboard.getId() != null ? leaderboard.getId() : leaderboard.getName()));
         }
 
-        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+        final var updatedLeaderboard = getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedLeaderboard)
+                .named(LEADERBOARD_UPDATED)
+                .build());
+
+        return updatedLeaderboard;
 
     }
 
@@ -203,7 +221,14 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             throw new LeaderboardNotFoundException("Leaderboard not found: " + leaderboardNameOrId);
         }
 
-        return getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+        final var updatedLeaderboard = getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedLeaderboard)
+                .named(LEADERBOARD_UPDATED)
+                .build());
+
+        return updatedLeaderboard;
 
     }
 
@@ -220,11 +245,20 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             query.filter(Filters.eq("name", leaderboardNameOrId));
         }
 
+        final var mongoLeaderboard = query.first();
+
         final DeleteResult deleteResult = query.delete();
 
         if(deleteResult.getDeletedCount() == 0){
             throw new LeaderboardNotFoundException();
         }
+
+        final var deletedLeaderboard = getBeanMapper().map(mongoLeaderboard, Leaderboard.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedLeaderboard)
+                .named(LEADERBOARD_DELETED)
+                .build());
 
     }
 
@@ -262,6 +296,15 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     @Inject
     public void setBeanMapper(MapperRegistry beanMapperRegistry) {
         this.beanMapperRegistry = beanMapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

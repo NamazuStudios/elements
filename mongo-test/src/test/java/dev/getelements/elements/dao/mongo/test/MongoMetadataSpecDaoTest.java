@@ -1,20 +1,27 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.MetadataSpecDao;
 import dev.getelements.elements.sdk.model.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
 import dev.getelements.elements.sdk.model.schema.MetadataSpecProperty;
 import dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType;
 import dev.getelements.elements.sdk.model.util.PaginationWalker;
+import jakarta.inject.Named;
 import org.bson.types.ObjectId;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.MetadataSpecDao.*;
 import static dev.getelements.elements.sdk.model.schema.MetadataSpecPropertyType.*;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
@@ -27,6 +34,27 @@ public class MongoMetadataSpecDaoTest {
     private MetadataSpecDao metadataSpecDao;
 
     private MetadataSpecTestFactory metadataSpecTestFactory;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case METADATA_SPEC_CREATED -> createdEventIds.add(ev.getEventArgument(0, MetadataSpec.class).getId());
+                case METADATA_SPEC_UPDATED -> updatedEventIds.add(ev.getEventArgument(0, MetadataSpec.class).getId());
+                case METADATA_SPEC_DELETED -> deletedEventIds.add(ev.getEventArgument(0, MetadataSpec.class).getId());
+            }
+        });
+    }
 
     @Test(groups = "create")
     public void testCreateMetadataSpec() {
@@ -67,6 +95,9 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(working.getType(), spec.getType());
         assertEquals(working.getProperties(), spec.getProperties());
 
+        assertTrue(createdEventIds.contains(working.getId()),
+                "Expected METADATA_SPEC_CREATED event for " + working.getId());
+
     }
 
     @Test(groups = "update", dependsOnGroups = "create")
@@ -99,6 +130,9 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(working, updated);
         working = updated;
 
+        assertTrue(updatedEventIds.contains(working.getId()),
+                "Expected METADATA_SPEC_UPDATED event for " + working.getId());
+
     }
 
     @Test(groups = "fetch", dependsOnGroups = "update")
@@ -116,6 +150,8 @@ public class MongoMetadataSpecDaoTest {
     @Test(groups = "delete", dependsOnGroups = "fetch")
     public void testDelete() {
         getMetadataSpecDao().deleteMetadataSpec(working.getId());
+        assertTrue(deletedEventIds.contains(working.getId()),
+                "Expected METADATA_SPEC_DELETED event for " + working.getId());
     }
 
     @Test(groups = "delete",

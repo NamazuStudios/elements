@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
@@ -17,7 +18,43 @@ import static java.util.Collections.emptyList;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_CREATED,
+        parameters = RewardIssuance.class,
+        description = "Called when a new reward issuance is issued/created."
+)
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_CREATED,
+        parameters = {RewardIssuance.class, Transaction.class},
+        description = "Called when a new reward issuance is issued/created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_UPDATED,
+        parameters = RewardIssuance.class,
+        description = "Called when a reward issuance is updated, such as when its expiration is changed or it is redeemed."
+)
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_UPDATED,
+        parameters = {RewardIssuance.class, Transaction.class},
+        description = "Called when a reward issuance is updated, such as when its expiration is changed or it is redeemed. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_DELETED,
+        parameters = RewardIssuance.class,
+        description = "Called when a reward issuance is deleted (including implicit deletion of NON_PERSISTENT issuances upon redemption)."
+)
+@ElementEventProducer(
+        value = RewardIssuanceDao.REWARD_ISSUANCE_DELETED,
+        parameters = {RewardIssuance.class, Transaction.class},
+        description = "Called when a reward issuance is deleted (including implicit deletion of NON_PERSISTENT issuances upon redemption). This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface RewardIssuanceDao {
+
+    String REWARD_ISSUANCE_CREATED = "dev.getelements.elements.sdk.model.dao.rewardissuance.created";
+
+    String REWARD_ISSUANCE_UPDATED = "dev.getelements.elements.sdk.model.dao.rewardissuance.updated";
+
+    String REWARD_ISSUANCE_DELETED = "dev.getelements.elements.sdk.model.dao.rewardissuance.deleted";
 
     /**
      * Fetches the instance of {@link RewardIssuance}.

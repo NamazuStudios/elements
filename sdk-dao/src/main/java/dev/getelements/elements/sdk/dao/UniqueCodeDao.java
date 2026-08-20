@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.exception.ucode.UniqueCodeNotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.ucode.UniqueCode;
@@ -21,7 +23,44 @@ import java.util.Optional;
  *
  * @author patrickt
  */
+@ElementServiceExport
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_CREATED,
+        parameters = UniqueCode.class,
+        description = "Called when a unique code was generated."
+)
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_CREATED,
+        parameters = {UniqueCode.class, Transaction.class},
+        description = "Called when a unique code was generated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_UPDATED,
+        parameters = UniqueCode.class,
+        description = "Called when a unique code's timeout was successfully reset."
+)
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_UPDATED,
+        parameters = {UniqueCode.class, Transaction.class},
+        description = "Called when a unique code's timeout was successfully reset. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_DELETED,
+        parameters = UniqueCode.class,
+        description = "Called when a unique code was successfully released."
+)
+@ElementEventProducer(
+        value = UniqueCodeDao.UNIQUE_CODE_DELETED,
+        parameters = {UniqueCode.class, Transaction.class},
+        description = "Called when a unique code was successfully released. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface UniqueCodeDao {
+
+    String UNIQUE_CODE_CREATED = "dev.getelements.elements.sdk.model.dao.unique.code.created";
+
+    String UNIQUE_CODE_UPDATED = "dev.getelements.elements.sdk.model.dao.unique.code.updated";
+
+    String UNIQUE_CODE_DELETED = "dev.getelements.elements.sdk.model.dao.unique.code.deleted";
 
     /**
      * The default length for generated codes.

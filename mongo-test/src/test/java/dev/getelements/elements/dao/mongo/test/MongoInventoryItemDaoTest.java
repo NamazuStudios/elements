@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.InventoryItemDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.sdk.dao.UserDao;
@@ -16,10 +17,16 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.InventoryItemDao.INVENTORY_ITEM_CREATED;
+import static dev.getelements.elements.sdk.dao.InventoryItemDao.INVENTORY_ITEM_UPDATED;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
@@ -44,6 +51,26 @@ public class MongoInventoryItemDaoTest {
     private Item testItemInsertOnUpdateQuantity;
 
     private UserTestFactory userTestFactory;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdInventoryItemIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedInventoryItemIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case INVENTORY_ITEM_CREATED -> createdInventoryItemIds.add(
+                        ev.getEventArgument(0, InventoryItem.class).getId());
+                case INVENTORY_ITEM_UPDATED -> updatedInventoryItemIds.add(
+                        ev.getEventArgument(0, InventoryItem.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void setupTestItems() {
@@ -105,6 +132,8 @@ public class MongoInventoryItemDaoTest {
         inserted.setQuantity(quantity);
         inserted = getInventoryItemDao().createInventoryItem(inserted);
 
+        assertTrue(createdInventoryItemIds.contains(inserted.getId()), "Expected INVENTORY_ITEM_CREATED event for " + inserted.getId());
+
         InventoryItem fetched = getInventoryItemDao().getInventoryItem(inserted.getId());
         assertEquals(inserted, fetched);
         assertEquals(user, fetched.getUser());
@@ -154,6 +183,7 @@ public class MongoInventoryItemDaoTest {
 
         assertEquals(updatedToZero.getId(), inventoryItem.getId());
         assertEquals(updatedToZero.getQuantity(), 0);
+        assertTrue(updatedInventoryItemIds.contains(updatedToZero.getId()), "Expected INVENTORY_ITEM_UPDATED event for " + updatedToZero.getId());
 
         final InventoryItem updatedToOneHundred = getInventoryItemDao().updateInventoryItem(inventoryItem.getId(), 100);
 

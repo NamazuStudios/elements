@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.schema;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MetadataSpecDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -16,6 +17,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -32,6 +34,8 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     private MapperRegistry beanMapperRegistry;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<MetadataSpec> getActiveMetadataSpecs(final int offset, final int count) {
@@ -86,7 +90,14 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
         getValidationHelper().validateModel(metadataSpec, ValidationGroups.Insert.class);
         final var toInsert = getBeanMapper().map(metadataSpec, MongoMetadataSpec.class);
         final var inserted = getMongoDBUtils().perform(ds -> ds.save(toInsert));
-        return getBeanMapper().map(inserted, MetadataSpec.class);
+        final var createdSpec = getBeanMapper().map(inserted, MetadataSpec.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdSpec)
+                .named(METADATA_SPEC_CREATED)
+                .build());
+
+        return createdSpec;
     }
 
     @Override
@@ -117,7 +128,14 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
             throw new MetadataSpecNotFoundException("Spec with id not found.");
         }
 
-        return transform(updated);
+        final var updatedSpec = transform(updated);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedSpec)
+                .named(METADATA_SPEC_UPDATED)
+                .build());
+
+        return updatedSpec;
 
 
     }
@@ -134,12 +152,21 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
                         eq("_id", objectId)
                 );
 
+        final var existing = query.first();
+
         final var result = new UpdateBuilder()
                 .with(unset("name"))
                 .execute(query, new UpdateOptions().upsert(false));
 
         if (result.getModifiedCount() == 0) {
             throw new MetadataSpecNotFoundException();
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(transform(existing))
+                    .named(METADATA_SPEC_DELETED)
+                    .build());
         }
 
     }
@@ -182,6 +209,15 @@ public class MongoMetadataSpecDao implements MetadataSpecDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -12,6 +13,7 @@ import dev.getelements.elements.sdk.model.inventory.InventoryItem;
 import dev.getelements.elements.sdk.model.mission.*;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.reward.Reward;
+import jakarta.inject.Named;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -19,7 +21,10 @@ import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ProgressDao.*;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State.*;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -31,6 +36,27 @@ import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoProgressDaoTest  {
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final List<Progress> createdProgresses = new CopyOnWriteArrayList<>();
+
+    private final List<Progress> updatedProgresses = new CopyOnWriteArrayList<>();
+
+    private final List<Progress> deletedProgresses = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupProgressEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case PROGRESS_CREATED -> createdProgresses.add(ev.getEventArgument(0, Progress.class));
+                case PROGRESS_UPDATED -> updatedProgresses.add(ev.getEventArgument(0, Progress.class));
+                case PROGRESS_DELETED -> deletedProgresses.add(ev.getEventArgument(0, Progress.class));
+            }
+        });
+    }
 
     private UserDao userDao;
 
@@ -205,11 +231,24 @@ public class MongoProgressDaoTest  {
         assertEquals(created.getMission().getFinalRepeatStep(), mission.getFinalRepeatStep());
         assertEquals(created.getMission().getTags(), mission.getTags());
 
+        assertTrue(
+                createdProgresses.stream().anyMatch(p -> p.getId().equals(created.getId())),
+                "Expected PROGRESS_CREATED event for progress: " + created.getId()
+        );
+
+        final int createdEventCountAfterFirstCreate = createdProgresses.size();
+
         progress.setId(null);
         progress.setCurrentStep(null);
         progress.setRemaining(null);
 
         final Progress recreated = getProgressDao().createOrGetExistingProgress(progress);
+
+        assertEquals(
+                createdProgresses.size(),
+                createdEventCountAfterFirstCreate,
+                "createOrGetExistingProgress should not fire another PROGRESS_CREATED for a pre-existing progress."
+        );
         assertNotNull(recreated.getMission());
         assertEquals(recreated.getMission().getId(), mission.getId());
         assertEquals(recreated.getMission().getName(), mission.getName());
@@ -283,9 +322,11 @@ public class MongoProgressDaoTest  {
                     progress.setRewardIssuances(emptyList());
                 }
                 assertEquals(progress.getRewardIssuances().size(), expectedRewards);
+                assertProgressUpdatedEventFired(progress);
             }
 
             progress = getProgressDao().advanceProgress(progress, 1);
+            assertProgressUpdatedEventFired(progress);
 
             if (progress.getCurrentStep() == null) {
                 assertNull(progress.getCurrentStep());
@@ -315,6 +356,15 @@ public class MongoProgressDaoTest  {
         } while (!steps.isEmpty());
 
         assertEquals(progress.getRewardIssuances().size(), expectedRewards);
+    }
+
+    private void assertProgressUpdatedEventFired(final Progress progress) {
+        assertTrue(
+                updatedProgresses.stream().anyMatch(p ->
+                        p.getId().equals(progress.getId()) && Objects.equals(p.getRemaining(), progress.getRemaining())
+                ),
+                "Expected PROGRESS_UPDATED event for progress: " + progress.getId()
+        );
     }
 
     @Test(dependsOnMethods = {"testAdvancementThroughFiniteMission", "testAdvancementThroughRepeatingMission"})
@@ -355,6 +405,13 @@ public class MongoProgressDaoTest  {
         inventoryItemList.stream().forEach(ii -> getInventoryItemDao().getInventoryItem(ii.getId()));
         progressPagination.getObjects().stream().forEach(ri -> getProgressDao().getProgress(ri.getId()));
         progressPagination.forEach(progress -> getProgressDao().deleteProgress(progress.getId()));
+
+        for (final Progress progress : progresses) {
+            assertTrue(
+                    deletedProgresses.stream().anyMatch(p -> p.getId().equals(progress.getId())),
+                    "Expected PROGRESS_DELETED event for progress: " + progress.getId()
+            );
+        }
 
     }
 

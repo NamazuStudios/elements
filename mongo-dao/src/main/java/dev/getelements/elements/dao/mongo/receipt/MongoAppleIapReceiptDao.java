@@ -6,6 +6,7 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.receipt.MongoAppleIapReceipt;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
@@ -23,6 +24,8 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Consumer;
+
 import static com.google.common.base.Strings.nullToEmpty;
 
 public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
@@ -38,6 +41,8 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoUserDao mongoUserDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
@@ -95,7 +100,14 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
         receiptQuery.filter(Filters.eq("_id", appleIapReceipt.getOriginalTransactionId()));
 
-        return getDozerMapper().map(receiptQuery.first(), AppleIapReceipt.class);
+        final var createdAppleIapReceipt = getDozerMapper().map(receiptQuery.first(), AppleIapReceipt.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdAppleIapReceipt)
+                .named(APPLE_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdAppleIapReceipt;
     }
 
     @Override
@@ -104,12 +116,19 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
         final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().find(MongoAppleIapReceipt.class);
 
         receiptQuery.filter(Filters.eq("_id", originalTransactionId));
-        
-        final DeleteResult deleteResult = getDatastore().delete(receiptQuery.first());
+
+        final var mongoAppleIapReceipt = receiptQuery.first();
+
+        final DeleteResult deleteResult = getDatastore().delete(mongoAppleIapReceipt);
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Apple IAP Receipt not found: " + originalTransactionId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class))
+                .named(APPLE_IAP_RECEIPT_DELETED)
+                .build());
     }
 
     public Datastore getDatastore() {
@@ -155,5 +174,14 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

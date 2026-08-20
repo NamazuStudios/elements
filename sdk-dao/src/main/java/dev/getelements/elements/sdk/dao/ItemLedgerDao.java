@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
@@ -10,7 +11,19 @@ import dev.getelements.elements.sdk.model.inventory.ItemLedgerEventType;
  * records are immutable by design.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ItemLedgerDao.ITEM_LEDGER_ENTRY_CREATED,
+        parameters = ItemLedgerEntry.class,
+        description = "Called when an item ledger entry was created."
+)
+@ElementEventProducer(
+        value = ItemLedgerDao.ITEM_LEDGER_ENTRY_CREATED,
+        parameters = {ItemLedgerEntry.class, Transaction.class},
+        description = "Called when an item ledger entry was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ItemLedgerDao {
+
+    String ITEM_LEDGER_ENTRY_CREATED = "dev.getelements.elements.sdk.model.dao.itemledgerentry.created";
 
     /**
      * Appends an immutable audit record to the ledger.

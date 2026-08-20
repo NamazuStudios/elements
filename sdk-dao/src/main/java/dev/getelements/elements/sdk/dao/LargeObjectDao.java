@@ -3,12 +3,49 @@ package dev.getelements.elements.sdk.dao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.largeobject.LargeObjectNotFoundException;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Optional;
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_CREATED,
+        parameters = LargeObject.class,
+        description = "Called when a large object was created."
+)
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_CREATED,
+        parameters = {LargeObject.class, Transaction.class},
+        description = "Called when a large object was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_UPDATED,
+        parameters = LargeObject.class,
+        description = "Called when a large object was updated."
+)
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_UPDATED,
+        parameters = {LargeObject.class, Transaction.class},
+        description = "Called when a large object was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_DELETED,
+        parameters = LargeObject.class,
+        description = "Called when a large object was deleted."
+)
+@ElementEventProducer(
+        value = LargeObjectDao.LARGE_OBJECT_DELETED,
+        parameters = {LargeObject.class, Transaction.class},
+        description = "Called when a large object was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface LargeObjectDao {
+
+    String LARGE_OBJECT_CREATED = "dev.getelements.elements.sdk.model.dao.large.object.created";
+
+    String LARGE_OBJECT_UPDATED = "dev.getelements.elements.sdk.model.dao.large.object.updated";
+
+    String LARGE_OBJECT_DELETED = "dev.getelements.elements.sdk.model.dao.large.object.deleted";
 
     /**
      * Finds a {@link LargeObject} with the supplied object id, returning a value equivalent to {@link Optional#empty()}

@@ -1,9 +1,11 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
+import jakarta.inject.Named;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -12,10 +14,15 @@ import org.testng.annotations.Test;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ProfileDao.PROFILE_CREATED;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRefreshProfileDaoTest {
@@ -25,6 +32,21 @@ public class MongoRefreshProfileDaoTest {
     private List<Profile> profiles = new CopyOnWriteArrayList<>();
 
     private MongoProfileTestOperations mongoProfileTestOperations;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            if (PROFILE_CREATED.equals(ev.getEventName())) {
+                createdEventIds.add(ev.getEventArgument(0, Profile.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void createUsersAndApplications() {
@@ -60,6 +82,9 @@ public class MongoRefreshProfileDaoTest {
         assertEquals(refreshed.getDisplayName(), profile.getDisplayName());
         assertEquals(refreshed.getImageUrl(), profile.getImageUrl());
 
+        assertTrue(createdEventIds.contains(refreshed.getId()),
+                "Expected PROFILE_CREATED event for " + refreshed.getId());
+
         profiles.add(refreshed);
 
     }
@@ -79,6 +104,9 @@ public class MongoRefreshProfileDaoTest {
         assertEquals(refreshed.getApplication().getId(), original.getApplication().getId());
         assertEquals(refreshed.getDisplayName(), original.getDisplayName());
         assertEquals(refreshed.getImageUrl(), original.getImageUrl());
+
+        assertTrue(createdEventIds.contains(refreshed.getId()),
+                "Expected PROFILE_CREATED event for " + refreshed.getId());
 
     }
 

@@ -7,6 +7,7 @@ import dev.getelements.elements.dao.mongo.model.application.MongoApplicationConf
 import dev.getelements.elements.dao.mongo.model.application.MongoProductBundle;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups.Insert;
@@ -31,6 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,6 +62,8 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     private BooleanQueryParser booleanQueryParser;
 
     private MongoItemDao mongoItemDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public <T extends ApplicationConfiguration> List<T> getAllActiveApplicationConfigurations(
@@ -191,7 +195,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         getMongoDBUtils().performV(ds -> getDatastore().insert(mongoApplicationConfiguration));
 
-        return getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
+        final var created = getMapperRegistry().map(mongoApplicationConfiguration, (Class<T>) applicationConfiguration.getClass());
+
+        getEventPublisher().accept(Event.builder()
+                .argument((ApplicationConfiguration) created)
+                .named(APPLICATION_CONFIGURATION_CREATED)
+                .build());
+
+        return created;
 
     }
 
@@ -212,7 +223,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         mongoApplicationConfiguration.setType(applicationConfiguration.getClass().getName());
 
         final var result = getMongoDBUtils().perform(ds -> getDatastore().replace(mongoApplicationConfiguration));
-        return getMapperRegistry().map(result, (Class<T>) applicationConfiguration.getClass());
+        final var updated = getMapperRegistry().map(result, (Class<T>) applicationConfiguration.getClass());
+
+        getEventPublisher().accept(Event.builder()
+                .argument((ApplicationConfiguration) updated)
+                .named(APPLICATION_CONFIGURATION_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -274,7 +292,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             throw new NotFoundException("Application Configuration with id: " + applicationNameOrId + "not found.");
         }
 
-        return getMapperRegistry().map(resultMongoApplicationConfiguration, configurationClass);
+        final var updated = getMapperRegistry().map(resultMongoApplicationConfiguration, configurationClass);
+
+        getEventPublisher().accept(Event.builder()
+                .argument((ApplicationConfiguration) updated)
+                .named(APPLICATION_CONFIGURATION_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -304,10 +329,19 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
                 applicationNameOrId,
                 applicationConfigurationNameOrId);
 
+        final var existing = query.first();
+
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0) {
             throw new ApplicationConfigurationNotFoundException();
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(getMapperRegistry().map(existing, configType))
+                    .named(APPLICATION_CONFIGURATION_DELETED)
+                    .build());
         }
 
     }
@@ -468,6 +502,15 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

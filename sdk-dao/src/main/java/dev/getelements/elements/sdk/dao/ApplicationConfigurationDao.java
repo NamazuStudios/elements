@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -15,7 +16,43 @@ import java.util.Optional;
  * Created by patricktwohig on 7/13/15.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_CREATED,
+        parameters = ApplicationConfiguration.class,
+        description = "Called when an application configuration was created."
+)
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_CREATED,
+        parameters = {ApplicationConfiguration.class, Transaction.class},
+        description = "Called when an application configuration was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_UPDATED,
+        parameters = ApplicationConfiguration.class,
+        description = "Called when an application configuration was updated."
+)
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_UPDATED,
+        parameters = {ApplicationConfiguration.class, Transaction.class},
+        description = "Called when an application configuration was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_DELETED,
+        parameters = ApplicationConfiguration.class,
+        description = "Called when an application configuration was deleted."
+)
+@ElementEventProducer(
+        value = ApplicationConfigurationDao.APPLICATION_CONFIGURATION_DELETED,
+        parameters = {ApplicationConfiguration.class, Transaction.class},
+        description = "Called when an application configuration was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ApplicationConfigurationDao {
+
+    String APPLICATION_CONFIGURATION_CREATED = "dev.getelements.elements.sdk.model.dao.application.configuration.created";
+
+    String APPLICATION_CONFIGURATION_UPDATED = "dev.getelements.elements.sdk.model.dao.application.configuration.updated";
+
+    String APPLICATION_CONFIGURATION_DELETED = "dev.getelements.elements.sdk.model.dao.application.configuration.deleted";
 
     /**
      * Gets the active applications registered in the databse given the offset and count.

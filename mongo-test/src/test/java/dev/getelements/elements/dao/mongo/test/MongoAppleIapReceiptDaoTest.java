@@ -1,10 +1,12 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.AppleIapReceiptDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
+import jakarta.inject.Named;
 import org.testng.ITestContext;
 import org.testng.annotations.*;
 
@@ -12,7 +14,12 @@ import jakarta.inject.Inject;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.AppleIapReceiptDao.APPLE_IAP_RECEIPT_CREATED;
+import static dev.getelements.elements.sdk.dao.AppleIapReceiptDao.APPLE_IAP_RECEIPT_DELETED;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -26,9 +33,31 @@ public class MongoAppleIapReceiptDaoTest {
 
     private static final int INVOCATION_COUNT = 10;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdOriginalTransactionIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedOriginalTransactionIds = ConcurrentHashMap.newKeySet();
+
     @BeforeClass
     public void createTestUser() {
         testUser = getUserTestFactory().createTestUser();
+    }
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case APPLE_IAP_RECEIPT_CREATED -> createdOriginalTransactionIds.add(
+                        ev.getEventArgument(0, AppleIapReceipt.class).getOriginalTransactionId()
+                );
+                case APPLE_IAP_RECEIPT_DELETED -> deletedOriginalTransactionIds.add(
+                        ev.getEventArgument(0, AppleIapReceipt.class).getOriginalTransactionId()
+                );
+            }
+        });
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
@@ -60,6 +89,11 @@ public class MongoAppleIapReceiptDaoTest {
         assertEquals(resultAppleIapReceipt.getQuantity(), appleIapReceipt.getQuantity());
         assertEquals(resultAppleIapReceipt.getProductId(), appleIapReceipt.getProductId());
         assertEquals(resultAppleIapReceipt.getBundleId(), appleIapReceipt.getBundleId());
+
+        assertTrue(
+                createdOriginalTransactionIds.contains(appleIapReceipt.getOriginalTransactionId()),
+                "Expected " + APPLE_IAP_RECEIPT_CREATED + " event for " + appleIapReceipt.getOriginalTransactionId()
+        );
 
     }
 
@@ -119,6 +153,11 @@ public class MongoAppleIapReceiptDaoTest {
             })
     public void testDeleteAppleIapReceipt(final AppleIapReceipt appleIapReceipt) {
         getAppleIapReceiptDao().deleteAppleIapReceipt(appleIapReceipt.getOriginalTransactionId());
+
+        assertTrue(
+                deletedOriginalTransactionIds.contains(appleIapReceipt.getOriginalTransactionId()),
+                "Expected " + APPLE_IAP_RECEIPT_DELETED + " event for " + appleIapReceipt.getOriginalTransactionId()
+        );
 
         try {
             final AppleIapReceipt resultAppleIapReceipt =

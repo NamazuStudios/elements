@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -10,7 +11,31 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_CREATED,
+        parameters = GooglePlayIapReceipt.class,
+        description = "Called when a new Google Play IAP receipt is created."
+)
+@ElementEventProducer(
+        value = GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_CREATED,
+        parameters = {GooglePlayIapReceipt.class, Transaction.class},
+        description = "Called when a new Google Play IAP receipt is created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_DELETED,
+        parameters = GooglePlayIapReceipt.class,
+        description = "Called when a Google Play IAP receipt is deleted."
+)
+@ElementEventProducer(
+        value = GooglePlayIapReceiptDao.GOOGLE_PLAY_IAP_RECEIPT_DELETED,
+        parameters = {GooglePlayIapReceipt.class, Transaction.class},
+        description = "Called when a Google Play IAP receipt is deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface GooglePlayIapReceiptDao {
+
+    String GOOGLE_PLAY_IAP_RECEIPT_CREATED = "dev.getelements.elements.sdk.model.dao.googleplayiapreceipt.created";
+
+    String GOOGLE_PLAY_IAP_RECEIPT_DELETED = "dev.getelements.elements.sdk.model.dao.googleplayiapreceipt.deleted";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.

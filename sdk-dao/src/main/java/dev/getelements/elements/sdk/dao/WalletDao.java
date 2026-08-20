@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.blockchain.WalletNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -12,7 +13,43 @@ import java.util.List;
 import java.util.Optional;
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = WalletDao.WALLET_CREATED,
+        parameters = Wallet.class,
+        description = "Called when a wallet was created."
+)
+@ElementEventProducer(
+        value = WalletDao.WALLET_CREATED,
+        parameters = {Wallet.class, Transaction.class},
+        description = "Called when a wallet was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = WalletDao.WALLET_UPDATED,
+        parameters = Wallet.class,
+        description = "Called when a wallet was updated."
+)
+@ElementEventProducer(
+        value = WalletDao.WALLET_UPDATED,
+        parameters = {Wallet.class, Transaction.class},
+        description = "Called when a wallet was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = WalletDao.WALLET_DELETED,
+        parameters = Wallet.class,
+        description = "Called when a wallet was deleted."
+)
+@ElementEventProducer(
+        value = WalletDao.WALLET_DELETED,
+        parameters = {Wallet.class, Transaction.class},
+        description = "Called when a wallet was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface WalletDao {
+
+    String WALLET_CREATED = "dev.getelements.elements.sdk.model.dao.wallet.created";
+
+    String WALLET_UPDATED = "dev.getelements.elements.sdk.model.dao.wallet.updated";
+
+    String WALLET_DELETED = "dev.getelements.elements.sdk.model.dao.wallet.deleted";
 
     /**
      * Lists all {@link Wallet} instances, specifying a search query.

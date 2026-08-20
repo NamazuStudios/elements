@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo.mission;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ProgressDao;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -73,6 +75,8 @@ public class MongoProgressDao implements ProgressDao {
     private MongoRewardIssuanceDao rewardIssuanceDao;
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Progress> getProgresses(final Profile profile,
@@ -222,7 +226,14 @@ public class MongoProgressDao implements ProgressDao {
             throw new ProgressNotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
         }
 
-        return getMapperRegistry().map(mongoProgress, Progress.class);
+        final var updatedProgress = getMapperRegistry().map(mongoProgress, Progress.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedProgress)
+                .named(PROGRESS_UPDATED)
+                .build());
+
+        return updatedProgress;
 
     }
 
@@ -238,6 +249,8 @@ public class MongoProgressDao implements ProgressDao {
         final var query = getDatastore()
                 .find(MongoProgress.class)
                 .filter(eq("_id", mongoProgressId));
+
+        final boolean alreadyExisted = query.first() != null;
 
         final var steps = mongoMission.getSteps();
         final var finalRepeatStep = mongoMission.getFinalRepeatStep();
@@ -270,7 +283,16 @@ public class MongoProgressDao implements ProgressDao {
                 ))
         ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER));
 
-        return getMapperRegistry().map(result, Progress.class);
+        final var resultingProgress = getMapperRegistry().map(result, Progress.class);
+
+        if (!alreadyExisted) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(resultingProgress)
+                    .named(PROGRESS_CREATED)
+                    .build());
+        }
+
+        return resultingProgress;
 
     }
 
@@ -280,10 +302,21 @@ public class MongoProgressDao implements ProgressDao {
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progressId);
         final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
         query.filter(eq("_id", mongoProgressId));
+
+        final var mongoProgress = query.first();
+
         final DeleteResult deleteResult = query.delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new ProgressNotFoundException("Progress not found: " + progressId);
+        }
+
+        if (mongoProgress != null) {
+            final var deletedProgress = getMapperRegistry().map(mongoProgress, Progress.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedProgress)
+                    .named(PROGRESS_DELETED)
+                    .build());
         }
     }
 
@@ -298,7 +331,14 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-        return getMapperRegistry().map(mongoProgress, Progress.class);
+        final var advancedProgress = getMapperRegistry().map(mongoProgress, Progress.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(advancedProgress)
+                .named(PROGRESS_UPDATED)
+                .build());
+
+        return advancedProgress;
 
     }
 
@@ -531,6 +571,15 @@ public class MongoProgressDao implements ProgressDao {
     @Inject
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

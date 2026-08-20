@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ScheduleDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -18,6 +19,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
@@ -38,11 +40,19 @@ public class MongoScheduleDao implements ScheduleDao {
 
     private BooleanQueryParser booleanQueryParser;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public Schedule create(final Schedule schedule) {
         getValidationHelper().validateModel(schedule, Insert.class);
         final var mongoSchedule = getMapper().map(schedule, MongoSchedule.class);
         final var asWritten = getMongoDBUtils().perform(ds -> ds.save(mongoSchedule), Schedule.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(asWritten)
+                .named(SCHEDULE_CREATED)
+                .build());
+
         return asWritten;
     }
 
@@ -124,12 +134,19 @@ public class MongoScheduleDao implements ScheduleDao {
             throw new ScheduleNotFoundException();
         }
 
+        getEventPublisher().accept(Event.builder()
+                .argument(result)
+                .named(SCHEDULE_UPDATED)
+                .build());
+
         return result;
 
     }
 
     @Override
     public void deleteSchedule(final String scheduleNameOrId) {
+
+        final var mongoSchedule = findMongoScheduleByNameOrId(scheduleNameOrId).orElse(null);
 
         final var query = getScheduleQuery(scheduleNameOrId);
         final var result = new UpdateBuilder()
@@ -139,6 +156,14 @@ public class MongoScheduleDao implements ScheduleDao {
 
         if (result.getMatchedCount() == 0) {
             throw new ScheduleNotFoundException();
+        }
+
+        if (mongoSchedule != null) {
+            final var deletedSchedule = getDozerMapper().map(mongoSchedule, Schedule.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedSchedule)
+                    .named(SCHEDULE_DELETED)
+                    .build());
         }
 
     }
@@ -195,6 +220,15 @@ public class MongoScheduleDao implements ScheduleDao {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.VaultDao;
 import dev.getelements.elements.sdk.model.exception.blockchain.VaultNotFoundException;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainApi;
@@ -14,14 +15,20 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.VaultDao.VAULT_CREATED;
+import static dev.getelements.elements.sdk.dao.VaultDao.VAULT_DELETED;
+import static dev.getelements.elements.sdk.dao.VaultDao.VAULT_UPDATED;
 import static dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static dev.getelements.elements.sdk.util.Hex.Case.UPPER;
 import static dev.getelements.elements.sdk.util.Hex.forNibble;
@@ -42,6 +49,27 @@ public class MongoVaultDaoTest {
     private List<User> regularUsers;
 
     private final Map<String, Vault> vaults = new ConcurrentHashMap<>();
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdVaultIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedVaultIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedVaultIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case VAULT_CREATED -> createdVaultIds.add(ev.getEventArgument(0, Vault.class).getId());
+                case VAULT_UPDATED -> updatedVaultIds.add(ev.getEventArgument(0, Vault.class).getId());
+                case VAULT_DELETED -> deletedVaultIds.add(ev.getEventArgument(0, Vault.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void createTestUsers() {
@@ -124,6 +152,7 @@ public class MongoVaultDaoTest {
         assertEquals(created.getDisplayName(), vault.getDisplayName());
         assertEquals(created.getUser(), vault.getUser());
         assertEquals(created.getKey(), vault.getKey());
+        assertTrue(createdVaultIds.contains(created.getId()), "Expected VAULT_CREATED event for " + created.getId());
 
         vaults.put(created.getId(), created);
 
@@ -151,6 +180,7 @@ public class MongoVaultDaoTest {
         final var updated = getUnderTest().updateVault(update);
         assertEquals(updated, update);
         assertNotEquals(updated, vault);
+        assertTrue(updatedVaultIds.contains(updated.getId()), "Expected VAULT_UPDATED event for " + updated.getId());
 
         vaults.put(updated.getId(), updated);
 
@@ -224,6 +254,7 @@ public class MongoVaultDaoTest {
     @Test(dataProvider = "vaults", groups = "delete", dependsOnGroups = "pre delete")
     public void deleteVault(final Vault vault) {
         getUnderTest().deleteVault(vault.getId());
+        assertTrue(deletedVaultIds.contains(vault.getId()), "Expected VAULT_DELETED event for " + vault.getId());
     }
 
     @Test(dataProvider = "vaults",
@@ -261,6 +292,7 @@ public class MongoVaultDaoTest {
 
         getUnderTest().deleteVaultForUser(created.getId(), user.getId());
         assertTrue(getUnderTest().findVault(created.getId()).isEmpty());
+        assertTrue(deletedVaultIds.contains(created.getId()), "Expected VAULT_DELETED event for " + created.getId());
 
     }
 
