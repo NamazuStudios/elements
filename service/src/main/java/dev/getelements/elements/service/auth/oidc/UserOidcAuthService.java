@@ -60,21 +60,57 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
     }
 
     private User apply(final DecodedJWT jwt, final OidcAuthScheme scheme) {
+        return apply(user, jwt, scheme);
+    }
+
+    /**
+     * Links the given already-authenticated user to the external OIDC identity carried by the token, rather than
+     * the injected {@link #getUser() current user} — used by the browser-redirect login-attempt flow, where the
+     * user to link was resolved at {@code begin()} time (when the caller's own session was known) and the
+     * callback itself (hit by an unauthenticated provider redirect) has no session of its own.
+     *
+     * @param targetUser the already-authenticated user to link the external identity to
+     * @param jwt the validated id_token
+     * @param scheme the scheme the token was validated against
+     * @return {@code targetUser}
+     */
+    public User apply(final User targetUser, final DecodedJWT jwt, final OidcAuthScheme scheme) {
 
         final var uid = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.USER_ID.value);
         final var email = OidcAuthServiceOperations.claimAsString(jwt, OidcAuthServiceOperations.Claim.EMAIL.value);
+        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
+
+        return apply(targetUser, scheme.getName(), uid, email, profileClaims);
+
+    }
+
+    /**
+     * Links the given already-authenticated user to an external OIDC identity described by plain values rather
+     * than a live token — used by the login-attempt confirm flow, where the identity was already validated by
+     * the callback and persisted (see {@code OidcLoginAttemptOperations}), and the original {@code DecodedJWT} is
+     * long gone by the time confirmation happens.
+     *
+     * @param targetUser the already-authenticated user to link the external identity to
+     * @param schemeName the scheme the identity was validated against
+     * @param externalUserId the external user id (the token's {@code sub} claim)
+     * @param email the token's {@code email} claim, or {@code null} if absent
+     * @param profileClaims the token's standard OIDC profile-scope claims, or empty if none
+     * @return {@code targetUser}
+     */
+    public User apply(final User targetUser, final String schemeName, final String externalUserId,
+                       final String email, final Map<String, String> profileClaims) {
 
         // Check if this OIDC sub is already mapped to any user
-        final var existingOidcUid = userUidDao.findUserUid(uid, scheme.getName());
+        final var existingOidcUid = userUidDao.findUserUid(externalUserId, schemeName);
 
         if (existingOidcUid.isPresent()) {
             final var linkedUserId = existingOidcUid.get().getUserId();
-            if (linkedUserId != null && !linkedUserId.equals(user.getId())) {
+            if (linkedUserId != null && !linkedUserId.equals(targetUser.getId())) {
                 throw new AuthValidationException("External OIDC identity is already linked to a different user.");
             }
             // Already linked to current user — idempotent, fall through
         } else {
-            createNewUserUid(uid, scheme.getName(), user.getId());
+            createNewUserUid(externalUserId, schemeName, targetUser.getId());
         }
 
         // Trust any email claim returned by a configured provider as verified — see AnonOidcAuthService for
@@ -83,10 +119,10 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
             final var existingEmailUid = userUidDao.findUserUid(email, UserUidDao.SCHEME_EMAIL);
 
             if (existingEmailUid.isEmpty()) {
-                createNewUserUid(email, UserUidDao.SCHEME_EMAIL, user.getId());
+                createNewUserUid(email, UserUidDao.SCHEME_EMAIL, targetUser.getId());
             } else {
                 final var linkedUserId = existingEmailUid.get().getUserId();
-                if (linkedUserId != null && !linkedUserId.equals(user.getId())) {
+                if (linkedUserId != null && !linkedUserId.equals(targetUser.getId())) {
                     // Stale or foreign mapping — skip rather than block the link operation
                     logger.warn("Email UID {} is already linked to a different user; skipping email UID creation.", email);
                 }
@@ -97,27 +133,25 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
         // Tracking/audit snapshot of this scheme's reported profile claims — unlike email above, this isn't
         // identity-sensitive (no account-takeover concern), so it's safe to capture here too, unlike the flat
         // convenience fields on User which stay scoped to the anonymous login path (see AnonOidcAuthService).
-        final var profileClaims = OidcAuthServiceOperations.extractProfileClaims(jwt);
-
-        if (!profileClaims.isEmpty()) {
-            var profiles = user.getLinkedAccountProfiles();
+        if (profileClaims != null && !profileClaims.isEmpty()) {
+            var profiles = targetUser.getLinkedAccountProfiles();
             if (profiles == null) {
                 profiles = new HashMap<String, Map<String, String>>();
-                user.setLinkedAccountProfiles(profiles);
+                targetUser.setLinkedAccountProfiles(profiles);
             }
-            profiles.put(scheme.getName(), profileClaims);
+            profiles.put(schemeName, profileClaims);
 
             try {
-                getUserDao().updateUserStrict(user);
+                getUserDao().updateUserStrict(targetUser);
             } catch (final Exception ex) {
                 // Best-effort: this is an opportunistic profile-data capture, not a critical part of linking
                 // the account. A pre-existing data issue on this user record must never block the link operation.
                 logger.warn("Failed to persist linked account profile for user {}; continuing without it.",
-                        user.getId(), ex);
+                        targetUser.getId(), ex);
             }
         }
 
-        return user;
+        return targetUser;
 
     }
 

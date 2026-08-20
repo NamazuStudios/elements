@@ -149,6 +149,22 @@ public class OidcAuthServiceOperations {
         return buildSession(decodedJWT, scheme, userMapper);
     }
 
+    /**
+     * Builds and persists a session for an already-resolved user, with no token of its own to run through
+     * {@link #buildSession}. Used by the login-attempt confirm flow, where the user was resolved (and any
+     * account-link mutation already performed) from claims persisted by an earlier callback, not a live JWT.
+     *
+     * @param user the already-resolved user
+     * @return the created session
+     */
+    public SessionCreation createSessionForResolvedUser(final User user) {
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+        final var session = new Session();
+        session.setUser(user);
+        session.setExpiry(expiry);
+        return getSessionDao().create(session);
+    }
+
     private SessionCreation buildSession(final DecodedJWT decodedJWT,
                                           final OidcAuthScheme scheme,
                                           final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
@@ -205,7 +221,9 @@ public class OidcAuthServiceOperations {
 
         final var kid = jwt.getHeaderClaim(OidcClaim.KID.getValue()).asString();
 
-        final var jwk = scheme.getKeys()
+        // A scheme with no keys fetched yet (or a legacy record predating the keys field) has null here rather
+        // than an empty list; treated the same as "no matching key" so it falls through to the fetch-on-miss path.
+        final var jwk = (scheme.getKeys() == null ? List.<JWK>of() : scheme.getKeys())
                 .stream()
                 .filter(k -> Objects.equals(k.getKid(), kid))
                 .findFirst()

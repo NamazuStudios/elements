@@ -3,6 +3,7 @@ package dev.getelements.elements.service.auth.oidc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
+import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttemptStatus;
 import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
@@ -14,6 +15,7 @@ import dev.getelements.elements.sdk.model.session.OidcLoginAttemptBegin;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptCallbackResult;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
+import dev.getelements.elements.sdk.model.user.User;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.Base64;
@@ -38,6 +41,16 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  * completion, and handling the provider's callback. All state (id/state/nonce), the code exchange, and
  * id_token validation happen here, server-side, per the design — the client only ever sees an opaque id and
  * the Elements session it eventually resolves to.
+ *
+ * <p>Supports both anonymous (first-time login) and account-linking attempts. Which behavior applies is decided
+ * once, at {@link #begin(String, User)} time, when the caller's own session (if any) is known. For an anonymous
+ * attempt, {@link #handleCallback} builds and stores the session directly, exactly as before. For a linking
+ * attempt, {@link #handleCallback} — always hit by an unauthenticated provider redirect, with no session of its
+ * own and no way to verify it's talking to the same party that called {@code begin()} — deliberately does
+ * <em>not</em> perform the account-link mutation. It only validates the external identity and marks the attempt
+ * {@link OidcLoginAttemptStatus#LINK_READY}. Finalizing it requires {@link #confirmLink}, presenting the
+ * {@code confirmToken} returned only in the original {@code begin()} response — proof that the caller is the
+ * same party that started the attempt, without relying on Elements' own session/access-level machinery.
  */
 public class OidcLoginAttemptOperations {
 
@@ -59,11 +72,31 @@ public class OidcLoginAttemptOperations {
 
     private AnonOidcAuthService anonOidcAuthService;
 
+    private UserOidcAuthService userOidcAuthService;
+
+    private UserDao userDao;
+
     private Client client;
 
     private long ttlSeconds;
 
     public OidcLoginAttemptBegin begin(final String provider) {
+        return begin(provider, null);
+    }
+
+    /**
+     * Begins a pending login attempt, optionally on behalf of an already-authenticated user. When
+     * {@code linkingUser} is non-null (the caller had an existing Elements session when starting the attempt),
+     * the attempt is stamped with that user's id so a later successful callback links the external identity to
+     * them instead of creating/finding a user by external id — the callback itself, hit by an unauthenticated
+     * provider redirect, has no session of its own to make that determination.
+     *
+     * @param provider the provider identifier
+     * @param linkingUser the already-authenticated user to link on success, or {@code null} for an anonymous
+     *                    (first-time login) attempt
+     * @return the pending attempt's id, authorize URL, and expiry
+     */
+    public OidcLoginAttemptBegin begin(final String provider, final User linkingUser) {
 
         final var config = findConfigOrThrow(provider);
         final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
@@ -71,6 +104,7 @@ public class OidcLoginAttemptOperations {
         final var id = randomToken();
         final var state = randomToken();
         final var nonce = randomToken();
+        final var confirmToken = randomToken();
         final var expiry = new Timestamp(currentTimeMillis() + (ttlSeconds * 1000));
 
         final var attempt = new OidcLoginAttempt();
@@ -78,6 +112,7 @@ public class OidcLoginAttemptOperations {
         attempt.setProvider(provider);
         attempt.setState(state);
         attempt.setNonce(nonce);
+        attempt.setConfirmToken(confirmToken);
         attempt.setStatus(OidcLoginAttemptStatus.PENDING);
         attempt.setExpiry(expiry);
         // Snapshotted from the provider config at begin() time, not read live at callback time, so an admin
@@ -85,14 +120,27 @@ public class OidcLoginAttemptOperations {
         attempt.setSuccessRedirectUrl(config.getSuccessRedirectUrl());
         attempt.setErrorRedirectUrl(config.getErrorRedirectUrl());
 
+        if (linkingUser != null) {
+            attempt.setLinkedUserId(linkingUser.getId());
+        }
+
         getOidcLoginAttemptDao().create(attempt);
 
         final var authorizeUrl = buildAuthorizeUrl(config, discoveryDocument, state, nonce);
 
-        return new OidcLoginAttemptBegin(id, authorizeUrl, expiry.toInstant().getEpochSecond());
+        return new OidcLoginAttemptBegin(id, authorizeUrl, expiry.toInstant().getEpochSecond(), confirmToken);
 
     }
 
+    /**
+     * Polls a pending attempt by id. Returns {@code COMPLETE} with the session exactly once, on the poll that
+     * first observes completion; every subsequent poll for the same id returns {@code EXPIRED}. A non-mutating
+     * peek: a linking attempt that has become link-ready is rejected outright, since finalizing it here would
+     * mean trusting whoever presents {@code id} alone with the account-link mutation — see {@link #confirmLink}.
+     *
+     * @param id the opaque poll id
+     * @return the current status of the attempt
+     */
     public OidcLoginAttemptStatusResponse poll(final String id) {
 
         final var claimed = getOidcLoginAttemptDao().claimCompleteById(id);
@@ -100,6 +148,13 @@ public class OidcLoginAttemptOperations {
         if (claimed.isPresent()) {
             final var sessionCreation = deserializeSession(claimed.get().getSessionToken());
             return OidcLoginAttemptStatusResponse.complete(sessionCreation);
+        }
+
+        // A non-mutating peek: a linking attempt is never finalizable via plain poll, since doing so would mean
+        // trusting whoever presents `id` alone with the account-link mutation. Reject rather than silently
+        // returning PENDING forever, so the client learns it must call confirmLink() instead.
+        if (getOidcLoginAttemptDao().findLinkReadyById(id).isPresent()) {
+            throw new ForbiddenException("This login attempt requires confirmation via POST .../confirm.");
         }
 
         return getOidcLoginAttemptDao()
@@ -113,6 +168,71 @@ public class OidcLoginAttemptOperations {
 
     }
 
+    /**
+     * Finalizes a linking attempt by presenting the {@code confirmToken} returned only in the original
+     * {@code begin()} response — the sole proof that the caller is the same party that started the attempt.
+     * Performs the actual account-link mutation (deferred out of {@link #handleCallback}, which cannot make this
+     * determination itself) and mints the resulting session.
+     *
+     * @param id the opaque poll id
+     * @param confirmToken the secret returned in the original {@code begin()} response for this attempt
+     * @return the completed session, or {@link OidcLoginAttemptStatusResponse#expired()} if the attempt is
+     *         unknown, not link-ready, already claimed, or expired
+     */
+    public OidcLoginAttemptStatusResponse confirmLink(final String id, final String confirmToken) {
+
+        final var attemptOptional = getOidcLoginAttemptDao().findLinkReadyById(id);
+
+        if (attemptOptional.isEmpty()) {
+            return OidcLoginAttemptStatusResponse.expired();
+        }
+
+        final var attempt = attemptOptional.get();
+
+        if (confirmToken == null || !constantTimeEquals(confirmToken, attempt.getConfirmToken())) {
+            // Deliberately does not consume the attempt: a wrong/missing token might just be a client bug, and
+            // the legitimate holder of the real confirmToken must still be able to retry.
+            throw new ForbiddenException("Invalid confirmation token.");
+        }
+
+        // Only claim (and thus consume) the attempt once the token has already been verified to match.
+        final var claimed = getOidcLoginAttemptDao().claimLinkReadyById(id);
+
+        if (claimed.isEmpty()) {
+            // Lost a race to a concurrent confirm for the same id.
+            return OidcLoginAttemptStatusResponse.expired();
+        }
+
+        final var claims = deserializeLinkClaims(claimed.get().getLinkClaimsJson());
+        final var targetUser = getUserDao().getUser(claimed.get().getLinkedUserId());
+
+        final var linkedUser = getUserOidcAuthService().apply(
+                targetUser, claims.getSchemeName(), claims.getExternalUserId(), claims.getEmail(),
+                claims.getProfileClaims());
+
+        final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(linkedUser);
+
+        return OidcLoginAttemptStatusResponse.complete(sessionCreation);
+
+    }
+
+    /**
+     * Handles the provider's redirect callback: looks up the pending attempt by state, exchanges the code for an
+     * id_token, and validates it. For an anonymous attempt, builds and stores the session directly, exactly as
+     * before. For a linking attempt, deliberately does <em>not</em> perform the account-link mutation — this
+     * callback is always hit by an unauthenticated provider redirect with no way to verify it's talking to the
+     * same party that called {@link #begin(String, User)} — and instead persists the validated claims and marks
+     * the attempt {@link OidcLoginAttemptStatus#LINK_READY}, deferring the mutation to {@link #confirmLink}. Fails
+     * closed (marks the attempt FAILED) on any missing/expired/mismatched state, nonce mismatch, or exchange or
+     * validation failure; never throws for an expected failure mode, so the REST layer stays a thin dispatcher
+     * over the returned result.
+     *
+     * @param provider the provider identifier from the callback path
+     * @param code the authorization code from the provider, or {@code null} if the provider reported an error
+     * @param state the state value from the provider, matched against the pending attempt
+     * @param error the provider's {@code error} query parameter, or {@code null} on a normal code-bearing callback
+     * @return the outcome, including the caller-configured redirect URL for that outcome, if any
+     */
     public OidcLoginAttemptCallbackResult handleCallback(final String provider, final String code,
                                                           final String state, final String error) {
 
@@ -143,6 +263,30 @@ public class OidcLoginAttemptOperations {
             final var decodedJWT = getOidcAuthServiceOperations().decodeAndVerify(
                     idToken, scheme, config.getClientId(), attempt.getNonce());
 
+            if (attempt.getLinkedUserId() != null) {
+
+                // Linking attempt: the account-link mutation is deliberately deferred to confirmLink(), which
+                // this (always-unauthenticated) callback cannot itself gate correctly -- it has no way to verify
+                // it's talking to the same party that called begin(). Only the validated external identity is
+                // persisted here.
+                final var claims = new OidcLinkClaims();
+                claims.setSchemeName(scheme.getName());
+                claims.setExternalUserId(OidcAuthServiceOperations.claimAsString(
+                        decodedJWT, OidcAuthServiceOperations.Claim.USER_ID.value));
+                claims.setEmail(OidcAuthServiceOperations.claimAsString(
+                        decodedJWT, OidcAuthServiceOperations.Claim.EMAIL.value));
+                claims.setProfileClaims(OidcAuthServiceOperations.extractProfileClaims(decodedJWT));
+
+                final var linkReady = getOidcLoginAttemptDao().markLinkReady(state, serializeLinkClaims(claims));
+
+                if (linkReady.isEmpty()) {
+                    return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
+                }
+
+                return OidcLoginAttemptCallbackResult.success(successRedirectUrl);
+
+            }
+
             final var sessionCreation = getOidcAuthServiceOperations().createOrUpdateUserWithVerifiedToken(
                     decodedJWT, scheme, getAnonOidcAuthService()::apply);
 
@@ -161,7 +305,7 @@ public class OidcLoginAttemptOperations {
             // Never log the code, id_token, or attempt id — only enough context to debug which provider/attempt failed.
             // Every expected failure mode is caught here so the REST layer never has to interpret an exception —
             // it only sees a plain failure result.
-            logger.debug("OIDC callback failed for provider {}", provider, ex);
+            logger.error("OIDC callback failed for provider {}", provider, ex);
             getOidcLoginAttemptDao().markFailed(state, "Login failed");
             return OidcLoginAttemptCallbackResult.failure(errorRedirectUrl);
         }
@@ -275,6 +419,30 @@ public class OidcLoginAttemptOperations {
         }
     }
 
+    private static String serializeLinkClaims(final OidcLinkClaims claims) {
+        try {
+            return OBJECT_MAPPER.writeValueAsString(claims);
+        } catch (final Exception ex) {
+            throw new InternalException(ex);
+        }
+    }
+
+    private static OidcLinkClaims deserializeLinkClaims(final String json) {
+        try {
+            return OBJECT_MAPPER.readValue(json, OidcLinkClaims.class);
+        } catch (final Exception ex) {
+            throw new InternalException(ex);
+        }
+    }
+
+    /**
+     * A real secret comparison (unlike the other lookups in this class, which are keyed by unguessable random
+     * tokens anyway) — compared in constant time to avoid leaking match-length information via timing.
+     */
+    private static boolean constantTimeEquals(final String a, final String b) {
+        return MessageDigest.isEqual(a.getBytes(UTF_8), b.getBytes(UTF_8));
+    }
+
     public OidcProviderConfigurationDao getOidcProviderConfigurationDao() {
         return oidcProviderConfigurationDao;
     }
@@ -318,6 +486,24 @@ public class OidcLoginAttemptOperations {
     @Inject
     public void setAnonOidcAuthService(AnonOidcAuthService anonOidcAuthService) {
         this.anonOidcAuthService = anonOidcAuthService;
+    }
+
+    public UserOidcAuthService getUserOidcAuthService() {
+        return userOidcAuthService;
+    }
+
+    @Inject
+    public void setUserOidcAuthService(UserOidcAuthService userOidcAuthService) {
+        this.userOidcAuthService = userOidcAuthService;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     public Client getClient() {

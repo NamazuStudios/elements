@@ -6,7 +6,12 @@ import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse
 import dev.getelements.elements.sdk.service.auth.OidcLoginAttemptService;
 import jakarta.inject.Inject;
 
-public class StandardOidcLoginAttemptService implements OidcLoginAttemptService {
+/**
+ * Anonymous (first-time login) browser-redirect OIDC attempt. Dispatched by
+ * {@link OidcLoginAttemptServiceProvider} when the caller has no existing Elements session; see
+ * {@link UserOidcLoginAttemptService} for the account-linking counterpart.
+ */
+public class AnonOidcLoginAttemptService implements OidcLoginAttemptService {
 
     private OidcLoginAttemptOperations oidcLoginAttemptOperations;
 
@@ -18,6 +23,11 @@ public class StandardOidcLoginAttemptService implements OidcLoginAttemptService 
     @Override
     public OidcLoginAttemptStatusResponse poll(final String id) {
         return getOidcLoginAttemptOperations().poll(id);
+    }
+
+    @Override
+    public OidcLoginAttemptStatusResponse confirmLink(final String id, final String confirmToken) {
+        return getOidcLoginAttemptOperations().confirmLink(id, confirmToken);
     }
 
     @Override

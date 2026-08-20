@@ -82,6 +82,50 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
     }
 
     @Override
+    public Optional<OidcLoginAttempt> markLinkReady(final String state, final String linkClaimsJson) {
+
+        final var query = getDatastore().find(MongoOidcLoginAttempt.class)
+                .filter(and(eq("state", state), eq("status", PENDING)));
+
+        final var entity = getMongoDBUtils().perform(ds -> query.modify(
+                set("status", LINK_READY),
+                set("linkClaimsJson", linkClaimsJson)
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER)));
+
+        return Optional.ofNullable(entity).map(this::transform);
+
+    }
+
+    @Override
+    public Optional<OidcLoginAttempt> findLinkReadyById(final String id) {
+
+        final var entity = getDatastore().find(MongoOidcLoginAttempt.class)
+                .filter(and(eq("_id", id), eq("status", LINK_READY)))
+                .first();
+
+        return notExpired(entity).map(this::transform);
+
+    }
+
+    @Override
+    public Optional<OidcLoginAttempt> claimLinkReadyById(final String id) {
+
+        final var query = getDatastore().find(MongoOidcLoginAttempt.class)
+                .filter(and(eq("_id", id), eq("status", LINK_READY)));
+
+        // returnDocument(BEFORE): the caller that wins the race gets the pre-claim document, which still has
+        // linkClaimsJson populated. A concurrent second caller's modify() no longer matches (status is CLAIMED)
+        // and returns null, so the claims can never be consumed twice.
+        final var entity = getMongoDBUtils().perform(ds -> query.modify(
+                set("status", CLAIMED),
+                unset("linkClaimsJson")
+        ).execute(new ModifyOptions().upsert(false).returnDocument(BEFORE)));
+
+        return notExpired(entity).map(this::transform);
+
+    }
+
+    @Override
     public Optional<OidcLoginAttempt> claimCompleteById(final String id) {
 
         final var query = getDatastore().find(MongoOidcLoginAttempt.class)

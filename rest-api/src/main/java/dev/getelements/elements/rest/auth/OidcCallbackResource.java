@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.auth;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptCallbackResult;
 import dev.getelements.elements.sdk.service.auth.OidcLoginAttemptService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -71,17 +72,40 @@ public class OidcCallbackResource {
 
     private OidcLoginAttemptService oidcLoginAttemptService;
 
+    /**
+     * Handles the provider's redirect callback, delegating to {@link OidcLoginAttemptService#handleCallback} to
+     * validate the exchanged identity and advance the matching pending attempt. Always returns {@code 200} HTML
+     * or a {@code 302} redirect to the provider-configured success/error URL — never a JSON error body — since
+     * the outcome is reported to the waiting client via {@link OidcSessionResource}'s poll/confirm endpoints, not
+     * via this response.
+     *
+     * @param provider the provider identifier from the callback path
+     * @param code the authorization code from the provider, or {@code null} if the provider reported an error
+     * @param state the state value identifying the pending attempt
+     * @param error the provider's error query parameter (e.g. user denied consent), or {@code null} on success
+     * @param uriInfo the request URI, used to forward query parameters onto a configured redirect target
+     * @return an HTML page, or a redirect to the provider-configured success/error URL
+     */
     @GET
     @Produces(MediaType.TEXT_HTML)
     @Operation(
             summary = "OIDC provider redirect target",
             description = "Not called by game clients. The provider redirects the system browser here after " +
                     "the user completes (or denies) authorization.")
-    public Response callback(@PathParam("provider") final String provider,
-                              @QueryParam("code") final String code,
-                              @QueryParam("state") final String state,
-                              @QueryParam("error") final String error,
-                              @Context final UriInfo uriInfo) {
+    public Response callback(
+            @PathParam("provider")
+            @Parameter(description = "The provider identifier this login attempt was begun for.")
+            final String provider,
+            @QueryParam("code")
+            @Parameter(description = "The authorization code from the provider, absent if error is set.")
+            final String code,
+            @QueryParam("state")
+            @Parameter(description = "The state value identifying the pending attempt.")
+            final String state,
+            @QueryParam("error")
+            @Parameter(description = "The provider's reported error, e.g. the user denied consent.")
+            final String error,
+            @Context final UriInfo uriInfo) {
 
         if (state == null || (error == null && code == null)) {
             return html(FAILURE_HTML, provider, code, state, error);

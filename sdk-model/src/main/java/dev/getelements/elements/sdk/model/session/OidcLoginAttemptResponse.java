@@ -25,6 +25,11 @@ public class OidcLoginAttemptResponse {
     @Schema(description = "The epoch second after which the attempt expires. Only set for pending attempts.")
     private Long expiresAt;
 
+    @Schema(description = "A secret returned only to the caller of this request, presented back on " +
+            "POST /oidc/session/{id}/confirm to finalize an account-linking attempt. Present for every pending " +
+            "attempt, but only ever required for a linking one. Only set for pending attempts.")
+    private String confirmToken;
+
     @Schema(description = "The completed Elements session. Only set when idToken direct validation completed synchronously.")
     private SessionCreation session;
 
@@ -34,13 +39,16 @@ public class OidcLoginAttemptResponse {
      * @param id           the opaque poll id
      * @param authorizeUrl the provider authorize URL
      * @param expiresAt    the epoch second expiry
+     * @param confirmToken the secret used to finalize a linking attempt
      * @return the response
      */
-    public static OidcLoginAttemptResponse pending(final String id, final String authorizeUrl, final long expiresAt) {
+    public static OidcLoginAttemptResponse pending(final String id, final String authorizeUrl, final long expiresAt,
+                                                    final String confirmToken) {
         final var response = new OidcLoginAttemptResponse();
         response.setId(id);
         response.setAuthorizeUrl(authorizeUrl);
         response.setExpiresAt(expiresAt);
+        response.setConfirmToken(confirmToken);
         return response;
     }
 
@@ -78,6 +86,14 @@ public class OidcLoginAttemptResponse {
 
     public void setExpiresAt(Long expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public String getConfirmToken() {
+        return confirmToken;
+    }
+
+    public void setConfirmToken(String confirmToken) {
+        this.confirmToken = confirmToken;
     }
 
     public SessionCreation getSession() {
