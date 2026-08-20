@@ -140,7 +140,7 @@
     </modules>
 
     <properties>
-        <revision>3.9.0-rc-5</revision>
+        <revision>3.9.0-rc-6</revision>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>7.0.0</guice.version>
         <guice.bridge.version>3.0.6</guice.bridge.version>
