@@ -15,9 +15,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import static dev.getelements.elements.sdk.cluster.id.ApplicationId.randomApplicationId;
+import static dev.getelements.elements.sdk.cluster.id.DeploymentId.randomDeploymentId;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
-import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndApplication;
+import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndDeployment;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -169,9 +169,9 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
     public void testConflictingRoute() throws Exception {
 
         final List<Object> address = asList(
-            forInstanceAndApplication(randomInstanceId(), randomApplicationId()),
-            forInstanceAndApplication(randomInstanceId(), randomApplicationId()),
-            forInstanceAndApplication(randomInstanceId(), randomApplicationId())
+            forInstanceAndDeployment(randomInstanceId(), randomDeploymentId()),
+            forInstanceAndDeployment(randomInstanceId(), randomDeploymentId()),
+            forInstanceAndDeployment(randomInstanceId(), randomDeploymentId())
         );
 
         final Invocation invocation = spy(Invocation.class);
@@ -188,14 +188,14 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
 
 
     private NodeId generateNodeId() {
-        return forInstanceAndApplication(instanceId, getApplicationId());
+        return forInstanceAndDeployment(instanceId, getDeploymentId());
     }
 
     private List<Object> generateSaneAddress() {
         return asList(
-            forInstanceAndApplication(instanceId, getApplicationId()),
-            forInstanceAndApplication(instanceId, getApplicationId()),
-            forInstanceAndApplication(instanceId, getApplicationId())
+            forInstanceAndDeployment(instanceId, getDeploymentId()),
+            forInstanceAndDeployment(instanceId, getDeploymentId()),
+            forInstanceAndDeployment(instanceId, getDeploymentId())
         );
     }
 

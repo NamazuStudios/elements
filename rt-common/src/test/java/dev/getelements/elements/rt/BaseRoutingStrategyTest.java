@@ -1,7 +1,7 @@
 package dev.getelements.elements.rt;
 
 import com.google.inject.Inject;
-import dev.getelements.elements.sdk.cluster.id.ApplicationId;
+import dev.getelements.elements.sdk.cluster.id.DeploymentId;
 import dev.getelements.elements.rt.remote.RemoteInvokerRegistry;
 import dev.getelements.elements.rt.remote.RoutingStrategy;
 import org.testng.annotations.BeforeMethod;
@@ -10,7 +10,7 @@ import static org.mockito.Mockito.reset;
 
 public class BaseRoutingStrategyTest {
 
-    private ApplicationId applicationId;
+    private DeploymentId deploymentId;
 
     private RoutingStrategy routingStrategy;
 
@@ -30,13 +30,13 @@ public class BaseRoutingStrategyTest {
         this.routingStrategy = routingStrategy;
     }
 
-    public ApplicationId getApplicationId() {
-        return applicationId;
+    public DeploymentId getDeploymentId() {
+        return deploymentId;
     }
 
     @Inject
-    public void setApplicationId(ApplicationId applicationId) {
-        this.applicationId = applicationId;
+    public void setDeploymentId(DeploymentId deploymentId) {
+        this.deploymentId = deploymentId;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {
