@@ -31,6 +31,10 @@
                     <artifactId>jetty-ws</artifactId>
                 </dependency>
                 <dependency>
+                    <groupId>dev.getelements.elements</groupId>
+                    <artifactId>migrate</artifactId>
+                </dependency>
+                <dependency>
                     <groupId>org.slf4j</groupId>
                     <artifactId>slf4j-api</artifactId>
                     <scope>compile</scope>
