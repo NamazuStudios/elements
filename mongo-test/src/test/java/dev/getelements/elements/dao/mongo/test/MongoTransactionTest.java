@@ -1,12 +1,23 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.model.user.User;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoTransactionTest {
@@ -14,6 +25,12 @@ public class MongoTransactionTest {
     private Datastore datastore;
 
     private Provider<Transaction> transactionProvider;
+
+    private UserTestFactory userTestFactory;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
 
     @DataProvider
     public static Object[][] daoClasses() {
@@ -65,6 +82,113 @@ public class MongoTransactionTest {
         try (final var txn = getTransactionProvider().get()) {
             txn.getDao(daoT);
         }
+    }
+
+    @Test
+    public void testTransactionalEventPublishesImmediatelyAndPlainEventOnlyAfterCommit() {
+
+        final var events = new CopyOnWriteArrayList<Event>();
+        final var subscription = getElementRegistry().onEvent(events::add);
+
+        final var toCreate = getUserTestFactory().buildTestUser();
+        final User created;
+
+        try {
+
+            try (final var txn = getTransactionProvider().get()) {
+
+                created = txn.getDao(UserDao.class).createUserStrict(toCreate);
+
+                assertTrue(
+                        hasTransactionalCreatedEvent(events, created.getId()),
+                        "Expected the {User, Transaction} USER_CREATED event to fire immediately, inside the transaction"
+                );
+
+                assertFalse(
+                        hasPlainCreatedEvent(events, created.getId()),
+                        "Did not expect the plain USER_CREATED event before the transaction commits"
+                );
+
+                txn.commit();
+
+            }
+
+            assertTrue(
+                    hasPlainCreatedEvent(events, created.getId()),
+                    "Expected the plain USER_CREATED event to fire once the transaction commits"
+            );
+
+        } finally {
+            subscription.unsubscribe();
+        }
+
+    }
+
+    @Test
+    public void testBufferedPlainEventIsDroppedOnRollback() {
+
+        final var events = new CopyOnWriteArrayList<Event>();
+        final var subscription = getElementRegistry().onEvent(events::add);
+
+        final var toCreate = getUserTestFactory().buildTestUser();
+
+        try {
+
+            final String createdId;
+
+            try (final var txn = getTransactionProvider().get()) {
+
+                final var created = txn.getDao(UserDao.class).createUserStrict(toCreate);
+                createdId = created.getId();
+
+                assertTrue(
+                        hasTransactionalCreatedEvent(events, createdId),
+                        "Expected the {User, Transaction} USER_CREATED event to fire immediately, inside the transaction"
+                );
+
+                txn.rollback();
+
+            }
+
+            assertFalse(
+                    hasPlainCreatedEvent(events, createdId),
+                    "Did not expect the buffered plain USER_CREATED event to fire after a rollback"
+            );
+
+        } finally {
+            subscription.unsubscribe();
+        }
+
+    }
+
+    private boolean hasTransactionalCreatedEvent(final List<Event> events, final String userId) {
+        return events.stream().anyMatch(ev ->
+                UserDao.USER_CREATED.equals(ev.getEventName()) &&
+                ev.getEventArguments().size() == 2 &&
+                ev.getEventArgument(0, User.class).getId().equals(userId) &&
+                ev.getEventArgument(1) instanceof Transaction
+        );
+    }
+
+    private boolean hasPlainCreatedEvent(final List<Event> events, final String userId) {
+        return events.stream().anyMatch(ev ->
+                UserDao.USER_CREATED.equals(ev.getEventName()) &&
+                ev.getEventArguments().size() == 1 &&
+                ev.getEventArgument(0, User.class).getId().equals(userId)
+        );
+    }
+
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
     }
 
     public Datastore getDatastore() {
