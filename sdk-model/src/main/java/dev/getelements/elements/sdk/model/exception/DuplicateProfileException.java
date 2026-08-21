@@ -1,8 +1,10 @@
-package dev.getelements.elements.rt.exception;
+package dev.getelements.elements.sdk.model.exception;
 
 public class DuplicateProfileException extends DuplicateException {
 
-    public DuplicateProfileException() {}
+    public DuplicateProfileException() {
+        super();
+    }
 
     public DuplicateProfileException(String message) {
         super(message);
@@ -19,5 +21,5 @@ public class DuplicateProfileException extends DuplicateException {
     public DuplicateProfileException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
-
+    
 }
