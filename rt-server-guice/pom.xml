@@ -29,11 +29,6 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-guice</artifactId>
         </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jackson</artifactId>
-            <optional>true</optional>
-        </dependency>
     </dependencies>
 
 </project>
