@@ -55,7 +55,6 @@
         <module>service</module>
         <module>service-guice</module>
         <module>mongo-dao</module>
-        <module>setup</module>
         <module>guice</module>
         <module>rest-guice</module>
         <module>rt-common</module>
@@ -96,9 +95,6 @@
         <module>doc-serve-jetty</module>
         <module>mongo-test</module>
         <module>common-servlet-guice</module>
-        <module>rpc-api</module>
-        <module>rpc-api-guice</module>
-        <module>rpc-api-jetty</module>
         <module>mongo-guice</module>
         <module>migrate</module>
         <module>jetty-ws</module>
@@ -454,21 +450,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>cdn-serve-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rpc-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rpc-api-jetty</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rpc-api-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
