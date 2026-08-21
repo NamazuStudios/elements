@@ -219,6 +219,10 @@ public class MongoMissionDao implements MissionDao {
             builder.with(unset("metadata"));
         }
 
+        if (mission.getAuthoritative() != null) {
+            builder.with(set("authoritative", mission.getAuthoritative()));
+        }
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
@@ -289,6 +293,10 @@ public class MongoMissionDao implements MissionDao {
             builder.with(unset("metadata"));
         }
 
+        if (mission.getAuthoritative() != null) {
+            builder.with(set("authoritative", mongoMission.getAuthoritative()));
+        }
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
@@ -320,6 +328,14 @@ public class MongoMissionDao implements MissionDao {
         mission.validateTags();
 
         final MongoMission mongoMission = checkMission(mission);
+
+        // Mission#authoritative is documented to default to true: materialize the default at
+        // create time so every stored Mission carries an explicit value. (The advance gate in
+        // UserProgressService additionally treats null as authoritative, which covers records
+        // that predate this field.)
+        if (mongoMission.getAuthoritative() == null) {
+            mongoMission.setAuthoritative(Boolean.TRUE);
+        }
 
         try {
             getDatastore().insert(mongoMission);
