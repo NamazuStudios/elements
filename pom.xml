@@ -91,7 +91,6 @@
         <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>deployment-jetty</module>
-        <module>app-node</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
         <module>doc-serve-jetty</module>
