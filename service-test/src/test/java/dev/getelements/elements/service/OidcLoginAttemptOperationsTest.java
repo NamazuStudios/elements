@@ -5,9 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
+import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.auth.JWK;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
@@ -16,10 +18,12 @@ import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import dev.getelements.elements.sdk.model.auth.TokenEndpointAuthMethod;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.session.OidcLoginAttemptStatusResponse;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
+import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
 import dev.getelements.elements.service.auth.oidc.OidcDiscoveryDocument;
@@ -49,6 +53,7 @@ import java.util.Optional;
 import static java.lang.System.currentTimeMillis;
 import static java.util.List.of;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -73,6 +78,8 @@ public class OidcLoginAttemptOperationsTest {
     private UserOidcAuthService userOidcAuthService;
     private UserDao userDao;
     private Client client;
+    private ApplicationDao applicationDao;
+    private ProfileDao profileDao;
 
     private OidcLoginAttemptOperations operations;
 
@@ -108,7 +115,11 @@ public class OidcLoginAttemptOperationsTest {
         // than mocking it away. The token carries an 'aud' claim (needed for the audience check), which also
         // triggers buildSession's optional Application lookup, so ApplicationDao/SessionDao need mocking too.
         oidcAuthServiceOperations = new OidcAuthServiceOperations();
-        oidcAuthServiceOperations.setApplicationDao(mock(ApplicationDao.class));
+        applicationDao = mock(ApplicationDao.class);
+        oidcAuthServiceOperations.setApplicationDao(applicationDao);
+        profileDao = mock(ProfileDao.class);
+        oidcAuthServiceOperations.setProfileDao(profileDao);
+        oidcAuthServiceOperations.setNameService(mock(NameService.class));
         final var sessionDao = mock(SessionDao.class);
         when(sessionDao.create(any())).thenAnswer(invocation -> {
             final var sessionCreation = new SessionCreation();
@@ -267,6 +278,28 @@ public class OidcLoginAttemptOperationsTest {
 
     }
 
+    @Test
+    public void testBeginWithoutApplicationNameOrIdLeavesItNull() {
+
+        operations.begin(PROVIDER);
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertNull(attemptCaptor.getValue().getApplicationNameOrId());
+
+    }
+
+    @Test
+    public void testBeginWithApplicationNameOrIdPersistsIt() {
+
+        operations.begin(PROVIDER, null, "app-1");
+
+        final var attemptCaptor = ArgumentCaptor.forClass(OidcLoginAttempt.class);
+        verify(oidcLoginAttemptDao).create(attemptCaptor.capture());
+        assertEquals(attemptCaptor.getValue().getApplicationNameOrId(), "app-1");
+
+    }
+
     // ── handleCallback() ─────────────────────────────────────────────────────
 
     @Test
@@ -336,6 +369,98 @@ public class OidcLoginAttemptOperationsTest {
         assertNull(result.getRedirectUrl());
         verify(oidcLoginAttemptDao).markComplete(eq(state), anyString());
         verify(oidcLoginAttemptDao, never()).markFailed(eq(state), anyString());
+
+    }
+
+    @Test
+    public void testHandleCallbackAnonymousPathReachesGatedAutoCreateWhenApplicationNameOrIdSet() {
+
+        final var state = "matching-state";
+        final var nonce = "matching-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setApplicationNameOrId("app-1");
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markComplete(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        final var user = new User();
+        user.setId("user-1");
+        when(anonOidcAuthService.apply(any(), any())).thenReturn(user);
+
+        final var application = new Application();
+        application.setId("app-1");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication("app-1")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-1", "app-1")).thenReturn(Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("profile-1");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        assertTrue(result.isSuccess());
+        verify(profileDao).createSlottedProfile(any(Profile.class), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+
+    }
+
+    @Test
+    public void testHandleCallbackAnonymousPathWithoutApplicationNameOrIdKeepsLegacyUngatedBehavior() {
+
+        final var state = "matching-state";
+        final var nonce = "matching-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        // applicationNameOrId intentionally left unset -- legacy aud-claim-driven resolution applies.
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markComplete(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        final var user = new User();
+        user.setId("user-2");
+        when(anonOidcAuthService.apply(any(), any())).thenReturn(user);
+
+        final var application = new Application();
+        application.setId(CLIENT_ID);
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication(CLIENT_ID)).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-2", CLIENT_ID)).thenReturn(Optional.empty());
+
+        final var legacyProfile = new Profile();
+        legacyProfile.setId("legacy-profile");
+        when(profileDao.createOrRefreshProfile(any(Profile.class))).thenReturn(legacyProfile);
+
+        final var result = operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        assertTrue(result.isSuccess());
+        verify(profileDao).createOrRefreshProfile(any(Profile.class));
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
 
     }
 

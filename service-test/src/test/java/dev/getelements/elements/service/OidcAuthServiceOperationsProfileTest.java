@@ -227,6 +227,67 @@ public class OidcAuthServiceOperationsProfileTest {
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
     }
 
+    @Test
+    public void testVerifiedTokenPathAutoCreatesPrimaryProfileWhenApplicationNameOrIdSuppliedAndConfigured() {
+
+        final var decodedJWT = JWT.decode(token(null));
+        final var scheme = scheme();
+
+        final var user = new User();
+        user.setId("user-4");
+
+        final var application = new Application();
+        application.setId("app-4");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication("app-4")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-4", "app-4")).thenReturn(Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("profile-4");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        ops.createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper(user), "app-4");
+
+        verify(profileDao).createSlottedProfile(any(Profile.class), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
+        assertEquals(sessionCaptor.getValue().getApplication(), application);
+
+    }
+
+    @Test
+    public void testVerifiedTokenPathWithoutApplicationNameOrIdFallsBackToAudClaim() {
+
+        final var decodedJWT = JWT.decode(token("app-5"));
+        final var scheme = scheme();
+
+        final var user = new User();
+        user.setId("user-5");
+
+        final var application = new Application();
+        application.setId("app-5");
+        application.setAutoCreateProfile(false);
+        application.setMaxProfiles(0);
+
+        when(applicationDao.findActiveApplication("app-5")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-5", "app-5")).thenReturn(Optional.empty());
+
+        final var legacyProfile = new Profile();
+        legacyProfile.setId("legacy-profile-5");
+        when(profileDao.createOrRefreshProfile(any(Profile.class))).thenReturn(legacyProfile);
+
+        ops.createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper(user));
+
+        verify(profileDao).createOrRefreshProfile(any(Profile.class));
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+
+    }
+
     private static class TestModule extends AbstractModule {
 
         @Override

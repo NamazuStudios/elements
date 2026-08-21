@@ -53,6 +53,15 @@ public class OidcLoginAttempt {
     private String linkedUserId;
 
     /**
+     * The name or ID of the application whose primary profile should be attached to the resulting session, set
+     * at {@code begin()} time when the caller requested one. Snapshotted here (rather than read live) because
+     * {@code begin()} and the callback that later resolves this attempt are separate HTTP calls with no shared
+     * request body. {@code null} if the caller did not request one, in which case the legacy JWT
+     * {@code aud}-claim-driven, ungated resolution applies instead.
+     */
+    private String applicationNameOrId;
+
+    /**
      * Serialized external-identity claims (scheme name, external user id, email, profile claims) validated by
      * the callback for a linking attempt, set when transitioning to {@link OidcLoginAttemptStatus#LINK_READY}.
      * Consumed exactly once, by the authenticated poll that performs the deferred account-link mutation.
@@ -154,6 +163,14 @@ public class OidcLoginAttempt {
 
     public void setLinkedUserId(String linkedUserId) {
         this.linkedUserId = linkedUserId;
+    }
+
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
     }
 
     public String getLinkClaimsJson() {

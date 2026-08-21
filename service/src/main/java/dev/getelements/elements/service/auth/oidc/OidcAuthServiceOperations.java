@@ -146,7 +146,24 @@ public class OidcAuthServiceOperations {
             final DecodedJWT decodedJWT,
             final OidcAuthScheme scheme,
             final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
-        return buildSession(decodedJWT, scheme, userMapper, null);
+        return createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper, null);
+    }
+
+    /**
+     * Same as {@link #createOrUpdateUserWithVerifiedToken(DecodedJWT, OidcAuthScheme, BiFunction)}, additionally
+     * requesting that the given application's primary profile be attached to the resulting session (gated
+     * auto-create), exactly as {@link #createOrUpdateUserWithToken} does via
+     * {@link OidcSessionRequest#getApplicationNameOrId()}.
+     *
+     * @param requestedApplicationNameOrId the application name/ID to attach, or {@code null} for the legacy
+     *                                      JWT aud-claim-driven, ungated behavior
+     */
+    public SessionCreation createOrUpdateUserWithVerifiedToken(
+            final DecodedJWT decodedJWT,
+            final OidcAuthScheme scheme,
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
+            final String requestedApplicationNameOrId) {
+        return buildSession(decodedJWT, scheme, userMapper, requestedApplicationNameOrId);
     }
 
     /**

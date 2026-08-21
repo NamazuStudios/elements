@@ -24,6 +24,12 @@ public class OidcLoginAttemptRequest {
     @Schema(description = "An already-possessed id_token to validate directly, skipping the browser-redirect flow.")
     private String idToken;
 
+    @Schema(description = "The name or ID of an application whose primary profile should be attached to the " +
+            "session, auto-creating it (subject to the application's autoCreateProfile/maxProfiles settings) if " +
+            "it does not exist. If unspecified, the application encoded in the resulting id_token's own claims " +
+            "(if any) is used instead, without auto-create.")
+    private String applicationNameOrId;
+
     public String getProvider() {
         return provider;
     }
@@ -40,16 +46,25 @@ public class OidcLoginAttemptRequest {
         this.idToken = idToken;
     }
 
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof OidcLoginAttemptRequest that)) return false;
         return Objects.equals(provider, that.provider)
-                && Objects.equals(idToken, that.idToken);
+                && Objects.equals(idToken, that.idToken)
+                && Objects.equals(applicationNameOrId, that.applicationNameOrId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(provider, idToken);
+        return Objects.hash(provider, idToken, applicationNameOrId);
     }
 
     @Override

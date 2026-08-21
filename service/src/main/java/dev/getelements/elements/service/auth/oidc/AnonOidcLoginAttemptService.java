@@ -21,6 +21,11 @@ public class AnonOidcLoginAttemptService implements OidcLoginAttemptService {
     }
 
     @Override
+    public OidcLoginAttemptBegin begin(final String provider, final String applicationNameOrId) {
+        return getOidcLoginAttemptOperations().begin(provider, null, applicationNameOrId);
+    }
+
+    @Override
     public OidcLoginAttemptStatusResponse poll(final String id) {
         return getOidcLoginAttemptOperations().poll(id);
     }
