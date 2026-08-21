@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * The wire framing used by {@link FabricEndpoint} and {@link FabricRemoteInvoker} for a single WebSocket binary
+ * The wire framing used by {@link FabricEndpoint} and {@link JakartaWebsocketRemoteInvoker} for a single WebSocket binary
  * message: a one-byte {@link Type} tag followed by a payload already serialized via {@code PayloadReader}/
  * {@code PayloadWriter}.
  */
