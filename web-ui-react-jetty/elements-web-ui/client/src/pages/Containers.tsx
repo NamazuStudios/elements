@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Container, RefreshCw, ExternalLink, ChevronDown, ChevronRight, ArrowLeft, AlertTriangle, AlertCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { queryClient } from '@/lib/queryClient';
+import { fixElementUri } from '@/lib/openapi-utils';
 
 interface ElementServiceMetadata {
   implementation?: {
@@ -334,13 +335,16 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Endpoints</h3>
                 <div className="space-y-1">
-                  {container.uris.map((uri, i) => (
-                    <a key={i} href={uri} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/20 hover:bg-muted/50 hover:border-primary/50 transition-colors">
-                      <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      <span className="font-mono text-xs break-all" data-testid={`text-uri-${i}`}>{uri}</span>
-                    </a>
-                  ))}
+                  {container.uris.map((uri, i) => {
+                    const fixedUri = fixElementUri(uri);
+                    return (
+                      <a key={i} href={fixedUri} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-3 py-2 rounded-md border bg-muted/20 hover:bg-muted/50 hover:border-primary/50 transition-colors">
+                        <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0" />
+                        <span className="font-mono text-xs break-all" data-testid={`text-uri-${i}`}>{fixedUri}</span>
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             )}
