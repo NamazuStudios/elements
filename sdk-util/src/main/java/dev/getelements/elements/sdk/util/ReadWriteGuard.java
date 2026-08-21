@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.util;
+package dev.getelements.elements.sdk.util;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;

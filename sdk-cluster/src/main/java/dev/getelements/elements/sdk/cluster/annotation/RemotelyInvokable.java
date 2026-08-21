@@ -1,6 +1,6 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
-import dev.getelements.elements.rt.Reflection;
+import dev.getelements.elements.sdk.cluster.util.Reflection;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -36,7 +36,7 @@ public @interface RemotelyInvokable {
 
         /**
          * Gets all {@link Method}
-         * @param cls the {@link Class<?>} from hich to extract the methods.
+         * @param cls the {@link Class} from hich to extract the methods.
          * @return a {@link Stream} of {@link Method} types.
          */
         public static Method[] getMethods(final Class<?> cls) {
@@ -45,7 +45,7 @@ public @interface RemotelyInvokable {
 
         /**
          * Gets all {@link Method}
-         * @param cls the {@link Class<?>} from hich to extract the methods.
+         * @param cls the {@link Class} from hich to extract the methods.
          * @return a {@link Stream} of {@link Method} types.
          */
         public static Stream<Method> getMethodStream(final Class<?> cls) {

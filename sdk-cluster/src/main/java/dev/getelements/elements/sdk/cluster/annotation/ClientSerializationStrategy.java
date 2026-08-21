@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -5,8 +5,8 @@ import dev.getelements.elements.config.ModuleDefaults;
 import java.util.Properties;
 
 import static dev.getelements.elements.rt.Constants.*;
-import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
-import static dev.getelements.elements.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
+import static dev.getelements.elements.sdk.cluster.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
+import static dev.getelements.elements.sdk.cluster.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 import static dev.getelements.elements.sdk.model.Constants.CORS_ALLOWED_ORIGINS;
 
 public class AppServeModuleDefaults implements ModuleDefaults {

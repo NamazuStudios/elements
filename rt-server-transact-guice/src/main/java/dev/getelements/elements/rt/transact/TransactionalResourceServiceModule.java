@@ -1,8 +1,6 @@
 package dev.getelements.elements.rt.transact;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.rt.PersistenceStrategy;
-import dev.getelements.elements.rt.ResourceService;
 
 public class TransactionalResourceServiceModule extends PrivateModule {
 

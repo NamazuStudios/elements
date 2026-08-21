@@ -1,6 +1,5 @@
-package dev.getelements.elements.rt;
+package dev.getelements.elements.sdk.util;
 
-import dev.getelements.elements.sdk.util.ReentrantThreadLocal;
 import org.testng.annotations.Test;
 
 import java.util.UUID;

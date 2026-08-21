@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt;
+package dev.getelements.elements.sdk.util.io;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

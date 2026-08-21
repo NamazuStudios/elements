@@ -1,7 +1,6 @@
 package dev.getelements.elements.rt.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.ResourceService;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.rt.transact.ResourceEntry.OperationalStrategy;
 

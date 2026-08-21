@@ -4,7 +4,7 @@ import dev.getelements.elements.dao.mongo.HexableId;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 

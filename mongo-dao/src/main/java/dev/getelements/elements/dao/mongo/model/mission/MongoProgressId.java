@@ -3,7 +3,7 @@ package dev.getelements.elements.dao.mongo.model.mission;
 import dev.getelements.elements.dao.mongo.HexableId;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
 import dev.getelements.elements.sdk.model.exception.mission.ProgressNotFoundException;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;

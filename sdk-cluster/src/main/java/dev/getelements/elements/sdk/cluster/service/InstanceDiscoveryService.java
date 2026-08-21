@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.remote;
+package dev.getelements.elements.sdk.cluster.service;
 
 import dev.getelements.elements.sdk.Subscription;
 
@@ -9,11 +9,10 @@ import java.util.function.Consumer;
 /**
  * Tracks and discovers remote instance of instances that have announced themselves on the network.
  */
-public interface InstanceDiscoveryService {
+public interface InstanceDiscoveryService extends AutoCloseable {
 
-    default void start() {}
-
-    default void stop() {}
+    @Override
+    default void close() {}
 
     /**
      * Gets the known remote hosts.

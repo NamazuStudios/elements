@@ -1,6 +1,6 @@
 package dev.getelements.elements.rt.transact;
 
-import dev.getelements.elements.rt.exception.InternalException;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 
 public class FatalException extends InternalException {
 

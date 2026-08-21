@@ -13,8 +13,6 @@ import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.firebase.FirebaseAppFactoryModule;
-import dev.getelements.elements.test.EmbeddedTestService;
-import dev.getelements.elements.test.JeroMQEmbeddedTestService;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.ArrayList;

@@ -1,10 +1,7 @@
 package dev.getelements.elements.rt.transact;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.rt.Scheduler;
 import dev.getelements.elements.rt.SchedulerContext;
-import dev.getelements.elements.rt.SimpleScheduler;
-import dev.getelements.elements.rt.SimpleSchedulerContext;
 
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.rt.Context.LOCAL;

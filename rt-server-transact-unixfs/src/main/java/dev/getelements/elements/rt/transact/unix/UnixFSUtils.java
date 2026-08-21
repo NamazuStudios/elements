@@ -1,9 +1,9 @@
 package dev.getelements.elements.rt.transact.unix;
 
-import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.sdk.cluster.id.HasNodeId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.transact.FatalException;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

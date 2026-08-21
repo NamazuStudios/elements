@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.sdk.annotation.ElementService;

@@ -17,15 +17,12 @@ import dev.getelements.elements.rt.kryo.guice.KryoPayloadReaderWriterModule;
 import dev.getelements.elements.rt.remote.guice.ClusterContextFactoryModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
-import dev.getelements.elements.rt.remote.jeromq.JeroMQSecurity;
-import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.guice.RootElementRegistryModule;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.MetaIapReceiptInvokerModule;
 import dev.getelements.elements.service.guice.SteamIapReceiptInvokerModule;
-import dev.getelements.elements.test.EmbeddedTestService;
 import dev.morphia.Datastore;
 import dev.morphia.config.MorphiaConfig;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -95,7 +92,6 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
 
         install(new RootElementRegistryModule());
 
-        install(new ZContextModule());
         install(new JeroMQAsyncConnectionServiceModule());
         install(new JeroMQInstanceConnectionServiceModule());
         install(new JeroMQRemoteInvokerModule());

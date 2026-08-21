@@ -1,6 +1,5 @@
 package dev.getelements.elements.dao.mongo.test;
 
-import dev.getelements.elements.rt.exception.DuplicateProfileException;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.dao.MultiMatchDao;

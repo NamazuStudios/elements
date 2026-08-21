@@ -1,9 +1,7 @@
 package dev.getelements.elements.rt.transact;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.rt.LockSetService;
 import dev.getelements.elements.rt.PersistenceEnvironment;
-import dev.getelements.elements.rt.WeakReferenceLockSetService;
 
 public class JournalTransactionalResourceServicePersistenceModule extends PrivateModule {
 

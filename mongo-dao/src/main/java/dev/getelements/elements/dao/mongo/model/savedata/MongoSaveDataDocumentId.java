@@ -1,7 +1,7 @@
 package dev.getelements.elements.dao.mongo.model.savedata;
 
 import dev.getelements.elements.dao.mongo.HexableId;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;

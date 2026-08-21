@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -36,44 +36,11 @@ public @interface RemoteScope {
     String ELEMENTS_RT_PROTOCOL = "eci:rt";
 
     /**
-     * The JSON-RPC Protocol tunneled via HTTP.
-     */
-    String ELEMENTS_JSON_RPC_PROTOCOL = "eci:json-rpc";
-
-    /**
-     * Indicates the scope for remote dispatch
-     */
-    String REMOTE_SCOPE = "dev.getelements.elements.rt.scope";
-
-    /**
-     * Indicates the protocol for remote dispatch
-     */
-    String REMOTE_PROTOCOL = "dev.getelements.elements.rt.protocol";
-
-    /**
      * Indicates the scope of the service. Note scopes prefixed with "eci" are reserved for system use.
      *
      * @return the scope.
      */
     String scope();
-
-    /**
-     * Indicates the protocol of the service. Note protocols prefixed with "eci" are reserved for system use.
-     *
-     * @return the scope.
-     */
-    String protocol();
-
-    /**
-     * Indicates the module's code style. By default this enforces natural code style.
-     *
-     * @return the {@link CodeStyle}
-     */
-    CodeStyle style() default @CodeStyle(
-        methodCaseFormat = NATURAL,
-        constantCaseFormat = NATURAL,
-        parameterCaseFormat = NATURAL
-    );
 
     /**
      * Indicates if this service is deprecated.

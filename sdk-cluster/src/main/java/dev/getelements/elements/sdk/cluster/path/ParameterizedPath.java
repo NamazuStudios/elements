@@ -117,7 +117,7 @@ public final class ParameterizedPath implements Serializable {
     }
 
     /**
-     * Resolves this instance against the supplied {@link Function<String, String>} which provides a
+     * Resolves this instance against the supplied {@link Function} which provides a
      * mapping of parameters to their values.
      *
      * @param resolver the resolver, which may return null if the parameter is unresolved.
@@ -169,11 +169,11 @@ public final class ParameterizedPath implements Serializable {
     }
 
     /**
-     * Given the provided non-parameterized path, this will return a {@link Map<String, String>} of the value of the
+     * Given the provided non-parameterized path, this will return a {@link Map} of the value of the
      * parameters.  The supplied {@link Path} must match this instance using {@link #matches(Path)} for this method to
      * succeed.
      *
-     * The ordering of the returned {@link Map<String, String>} will be returned in the order in which the mapping
+     * The ordering of the returned {@link Map} will be returned in the order in which the mapping
      * matched the original {@link Path}.
      *
      * @param path the {@link Path} which matches this

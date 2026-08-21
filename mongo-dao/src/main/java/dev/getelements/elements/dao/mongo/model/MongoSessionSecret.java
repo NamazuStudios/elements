@@ -1,7 +1,7 @@
 package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.sdk.model.session.SessionCreation;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import org.bson.types.ObjectId;
 
 import java.security.MessageDigest;

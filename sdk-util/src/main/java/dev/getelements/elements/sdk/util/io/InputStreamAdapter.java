@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.util;
+package dev.getelements.elements.sdk.util.io;
 
 import java.io.IOException;
 import java.io.InputStream;

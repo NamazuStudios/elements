@@ -65,10 +65,8 @@ public class ElementsCoreModule extends AbstractModule {
         // Old cluster code which needs to be replaced
         install(new RandomInstanceIdModule());
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
-        install(new ZContextModule());
         install(new JeroMQSecurityModule());
         install(new ClusterContextFactoryModule());
-        install(new JeroMQAsyncConnectionServiceModule());
         install(new JeroMQInstanceConnectionServiceModule());
         install(new JeroMQRemoteInvokerModule());
         install(new JeroMQControlClientModule());

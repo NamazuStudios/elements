@@ -1,7 +1,7 @@
 package dev.getelements.elements.sdk.service.blockchain;
 
-import dev.getelements.elements.rt.annotation.RemotelyInvokable;
-import dev.getelements.elements.rt.annotation.Serialize;
+import dev.getelements.elements.sdk.cluster.annotation.RemotelyInvokable;
+import dev.getelements.elements.sdk.cluster.annotation.Serialize;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainApi;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;

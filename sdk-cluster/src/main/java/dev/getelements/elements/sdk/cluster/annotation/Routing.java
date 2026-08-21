@@ -1,10 +1,8 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.rt.remote.RoutingStrategy;
-import dev.getelements.elements.rt.routing.DefaultRoutingStrategy;
+import dev.getelements.elements.sdk.cluster.routing.RoutingStrategy;
 
-import jakarta.inject.Named;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -28,8 +26,6 @@ public @interface Routing {
     /**
      * Optionally specifies the name of the {@link RoutingStrategy} to use.  If non-empty, this will be used in
      * conjunction with the {@link ServiceLocator} to fetch the {@link RoutingStrategy} from the container.
-     *
-     * Ths corresponds to the {@link Named} annotation.
      *
      * @return the name
      */

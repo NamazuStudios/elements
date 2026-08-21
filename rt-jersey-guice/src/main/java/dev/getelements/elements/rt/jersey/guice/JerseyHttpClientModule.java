@@ -8,7 +8,7 @@ import com.google.inject.multibindings.MapBinder;
 import dev.getelements.elements.rt.jersey.ClientObjectMapperContextResolver;
 import dev.getelements.elements.rt.jersey.GenericMultipartFeature;
 import dev.getelements.elements.rt.jersey.OctetStreamJsonMessageBodyReader;
-import dev.getelements.elements.rt.util.AppleDateFormat;
+import dev.getelements.elements.sdk.util.AppleDateFormat;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ import java.util.function.Consumer;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE;
 import static com.google.inject.Scopes.SINGLETON;
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.*;
+import static dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy.*;
 import static jakarta.ws.rs.client.ClientBuilder.newBuilder;
 
 public class JerseyHttpClientModule extends PrivateModule {

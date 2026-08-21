@@ -1,13 +1,12 @@
 package dev.getelements.elements.dao.mongo.model;
 
 import dev.getelements.elements.dao.mongo.HexableId;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
 import org.bson.types.ObjectId;
 
-import java.util.Base64;
 import java.util.function.Function;
 
 import static dev.getelements.elements.dao.mongo.MongoConstants.OID_LENGTH_BYTES;
@@ -28,10 +27,10 @@ public class MongoFriendshipId implements HexableId {
 
     /**
      * Attempts to parse the supplied string into a {@link MongoFriendshipId}.  If parsing fails, then the supplied
-     * {@link Function<Throwable, ExceptionT>} will be used to generate an {@link Exception} to throw.
+     * {@link Function} will be used to generate an {@link Exception} to throw.
      *
      * @param hexStringRepresentation the hex string representation of the {@link MongoFriendshipId}
-     * @param exceptionSupplier the {@link Function<Throwable, ExceptionT>} to generate an exception if necessary
+     * @param exceptionSupplier the {@link Function} to generate an exception if necessary
      * @param <ExceptionT> the exception type
      * @return the {@link MongoFriendshipId} instance (never null).
      * @throws ExceptionT if parsing fails

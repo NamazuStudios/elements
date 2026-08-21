@@ -1,8 +1,8 @@
 package dev.getelements.elements.service;
 
-import dev.getelements.elements.rt.annotation.ClientSerializationStrategy;
+import dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy;
 
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.LCAMEL;
+import static dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy.LCAMEL;
 
 @ClientSerializationStrategy(LCAMEL)
 public class TestLCamelModel {

@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import dev.getelements.elements.sdk.annotation.ElementService;
 
@@ -23,7 +23,7 @@ public @interface ModuleDefinition {
      *
      * @return the method case format
      */
-    CodeStyle style() default @CodeStyle();
+    CodeStyle style() default;
 
     /**
      * Specifies the binding {@link Annotation} for the module.

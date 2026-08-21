@@ -4,13 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import dev.getelements.elements.rt.annotation.ClientSerializationStrategy;
+import dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy;
 
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ext.ContextResolver;
 import java.util.Map;
 
-import static dev.getelements.elements.rt.annotation.ClientSerializationStrategy.DEFAULT;
+import static dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy.DEFAULT;
 
 public class ClientObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
 

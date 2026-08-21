@@ -57,28 +57,15 @@
         <module>mongo-dao</module>
         <module>guice</module>
         <module>rest-guice</module>
-        <module>rt-common</module>
         <module>rt-jeromq</module>
         <module>rt-jeromq-guice</module>
-        <module>rt-server</module>
         <module>rt-server-git</module>
-        <module>rt-server-simple</module>
-        <module>rt-server-simple-guice</module>
-        <module>rt-server-cluster</module>
-        <module>rt-server-cluster-guice</module>
-        <module>rt-server-cluster-jeromq</module>
-        <module>rt-server-cluster-jeromq-guice</module>
-        <module>rt-server-cluster-node</module>
-        <module>rt-server-cluster-node-jeromq</module>
-        <module>rt-server-cluster-node-jeromq-guice</module>
         <module>rt-server-transact</module>
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
         <module>rt-server-transact-guice</module>
-        <module>rt-server-cluster-node-guice</module>
         <module>rt-kryo</module>
         <module>rt-kryo-guice</module>
-        <module>rt-server-guice</module>
         <module>rt-jersey</module>
         <module>rt-jersey-guice</module>
         <module>docker-config</module>
@@ -86,7 +73,6 @@
         <module>common-jetty</module>
         <module>cdn-serve</module>
         <module>deployment-jetty</module>
-        <module>rt-server-testkit</module>
         <module>service-test</module>
         <module>doc-serve-jetty</module>
         <module>mongo-test</module>
@@ -476,11 +462,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-git</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

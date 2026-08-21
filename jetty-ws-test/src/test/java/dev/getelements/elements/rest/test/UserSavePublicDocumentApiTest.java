@@ -5,7 +5,7 @@ import dev.getelements.elements.sdk.model.savedata.CreateSaveDataDocumentRequest
 import dev.getelements.elements.sdk.model.savedata.SaveDataDocument;
 import dev.getelements.elements.sdk.model.savedata.UpdateSaveDataDocumentRequest;
 import dev.getelements.elements.rest.test.model.SaveDataDocumentPagination;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;

@@ -1,9 +1,8 @@
-package dev.getelements.elements.rt;
+package dev.getelements.elements.sdk.util.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UncheckedIOException;
 
 /**
  * Handles the actual details of writing an {@link Object} to a byte stream.

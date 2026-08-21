@@ -1,8 +1,8 @@
 package dev.getelements.elements.rt.kryo.guice;
 
 import com.google.inject.PrivateModule;
-import dev.getelements.elements.rt.PayloadReader;
-import dev.getelements.elements.rt.PayloadWriter;
+import dev.getelements.elements.sdk.util.io.PayloadReader;
+import dev.getelements.elements.sdk.util.io.PayloadWriter;
 import dev.getelements.elements.rt.kryo.KryoPayloadReader;
 import dev.getelements.elements.rt.kryo.KryoPayloadWriter;
 

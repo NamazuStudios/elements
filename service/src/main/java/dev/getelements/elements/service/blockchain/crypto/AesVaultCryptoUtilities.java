@@ -5,7 +5,7 @@ import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.crypto.CryptoException;
 import dev.getelements.elements.sdk.model.blockchain.wallet.VaultKey;
 import dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;

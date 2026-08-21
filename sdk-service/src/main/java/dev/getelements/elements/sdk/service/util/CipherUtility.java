@@ -2,7 +2,7 @@ package dev.getelements.elements.sdk.service.util;
 
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm;
-import dev.getelements.elements.rt.util.Hex;
+import dev.getelements.elements.sdk.util.Hex;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;

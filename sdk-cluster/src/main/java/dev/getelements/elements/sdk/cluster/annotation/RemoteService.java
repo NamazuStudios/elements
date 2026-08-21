@@ -1,6 +1,6 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
-import dev.getelements.elements.rt.exception.ServiceNotFoundException;
+import dev.getelements.elements.sdk.cluster.remote.exception.ServiceNotFoundException;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -62,7 +62,7 @@ public @interface RemoteService {
          * @param cls the type
          * @param protocol the protocol
          * @param scope the scope
-         * @return the {@link Optional< RemoteScope >} which matches.
+         * @return the {@link Optional} which matches.
          */
         public static Optional<RemoteScope> findScope(
                 final Class<?> cls,

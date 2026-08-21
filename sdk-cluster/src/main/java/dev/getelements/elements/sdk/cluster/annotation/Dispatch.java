@@ -1,8 +1,6 @@
-package dev.getelements.elements.rt.annotation;
+package dev.getelements.elements.sdk.cluster.annotation;
 
 import dev.getelements.elements.rt.remote.AsyncOperation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
@@ -55,7 +53,7 @@ public @interface Dispatch {
 
         /**
          * This behaves similar to {@link #SYNCHRONOUS}, except the calling method must return some type of
-         * {@link Future<?>}.  The result is obtained through {@link Future#get()}, or {@link ExecutionException}
+         * {@link Future}.  The result is obtained through {@link Future#get()}, or {@link ExecutionException}
          * in the event of a failure.
          *
          * The method may use {@link ResultHandler} or {@link ErrorHandler} to receive results in addition to the
@@ -65,21 +63,7 @@ public @interface Dispatch {
          * The client method invocation will not block and instead return an instance of {@link Future} which will be
          * used to dispatch the remote invocation.
          */
-        FUTURE,
-
-        /**
-         * This is a type of method that doesn't exactly fit in the other categories.  Depending on the context, a
-         * method of this type may pick one of the other strategies to do the invocation.  Underlying connection
-         * details may affect the actual behavior of the method. Usage of this type is discouraged and will generate
-         * warnings in logs.
-         */
-        HYBRID,
-
-        /**
-         * @deprecated Renamed to {@link #HYBRID}.
-         */
-        @Deprecated
-        CONSUMER;
+        FUTURE;
 
         /**
          * Inspects the supplied {@link Method} and determines the type of dispatch used.  If not specified, then this
@@ -111,7 +95,7 @@ public @interface Dispatch {
             } else if (isAsync(rType)) {
                 return ASYNCHRONOUS;
             } else if (errorCount != 1) {
-                final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), format(method));
+                final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), Reflection.format(method));
                 throw new IllegalArgumentException(msg);
             } else {
                 return HYBRID;

@@ -1,6 +1,5 @@
 package dev.getelements.elements.rt.transact;
 
-import dev.getelements.elements.rt.PersistenceStrategy;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 
 import jakarta.inject.Inject;
