@@ -1,6 +1,5 @@
 package dev.getelements.elements.rt.remote;
 
-import dev.getelements.elements.rt.AsyncConnectionService;
 import dev.getelements.elements.rt.exception.MultiException;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
@@ -27,8 +26,6 @@ public class SimpleInstance implements Instance {
 
     private InstanceConnectionService instanceConnectionService;
 
-    private AsyncConnectionService<?, ?> asyncConnectionService;
-
     private final AtomicBoolean closed = new AtomicBoolean();
 
     @Override
@@ -41,15 +38,6 @@ public class SimpleInstance implements Instance {
         hooks.add(this::close);
 
         preStart(exceptionList::add);
-
-        try {
-            logger.debug("Starting async connection service. Instance ID {}", instanceId);
-            getAsyncConnectionService().start();
-            logger.debug("Started async connection service. Instance ID {}", instanceId);
-        } catch (Exception ex) {
-            exceptionList.add(ex);
-            logger.error("Caught exception starting AsyncConnectionService.", ex);
-        }
 
         try {
             logger.debug("Starting instance discovery service. Instance ID {}", instanceId);
@@ -129,13 +117,6 @@ public class SimpleInstance implements Instance {
             logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
         }
 
-        try {
-            getAsyncConnectionService().stop();
-        } catch (Exception ex) {
-            exceptionList.add(ex);
-            logger.error("Caught exception stopping AsyncConnectionService.", ex);
-        }
-
         postClose(exceptionList::add);
 
         if (!exceptionList.isEmpty())
@@ -188,15 +169,6 @@ public class SimpleInstance implements Instance {
     @Inject
     public void setInstanceConnectionService(InstanceConnectionService instanceConnectionService) {
         this.instanceConnectionService = instanceConnectionService;
-    }
-
-    public AsyncConnectionService<?, ?> getAsyncConnectionService() {
-        return asyncConnectionService;
-    }
-
-    @Inject
-    public void setAsyncConnectionService(AsyncConnectionService<?, ?> asyncConnectionService) {
-        this.asyncConnectionService = asyncConnectionService;
     }
 
 }
