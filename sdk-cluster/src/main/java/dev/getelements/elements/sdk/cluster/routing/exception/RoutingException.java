@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.remote.exception;
+package dev.getelements.elements.sdk.cluster.routing.exception;
 
 import dev.getelements.elements.sdk.model.exception.InternalException;
 

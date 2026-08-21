@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.kryo;
+package dev.getelements.elements.sdk.cluster.kryo;
 
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;

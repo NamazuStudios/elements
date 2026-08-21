@@ -11,7 +11,7 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>rt-kryo</artifactId>
+    <artifactId>sdk-cluster-kryo</artifactId>
     <name>${project.artifactId}</name>
     <version>${revision}</version>
     <url>https://namazustudios.com</url>

@@ -64,7 +64,7 @@
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
         <module>rt-server-transact-guice</module>
-        <module>rt-kryo</module>
+        <module>sdk-cluster-kryo</module>
         <module>rt-kryo-guice</module>
         <module>rt-jersey</module>
         <module>rt-jersey-guice</module>
@@ -396,7 +396,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-kryo</artifactId>
+                <artifactId>sdk-cluster-kryo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

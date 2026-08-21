@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-kryo</artifactId>
+            <artifactId>sdk-cluster-kryo</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

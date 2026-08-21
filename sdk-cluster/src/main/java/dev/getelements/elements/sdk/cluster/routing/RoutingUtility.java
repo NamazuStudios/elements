@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.cluster.routing;
 
 import dev.getelements.elements.sdk.cluster.id.HasNodeId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
+import dev.getelements.elements.sdk.cluster.routing.exception.RoutingException;
 
 import java.util.List;
 import java.util.Objects;

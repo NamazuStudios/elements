@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.kryo;
+package dev.getelements.elements.sdk.cluster.kryo;
 
 import java.io.Serializable;
 import java.util.ArrayList;

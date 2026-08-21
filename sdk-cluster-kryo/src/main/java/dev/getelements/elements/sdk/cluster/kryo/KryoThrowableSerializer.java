@@ -1,4 +1,4 @@
-package dev.getelements.elements.rt.kryo;
+package dev.getelements.elements.sdk.cluster.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
