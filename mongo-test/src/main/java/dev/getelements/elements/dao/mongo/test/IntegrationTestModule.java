@@ -6,6 +6,7 @@ import com.google.inject.TypeLiteral;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
+import dev.getelements.elements.dao.mongo.guice.MongoMigrationModule;
 import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MongoDozerMapperProvider;
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
@@ -106,6 +107,7 @@ public class IntegrationTestModule extends AbstractModule {
 
         install(new MongoSdkModule());
         install(new MongoGridFSLargeObjectBucketModule());
+        install(new MongoMigrationModule());
         install(new ValidationModule());
 
     }
