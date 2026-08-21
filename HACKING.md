@@ -157,9 +157,9 @@ The following are internal libraries that make up the implementation of Elements
 
 #### Deprecated packages
 
-The following are deprecated and slated for removal:
-
-- **app-node**
+- **app-node** — removed (issue #10). Its standalone worker-node role is
+  being folded into `jetty-ws`'s `--mode external|worker` launch flag
+  (not yet implemented).
 
 ### RT system
 
