@@ -8,7 +8,6 @@ import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.InstanceDiscoveryService;
 import dev.getelements.elements.rt.remote.RemoteInvokerRegistry;
 import dev.getelements.elements.sdk.Attributes;
@@ -60,7 +59,6 @@ public class MockServiceTestModule extends AbstractModule {
 
         bind(Validator.class).toInstance(mock(Validator.class));
         bind(Attributes.class).toInstance(mock(Attributes.class));
-        bind(ControlClient.class).toInstance(mock(ControlClient.class));
         bind(LargeObjectBucket.class).toInstance(mock(LargeObjectBucket.class));
         bind(InstanceDiscoveryService.class).toInstance(mock(InstanceDiscoveryService.class));
         bind(RemoteInvokerRegistry.class).toInstance(mock(RemoteInvokerRegistry.class));

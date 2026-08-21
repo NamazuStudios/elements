@@ -20,7 +20,7 @@ public class DocServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
-        properties.setProperty(STATIC_HOST_INFO, "tcp://localhost:28883");
+        properties.setProperty(STATIC_HOST_INFO, "ws://localhost:28883");
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
         properties.setProperty(SRV_SERVERS, "");
         properties.setProperty(SRV_AUTHORITATIVE, "false");

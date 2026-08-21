@@ -2,6 +2,8 @@ package dev.getelements.elements.jetty;
 
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.cdnserve.guice.FileSystemCdnGitLoaderModule;
+import dev.getelements.elements.cluster.fabric.guice.FabricGuiceModule;
+import dev.getelements.elements.cluster.fabric.guice.JakartaWebsocketInstanceConnectionServiceModule;
 import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoElementModule;
@@ -61,13 +63,15 @@ public class ElementsCoreModule extends AbstractModule {
         install(new JerseyHttpClientModule());
         install(new FileSystemCdnGitLoaderModule());
 
-        // Cluster infrastructure (transport-agnostic; JeroMQ removed, Fabric transport pending)
+        // Cluster infrastructure, backed by the Fabric WebSocket transport (issue #10)
         install(new RandomInstanceIdModule());
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ClusterContextFactoryModule());
         install(new SimpleRemoteInvokerRegistryModule());
         install(new KryoPayloadReaderWriterModule());
         install(new SimpleInstanceModule());
+        install(new FabricGuiceModule());
+        install(new JakartaWebsocketInstanceConnectionServiceModule());
 
     }
 

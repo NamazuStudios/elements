@@ -265,7 +265,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         public String getConnectAddress() {
             var host = lookupResult.host();
             host = host.endsWith(".") ? host.substring(0, host.length() - 1) : host;
-            return String.format("tcp://%s:%d", host, lookupResult.port());
+            return String.format("ws://%s:%d", host, lookupResult.port());
         }
 
         @Override

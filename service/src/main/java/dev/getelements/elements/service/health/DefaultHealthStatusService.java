@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Provider;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -31,8 +30,6 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    private Provider<ControlClient> controlClientProvider;
-
     private Set<DatabaseHealthStatusDao> databaseHealthStatusDaos;
 
     @Override
@@ -40,8 +37,7 @@ public class DefaultHealthStatusService implements HealthStatusService {
         return new HealthChecklist()
                 .with(this::checkDatabaseStatus)
                 .with(this::checkDiscoveryStatus)
-                //TODO: EL-193 Restore these with app node
-//                .with(this::checkInstanceConnectionStatus)
+                //TODO: EL-193 Restore these
 //                .with(this::checkRoutingStatus)
 //                .with(this::checkRemoteInvokerStatus)
             .run();
@@ -75,15 +71,6 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
         healthChecklist.getHealthStatus().setDiscoveryHealthStatus(discoveryHealthStatus);
 
-    }
-
-    private void checkInstanceConnectionStatus(final HealthChecklist healthChecklist) {
-        try (var client = getControlClientProvider().get()) {
-            final var routingStatus = getMapper().map(client.getRoutingStatus(), RoutingHealthStatus.class);
-            final var instanceStatus = getMapper().map(client.getInstanceStatus(), InstanceHealthStatus.class);
-            healthChecklist.getHealthStatus().setInstanceStatus(instanceStatus);
-            healthChecklist.getHealthStatus().setRoutingHealthStatus(routingStatus);
-        }
     }
 
     private void checkRoutingStatus(final HealthChecklist healthChecklist) {
@@ -164,15 +151,6 @@ public class DefaultHealthStatusService implements HealthStatusService {
     @Inject
     public void setInstanceDiscoveryService(InstanceDiscoveryService instanceDiscoveryService) {
         this.instanceDiscoveryService = instanceDiscoveryService;
-    }
-
-    public Provider<ControlClient> getControlClientProvider() {
-        return controlClientProvider;
-    }
-
-    @Inject
-    public void setControlClientProvider(Provider<ControlClient> controlClientProvider) {
-        this.controlClientProvider = controlClientProvider;
     }
 
     public Set<DatabaseHealthStatusDao> getDatabaseHealthStatusDaos() {

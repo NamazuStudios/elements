@@ -31,6 +31,11 @@ import static dev.getelements.elements.cluster.fabric.FabricInvocationFrame.Type
  */
 public class FabricEndpoint extends jakarta.websocket.Endpoint {
 
+    /**
+     * The fixed path of the Fabric endpoint, identical on every instance.
+     */
+    public static final String CLUSTER_WS_PATH = "/cluster/v1";
+
     private static final Logger logger = LoggerFactory.getLogger(FabricEndpoint.class);
 
     private final LocalInvocationDispatcher localInvocationDispatcher;

@@ -31,10 +31,6 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>cluster-fabric-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-util</artifactId>
         </dependency>
         <dependency>

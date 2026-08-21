@@ -30,7 +30,7 @@ public class FabricWsBootstrap {
     /**
      * The fixed path of the Fabric endpoint, identical on every instance.
      */
-    public static final String CLUSTER_WS_PATH = "/cluster/v1";
+    public static final String CLUSTER_WS_PATH = FabricEndpoint.CLUSTER_WS_PATH;
 
     @Inject
     public FabricWsBootstrap(@Named(HANDLER_SEQUENCE) final Handler.Sequence sequence,

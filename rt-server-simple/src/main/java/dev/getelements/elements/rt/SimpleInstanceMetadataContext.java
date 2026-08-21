@@ -39,6 +39,11 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     }
 
     @Override
+    public InstanceId getInstanceId() {
+        return instanceId;
+    }
+
+    @Override
     public Set<NodeId> getNodeIds() {
         try (final var accessor = getWorker().accessWorkerState()) {
             return accessor.getNodeSet()

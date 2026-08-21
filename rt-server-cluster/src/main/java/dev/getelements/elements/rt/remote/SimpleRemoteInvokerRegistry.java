@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
-import jakarta.inject.Provider;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,8 +48,6 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     public static final long DEFAULT_TOTAL_REFRESH_TIMEOUT = 3;
 
     private InstanceId instanceId;
-
-    private Provider<RemoteInvoker> remoteInvokerProvider;
 
     private InstanceConnectionService instanceConnectionService;
 
@@ -154,15 +151,6 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     @Inject
     public void setInstanceConnectionService(InstanceConnectionService instanceConnectionService) {
         this.instanceConnectionService = instanceConnectionService;
-    }
-
-    public Provider<RemoteInvoker> getRemoteInvokerProvider() {
-        return remoteInvokerProvider;
-    }
-
-    @Inject
-    public void setRemoteInvokerProvider(Provider<RemoteInvoker> remoteInvokerProvider) {
-        this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
     public long getRefreshRateSeconds() {
@@ -286,7 +274,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             final var nodeIdSet = instanceMetadata.getNodeIds();
 
             for (final NodeId nodeId : nodeIdSet) {
-                builder.add(nodeId, quality, () -> establishNewConnection(nodeId, connection));
+                builder.add(nodeId, quality, () -> establishNewConnection(connection));
             }
 
             return builder;
@@ -348,12 +336,8 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         }
 
-        private RemoteInvoker establishNewConnection(final NodeId nodeId, final InstanceConnection connection) {
-            final String addr = connection.openRouteToNode(nodeId);
-            final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-            logger.info("Connecting to node {} via address {}", nodeId, addr);
-            remoteInvoker.start(addr);
-            return remoteInvoker;
+        private RemoteInvoker establishNewConnection(final InstanceConnection connection) {
+            return connection.getRemoteInvoker();
         }
 
     }

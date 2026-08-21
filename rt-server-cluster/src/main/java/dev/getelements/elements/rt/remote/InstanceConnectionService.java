@@ -104,13 +104,12 @@ public interface InstanceConnectionService {
         InstanceMetadataContext getInstanceMetadataContext();
 
         /**
-         * Opens a route to the supplied node with {@link NodeId}, returning an address where it will be possible to
-         * connect using a {@link RemoteInvoker}.
+         * Gets the {@link RemoteInvoker} used to communicate with this connection's remote instance. The returned
+         * {@link RemoteInvoker} is already started against the instance's connect address.
          *
-         * @param nodeId
-         * @return
+         * @return the {@link RemoteInvoker}
          */
-        String openRouteToNode(NodeId nodeId);
+        RemoteInvoker getRemoteInvoker();
 
         /**
          * Disconnects and disposes of the underlying {@link InstanceConnection}.  Trying to use the

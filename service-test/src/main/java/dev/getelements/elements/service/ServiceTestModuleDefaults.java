@@ -20,7 +20,7 @@ public class ServiceTestModuleDefaults implements ModuleDefaults {
         final Properties properties = new Properties();
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
-        properties.put(STATIC_HOST_INFO, "tcp://localhost:28883");
+        properties.put(STATIC_HOST_INFO, "ws://localhost:28883");
         properties.put(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.put(SRV_QUERY, "_elements._tcp.internal");
         properties.put(SRV_SERVERS, "");

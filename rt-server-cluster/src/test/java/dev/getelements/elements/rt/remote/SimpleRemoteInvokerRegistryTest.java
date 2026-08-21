@@ -1,7 +1,6 @@
 package dev.getelements.elements.rt.remote;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import dev.getelements.elements.rt.InstanceMetadata;
 import dev.getelements.elements.rt.InstanceMetadataContext;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceConnection;
@@ -16,7 +15,6 @@ import org.testng.annotations.Test;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static com.google.inject.name.Names.named;
@@ -24,14 +22,13 @@ import static dev.getelements.elements.rt.remote.SimpleRemoteInvokerRegistry.*;
 import static dev.getelements.elements.sdk.cluster.id.ApplicationId.randomApplicationId;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
 import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndApplication;
-import static dev.getelements.elements.sdk.cluster.id.NodeId.nodeIdFromString;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.assertSame;
 import static org.testng.collections.Lists.newArrayList;
 
 @Guice(modules = SimpleRemoteInvokerRegistryTest.Module.class)
@@ -39,23 +36,18 @@ public class SimpleRemoteInvokerRegistryTest {
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    private Supplier<RemoteInvoker> remoteInvokerSupplier;
-
     private MockInstanceConnectionService instanceConnectionService;
 
     @BeforeMethod
     private void resetMocks() {
         getInstanceConnectionService().resetInternal();
         reset(getInstanceConnectionService());
-        reset(getRemoteInvokerSupplier());
     }
 
     @Test
     public void testStartAndLoadInitialConnections() throws Exception {
 
         // Setup Mocks
-
-        final String prefix = "test+protocol://";
 
         final List<InstanceConnection> mockActiveConnections = unmodifiableList(asList(
             mock(InstanceConnection.class),
@@ -113,29 +105,20 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
 
-            nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
+            // Per the new dial-per-invocation transport, one RemoteInvoker is shared across every NodeId hosted by
+            // the same InstanceConnection - there is no more per-node address/route negotiation.
+            final RemoteInvoker mockRemoteInvoker = mock(RemoteInvoker.class);
+            mockRemoteInvokerList.add(mockRemoteInvoker);
+
+            when(mockInstanceConnection.getRemoteInvoker()).thenAnswer(i -> {
+                latch.countDown();
+                return mockRemoteInvoker;
+            });
+
+            nodeIdSet.forEach(nid -> mockRemoteInvokerMap.put(nid, mockRemoteInvoker));
 
             mockLoadMap.put(instanceId, load);
             mockInstanceConnectionMap.put(instanceId, mockInstanceConnection);
-
-        });
-
-        when(getRemoteInvokerSupplier().get()).thenAnswer(i -> {
-
-            final RemoteInvoker invoker = mock(RemoteInvoker.class);
-
-            doAnswer(i0 -> {
-                final String address = i0.getArgument(0);
-                final String nodeIdString = address.substring(prefix.length());
-                final NodeId nodeId = nodeIdFromString(nodeIdString);
-                mockRemoteInvokerMap.put(nodeId, invoker);
-                assertTrue(mockNodeIds.contains(nodeId), "Connected nodes does not contain: " + nodeId);
-                latch.countDown();
-                return null;
-            }).when(invoker).start(anyString());
-
-            mockRemoteInvokerList.add(invoker);
-            return invoker;
 
         });
 
@@ -156,14 +139,13 @@ public class SimpleRemoteInvokerRegistryTest {
                 return Double.compare(quality1, quality0);
             }).findFirst().get();
 
-        // Verify that the best instance is returned for each application when requesting any remote invoker.  Since
-        // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
-        // to the correct address based on our own mock addressing scheme.
+        // Verify that the best instance is returned for each application when requesting any remote invoker, and
+        // that it is the exact invoker minted for that instance's connection.
         mockApplicationIds.forEach(a -> {
             final var nodeId = forInstanceAndApplication(best, a);
-            final var addr = prefix + nodeId.asString();
+            final var expected = mockRemoteInvokerMap.get(nodeId);
             final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(remoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, expected);
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
@@ -173,17 +155,16 @@ public class SimpleRemoteInvokerRegistryTest {
             final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
             if (ri != mockRemoteInvoker) return;
 
-            final String addr = prefix + nodeId.asString();
-            verify(mockRemoteInvoker, times(1)).start(eq(addr));
+            assertSame(ri, mockRemoteInvoker);
 
         })));
 
-        // Verifies that the requested remote invoker for the correct NodeId was actually connected tot he correct node id
+        // Verifies that the requested remote invoker for the correct NodeId was actually connected to the correct
+        // node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> {
             final NodeId nodeId = forInstanceAndApplication(iid, aid);
             final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(nodeId);
-            final String addr = prefix + nodeId.asString();
-            verify(remoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, mockRemoteInvokerMap.get(nodeId));
         }));
 
         mockNodeIds.forEach(getRemoteInvokerRegistry()::getRemoteInvoker);
@@ -198,27 +179,22 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.forEach(c -> {
 
-            final InstanceId instanceId = c.getInstanceId();
-
+            c.getInstanceId();
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
-
-            mockApplicationIds.forEach(a -> {
-                final NodeId nodeId = forInstanceAndApplication(instanceId, a);
-                verify(c, times(1)).openRouteToNode(eq(nodeId));
-            });
+            verify(c, times(mockApplicationIds.size())).getRemoteInvoker();
 
         });
 
-        mockRemoteInvokerList.forEach(ri -> verify(ri, times(1)).stop());
+        // A full registry stop clears every NodeId entry individually (no de-duplication), so a shared
+        // per-connection invoker is stopped once per NodeId hosted by that connection.
+        mockRemoteInvokerList.forEach(ri -> verify(ri, times(mockApplicationIds.size())).stop());
 
     }
 
     @Test(dependsOnMethods = "testStartAndLoadInitialConnections")
     public void testEventDrivenConnectionAdd() throws Exception {
-
-        final String prefix = "test+protocol://";
 
         final List<InstanceConnection> mockActiveConnections = synchronizedList(new ArrayList<>());
 
@@ -239,25 +215,6 @@ public class SimpleRemoteInvokerRegistryTest {
 
         final Map<InstanceId, Double> mockLoadMap = new HashMap<>();
         final Map<InstanceId, InstanceConnection> mockInstanceConnectionMap = new HashMap<>();
-
-        when(getRemoteInvokerSupplier().get()).thenAnswer(i -> {
-
-            final RemoteInvoker invoker = mock(RemoteInvoker.class);
-
-            doAnswer(i0 -> {
-                final String address = i0.getArgument(0);
-                final String nodeIdString = address.substring(prefix.length());
-                final NodeId nodeId = nodeIdFromString(nodeIdString);
-                mockRemoteInvokerMap.put(nodeId, invoker);
-                latch.countDown();
-                assertTrue(mockNodeIds.contains(nodeId), "Connected nodes does not contain: " + nodeId);
-                return null;
-            }).when(invoker).start(anyString());
-
-            mockRemoteInvokerList.add(invoker);
-            return invoker;
-
-        });
 
         when(getInstanceConnectionService().getActiveConnections()).thenReturn(mockActiveConnections);
 
@@ -295,7 +252,16 @@ public class SimpleRemoteInvokerRegistryTest {
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
-            nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
+
+            final RemoteInvoker mockRemoteInvoker = mock(RemoteInvoker.class);
+            mockRemoteInvokerList.add(mockRemoteInvoker);
+
+            when(mockInstanceConnection.getRemoteInvoker()).thenAnswer(inv -> {
+                latch.countDown();
+                return mockRemoteInvoker;
+            });
+
+            nodeIdSet.forEach(nid -> mockRemoteInvokerMap.put(nid, mockRemoteInvoker));
 
             mockLoadMap.put(instanceId, load);
             mockInstanceConnectionMap.put(instanceId, mockInstanceConnection);
@@ -314,17 +280,15 @@ public class SimpleRemoteInvokerRegistryTest {
         // Drives all events that will be published to the service
         mockActiveConnections.forEach(getInstanceConnectionService().getOnConnectPublisher()::publish);
 
-        // Waits to make sure each remote invoker was started.
+        // Waits to make sure each remote invoker was minted.
         latch.await();
 
-        // Verify that the best instance is returned for each application when requesting any remote invoker.  Since
-        // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
-        // to the correct address based on our own mock addressing scheme.
+        // Verify that the best instance is returned for each application when requesting any remote invoker.
         mockApplicationIds.forEach(a -> {
             final var nodeId = forInstanceAndApplication(best, a);
-            final var addr = prefix + nodeId.asString();
+            final var expected = mockRemoteInvokerMap.get(nodeId);
             final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(remoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, expected);
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
@@ -332,20 +296,18 @@ public class SimpleRemoteInvokerRegistryTest {
 
             final var nodeId = forInstanceAndApplication(iid, aid);
             final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
-            final var remoteInvoker = ri;
-            if (remoteInvoker != mockRemoteInvoker) return;
+            if (ri != mockRemoteInvoker) return;
 
-            final String addr = prefix + nodeId.asString();
-            verify(mockRemoteInvoker, times(1)).start(eq(addr));
+            assertSame(ri, mockRemoteInvoker);
 
         })));
 
-        // Verifies that the requested remote invoker for the correct NodeId was actually connected tot he correct node id
+        // Verifies that the requested remote invoker for the correct NodeId was actually connected to the correct
+        // node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> {
             final NodeId nodeId = forInstanceAndApplication(iid, aid);
             final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(nodeId);
-            final String addr = prefix + nodeId.asString();
-            verify(remoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, mockRemoteInvokerMap.get(nodeId));
         }));
 
         // Stops the service so we can finish verification
@@ -358,27 +320,22 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.forEach(c -> {
 
-            final InstanceId instanceId = c.getInstanceId();
-
+            c.getInstanceId();
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
-
-            mockApplicationIds.forEach(a -> {
-                final NodeId nodeId = forInstanceAndApplication(instanceId, a);
-                verify(c, times(1)).openRouteToNode(eq(nodeId));
-            });
+            verify(c, times(mockApplicationIds.size())).getRemoteInvoker();
 
         });
 
-        mockRemoteInvokerList.forEach(ri -> verify(ri, times(1)).stop());
+        // A full registry stop clears every NodeId entry individually (no de-duplication), so a shared
+        // per-connection invoker is stopped once per NodeId hosted by that connection.
+        mockRemoteInvokerList.forEach(ri -> verify(ri, times(mockApplicationIds.size())).stop());
 
     }
 
     @Test(dependsOnMethods = "testEventDrivenConnectionAdd")
     public void testEventDrivenConnectionRemove() throws Exception {
-
-        final String prefix = "test+protocol://";
 
         final List<InstanceConnection> mockActiveConnections = synchronizedList(new ArrayList<>());
 
@@ -431,7 +388,16 @@ public class SimpleRemoteInvokerRegistryTest {
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
-            nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
+
+            final RemoteInvoker mockRemoteInvoker = mock(RemoteInvoker.class);
+            mockRemoteInvokerList.add(mockRemoteInvoker);
+
+            when(mockInstanceConnection.getRemoteInvoker()).thenAnswer(inv -> {
+                latch.countDown();
+                return mockRemoteInvoker;
+            });
+
+            nodeIdSet.forEach(nid -> mockRemoteInvokerMap.put(nid, mockRemoteInvoker));
 
             mockLoadMap.put(instanceId, load);
             mockInstanceConnectionMap.put(instanceId, mockInstanceConnection);
@@ -443,25 +409,6 @@ public class SimpleRemoteInvokerRegistryTest {
             final double quality1 = i1.getInstanceMetadataContext().getInstanceQuality();
             return Double.compare(quality1, quality0);
         }).collect(toList()));
-
-        when(getRemoteInvokerSupplier().get()).thenAnswer(i -> {
-
-            final RemoteInvoker invoker = mock(RemoteInvoker.class);
-
-            doAnswer(i0 -> {
-                final String address = i0.getArgument(0);
-                final String nodeIdString = address.substring(prefix.length());
-                final NodeId nodeId = nodeIdFromString(nodeIdString);
-                mockRemoteInvokerMap.put(nodeId, invoker);
-                latch.countDown();
-                assertTrue(mockNodeIds.contains(nodeId), "Connected nodes does not contain: " + nodeId);
-                return null;
-            }).when(invoker).start(anyString());
-
-            mockRemoteInvokerList.add(invoker);
-            return invoker;
-
-        });
 
         when(getInstanceConnectionService().getActiveConnections()).thenReturn(mockActiveConnections);
 
@@ -476,14 +423,12 @@ public class SimpleRemoteInvokerRegistryTest {
         // Determines the best instance based on the mocked load values.
         final InstanceId best = mockActiveConnections.get(0).getInstanceId();
 
-        // Verify that the best instance is returned for each application when requesting any remote invoker.  Since
-        // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
-        // to the correct address based on our own mock addressing scheme.
+        // Verify that the best instance is returned for each application when requesting any remote invoker.
         mockApplicationIds.forEach(a -> {
             final var nodeId = forInstanceAndApplication(best, a);
-            final var addr = prefix + nodeId.asString();
+            final var expected = mockRemoteInvokerMap.get(nodeId);
             final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(remoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, expected);
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
@@ -494,12 +439,12 @@ public class SimpleRemoteInvokerRegistryTest {
             final var remoteInvoker = ri;
             if (remoteInvoker != mockRemoteInvoker) return;
 
-            final String addr = prefix + nodeId.asString();
-            verify(mockRemoteInvoker, times(1)).start(eq(addr));
+            assertSame(remoteInvoker, mockRemoteInvoker);
 
         })));
 
-        // Verifies that the requested remote invoker for the correct NodeId was actually connected tot he correct node id
+        // Verifies that the requested remote invoker for the correct NodeId was actually connected to the correct
+        // node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> {
 
             final NodeId nodeId = forInstanceAndApplication(iid, aid);
@@ -510,8 +455,7 @@ public class SimpleRemoteInvokerRegistryTest {
                 verify(remoteInvoker, times(1)).stop();
             } else {
                 final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(nodeId);
-                final String addr = prefix + nodeId.asString();
-                verify(remoteInvoker, times(1)).start(eq(addr));
+                assertSame(remoteInvoker, mockRemoteInvokerMap.get(nodeId));
             }
 
 
@@ -527,30 +471,24 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.forEach(c -> {
 
-            final InstanceId instanceId = c.getInstanceId();
-
+            c.getInstanceId();
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
-
-            mockApplicationIds.forEach(a -> {
-                final NodeId nodeId = forInstanceAndApplication(instanceId, a);
-                verify(c, times(1)).openRouteToNode(eq(nodeId));
-            });
+            verify(c, times(mockApplicationIds.size())).getRemoteInvoker();
 
         });
 
-        mockRemoteInvokerList.forEach(ri -> verify(ri, times(1)).stop());
+        // The removed connection's invoker was already stopped exactly once by the mid-test disconnect (a
+        // de-duplicated remove). The remaining connections' invokers are stopped once per NodeId they host, since
+        // the final full registry stop clears every NodeId entry individually (no de-duplication).
+        final var removedInvoker = mockRemoteInvokerMap.get(forInstanceAndApplication(removed.getInstanceId(), mockApplicationIds.get(0)));
 
-    }
+        mockRemoteInvokerList.forEach(ri -> {
+            final int expectedStops = ri == removedInvoker ? 1 : mockApplicationIds.size();
+            verify(ri, times(expectedStops)).stop();
+        });
 
-    public Supplier<RemoteInvoker> getRemoteInvokerSupplier() {
-        return remoteInvokerSupplier;
-    }
-
-    @Inject
-    public void setRemoteInvokerSupplier(Supplier<RemoteInvoker> remoteInvokerSupplier) {
-        this.remoteInvokerSupplier = remoteInvokerSupplier;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {
@@ -579,10 +517,6 @@ public class SimpleRemoteInvokerRegistryTest {
             final InstanceId instanceId = randomInstanceId();
             bind(InstanceId.class).toInstance(instanceId);
 
-            final Supplier<RemoteInvoker> remoteInvokerSupplier = mock(Supplier.class);
-            bind(new TypeLiteral<Supplier<RemoteInvoker>>(){}).toInstance(remoteInvokerSupplier);
-
-            bind(RemoteInvoker.class).toProvider(remoteInvokerSupplier::get);
             bind(RemoteInvokerRegistry.class).to(SimpleRemoteInvokerRegistry.class).asEagerSingleton();
 
             bind(MockInstanceConnectionService.class).toInstance(spy(MockInstanceConnectionService.class));

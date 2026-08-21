@@ -1,6 +1,7 @@
 package dev.getelements.elements.rt;
 
 import dev.getelements.elements.rt.annotation.*;
+import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.remote.AsyncOperation;
 
@@ -27,6 +28,14 @@ public interface InstanceMetadataContext {
      * Stops this {@link InstanceMetadataContext}.
      */
     default void stop() {}
+
+    /**
+     * Gets the {@link InstanceId} of the instance hosting this {@link InstanceMetadataContext}.
+     *
+     * @return the {@link InstanceId}
+     */
+    @RemotelyInvokable
+    InstanceId getInstanceId();
 
     /**
      * Gets all {@link NodeId}s housed within the instance.
