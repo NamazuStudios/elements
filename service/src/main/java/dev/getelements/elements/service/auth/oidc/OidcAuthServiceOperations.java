@@ -5,6 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.util.Base64URL;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
@@ -29,13 +34,9 @@ import jakarta.ws.rs.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,9 @@ public class OidcAuthServiceOperations {
 
     private static final Logger logger = LoggerFactory.getLogger(OidcAuthServiceOperations.class);
 
-    private static final String RSA_ALGO = "RSA";
+    private static final String RSA_KTY = "RSA";
+
+    private static final String EC_KTY = "EC";
 
     private Client client;
 
@@ -260,7 +263,9 @@ public class OidcAuthServiceOperations {
         //no other source of truth, so its keys are always trusted as-is.
         if(jwk != null && !(scheme.getKeysUrl() != null && isKeysStale(scheme))) {
             final var algorithm = getAlgorithmFromJWK(jwk);
-            attemptVerify(jwt, algorithm);
+            if (attemptVerify(jwt, algorithm) == null) {
+                throw new ForbiddenException("Signature verification failed");
+            }
             return;
         }
 
@@ -327,22 +332,45 @@ public class OidcAuthServiceOperations {
                 .map(this::getAlgorithmFromJWK);
     }
 
-    private Algorithm getAlgorithmFromJWK(JWK k) {
+    private Algorithm getAlgorithmFromJWK(final JWK k) {
 
-        final BigInteger n = new BigInteger(1, Base64.getUrlDecoder().decode(k.getN()));
-        final BigInteger e = new BigInteger(1, Base64.getUrlDecoder().decode(k.getE()));
-
-        final RSAPublicKey publicKey;
+        final PublicKey publicKey;
 
         try {
-            final RSAPublicKeySpec keySpec = new RSAPublicKeySpec(n, e);
-            publicKey = (RSAPublicKey) KeyFactory.getInstance(RSA_ALGO).generatePublic(keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
+            if (RSA_KTY.equalsIgnoreCase(k.getKty())) {
+                publicKey = new RSAKey.Builder(Base64URL.from(k.getN()), Base64URL.from(k.getE()))
+                        .build()
+                        .toRSAPublicKey();
+            } else if (EC_KTY.equalsIgnoreCase(k.getKty())) {
+                final var curve = Curve.parse(k.getCrv());
+                publicKey = new ECKey.Builder(curve, Base64URL.from(k.getX()), Base64URL.from(k.getY()))
+                        .build()
+                        .toECPublicKey();
+            } else {
+                throw new InternalException("Unsupported JWK key type: " + k.getKty());
+            }
+        } catch (JOSEException ex) {
             throw new InternalException(ex);
         }
 
-        //TODO: Get algorithm type from JWK or JWT header
-        return Algorithm.RSA256(publicKey, null);
+        return algorithmFor(k.getAlg(), publicKey);
+
+    }
+
+    private Algorithm algorithmFor(final String alg, final PublicKey publicKey) {
+        if (alg == null) {
+            throw new InternalException("JWK is missing its 'alg' property");
+        }
+
+        return switch (alg) {
+            case "RS256" -> Algorithm.RSA256((RSAPublicKey) publicKey, null);
+            case "RS384" -> Algorithm.RSA384((RSAPublicKey) publicKey, null);
+            case "RS512" -> Algorithm.RSA512((RSAPublicKey) publicKey, null);
+            case "ES256" -> Algorithm.ECDSA256((ECPublicKey) publicKey, null);
+            case "ES384" -> Algorithm.ECDSA384((ECPublicKey) publicKey, null);
+            case "ES512" -> Algorithm.ECDSA512((ECPublicKey) publicKey, null);
+            default -> throw new InternalException("Unsupported JWK alg: " + alg);
+        };
     }
 
     private Profile map(final User user,

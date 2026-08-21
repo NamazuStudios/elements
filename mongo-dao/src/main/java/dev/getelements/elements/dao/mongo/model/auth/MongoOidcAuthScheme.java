@@ -10,8 +10,11 @@ import java.util.Objects;
 
 @Entity(value = "oidc_auth_scheme", useDiscriminator = false)
 @Indexes({
-        @Index(fields = @Field("name"), options = @IndexOptions(unique = true)),
-        @Index(fields = @Field("issuer"), options = @IndexOptions(unique = true))
+        // sparse: delete soft-deletes by unsetting "name"/"issuer" rather than removing the document (see
+        // MongoOidcAuthSchemeDao#deleteAuthScheme); non-sparse unique indexes would reject the second
+        // soft-deleted document, since it also has neither field.
+        @Index(fields = @Field("name"), options = @IndexOptions(unique = true, sparse = true)),
+        @Index(fields = @Field("issuer"), options = @IndexOptions(unique = true, sparse = true))
 })
 public class MongoOidcAuthScheme {
 

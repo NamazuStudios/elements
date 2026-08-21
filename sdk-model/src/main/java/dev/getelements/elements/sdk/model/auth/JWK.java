@@ -20,17 +20,26 @@ public class JWK implements Serializable {
     @Schema(description = "The intended use (e.g. sig)")
     private String use;
 
-    @Schema(description = "Base64url encoded exponent")
+    @Schema(description = "Base64url encoded exponent (RSA keys only)")
     private String e;
 
-    @Schema(description = "Pub key modulus")
+    @Schema(description = "Pub key modulus (RSA keys only)")
     private String n;
+
+    @Schema(description = "Curve name, e.g. P-256, P-384, P-521 (EC keys only)")
+    private String crv;
+
+    @Schema(description = "Base64url encoded x coordinate (EC keys only)")
+    private String x;
+
+    @Schema(description = "Base64url encoded y coordinate (EC keys only)")
+    private String y;
 
     /** Creates a new empty instance. */
     public JWK() {}
 
     /**
-     * Creates a new instance with all fields.
+     * Creates a new instance with the RSA public key fields.
      *
      * @param alg the algorithm
      * @param kid the key ID
@@ -156,6 +165,60 @@ public class JWK implements Serializable {
         this.n = n;
     }
 
+    /**
+     * Returns the curve name (e.g. P-256).
+     *
+     * @return the curve name
+     */
+    public String getCrv() {
+        return crv;
+    }
+
+    /**
+     * Sets the curve name (e.g. P-256).
+     *
+     * @param crv the curve name
+     */
+    public void setCrv(String crv) {
+        this.crv = crv;
+    }
+
+    /**
+     * Returns the base64url encoded x coordinate.
+     *
+     * @return the x coordinate
+     */
+    public String getX() {
+        return x;
+    }
+
+    /**
+     * Sets the base64url encoded x coordinate.
+     *
+     * @param x the x coordinate
+     */
+    public void setX(String x) {
+        this.x = x;
+    }
+
+    /**
+     * Returns the base64url encoded y coordinate.
+     *
+     * @return the y coordinate
+     */
+    public String getY() {
+        return y;
+    }
+
+    /**
+     * Sets the base64url encoded y coordinate.
+     *
+     * @param y the y coordinate
+     */
+    public void setY(String y) {
+        this.y = y;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -166,12 +229,15 @@ public class JWK implements Serializable {
                 Objects.equals(getKty(), key.getKty()) &&
                 Objects.equals(getUse(), key.getUse()) &&
                 Objects.equals(getE(), key.getE()) &&
-                Objects.equals(getN(), key.getN());
+                Objects.equals(getN(), key.getN()) &&
+                Objects.equals(getCrv(), key.getCrv()) &&
+                Objects.equals(getX(), key.getX()) &&
+                Objects.equals(getY(), key.getY());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAlg(), getKid(), getKty(), getUse(), getE(), getN());
+        return Objects.hash(getAlg(), getKid(), getKty(), getUse(), getE(), getN(), getCrv(), getX(), getY());
     }
 
     @Override
@@ -183,6 +249,9 @@ public class JWK implements Serializable {
                 ", use='" + use + '\'' +
                 ", e='" + e + '\'' +
                 ", n='" + n + '\'' +
+                ", crv='" + crv + '\'' +
+                ", x='" + x + '\'' +
+                ", y='" + y + '\'' +
                 '}';
     }
 }

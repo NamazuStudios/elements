@@ -44,6 +44,8 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
 
         final var mongoQuery = getDatastore().find(MongoOAuth2AuthScheme.class);
 
+        mongoQuery.filter(exists("name"));
+
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.filter(in("tags", tags));
         }
@@ -57,8 +59,14 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
 
         final var query = getMongoDBUtils()
                 .parse(authSchemeNameOrId)
-                .map(objectId -> getDatastore().find(MongoOAuth2AuthScheme.class).filter(eq("_id", objectId)))
-                .orElseGet(() -> getDatastore().find(MongoOAuth2AuthScheme.class).filter(eq("name", authSchemeNameOrId)));
+                .map(objectId -> getDatastore()
+                        .find(MongoOAuth2AuthScheme.class)
+                        .filter(exists("name"))
+                        .filter(eq("_id", objectId)))
+                .orElseGet(() -> getDatastore()
+                        .find(MongoOAuth2AuthScheme.class)
+                        .filter(exists("name"))
+                        .filter(eq("name", authSchemeNameOrId)));
 
         return Optional.ofNullable(query.first()).map(this::transform);
     }
@@ -125,6 +133,7 @@ public class MongoOAuth2AuthSchemeDao implements OAuth2AuthSchemeDao {
         final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
 
         final var query = getDatastore().find(MongoOAuth2AuthScheme.class);
+        query.filter(exists("name"));
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder();

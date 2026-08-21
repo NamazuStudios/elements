@@ -278,6 +278,20 @@ export function DynamicResourceForm({
           fromClient: z.boolean(),
           userId: z.boolean().optional(),
         })).optional();
+      } else if (field.name === 'keys' && field.type === 'object' && field.isArray) {
+        // OIDC JWK keys - accept array of objects directly (RSA and EC fields both optional here;
+        // JwkListEditor only shows the fields valid for the selected kty)
+        fieldSchema = z.array(z.object({
+          alg: z.string().optional(),
+          kid: z.string().optional(),
+          kty: z.string(),
+          use: z.string().optional(),
+          e: z.string().optional(),
+          n: z.string().optional(),
+          crv: z.string().optional(),
+          x: z.string().optional(),
+          y: z.string().optional(),
+        })).min(1, 'At least one key is required');
       } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
         // Valid status codes - accept array of numbers directly
         fieldSchema = z.array(z.number()).optional();
@@ -392,6 +406,9 @@ export function DynamicResourceForm({
         } else if ((field.name === 'headers' || field.name === 'params' || field.name === 'body') && field.type === 'object' && field.isArray) {
           // OAuth2 headers, params, and body - keep as array of objects
           values[field.name] = Array.isArray(value) ? value : [];
+        } else if (field.name === 'keys' && field.type === 'object' && field.isArray) {
+          // OIDC JWK keys - keep as array of objects
+          values[field.name] = Array.isArray(value) ? value : [];
         } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
           // Valid status codes - keep as array of numbers
           values[field.name] = Array.isArray(value) ? value : [];
@@ -433,6 +450,9 @@ export function DynamicResourceForm({
         values[field.name] = [];
       } else if ((field.name === 'headers' || field.name === 'params' || field.name === 'body') && field.type === 'object' && field.isArray) {
         // OAuth2 headers, params, and body - initialize as empty array
+        values[field.name] = [];
+      } else if (field.name === 'keys' && field.type === 'object' && field.isArray) {
+        // OIDC JWK keys - initialize as empty array
         values[field.name] = [];
       } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
         // Valid status codes - initialize as empty array
