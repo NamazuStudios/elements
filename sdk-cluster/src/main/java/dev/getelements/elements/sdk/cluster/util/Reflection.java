@@ -1,6 +1,6 @@
-package dev.getelements.elements.rt;
+package dev.getelements.elements.sdk.cluster.reflection;
 
-import dev.getelements.elements.rt.annotation.ErrorHandler;
+import dev.getelements.elements.sdk.cluster.annotation.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ public class Reflection {
     private Reflection(){}
 
     /**
-     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * Checks if the supplied {@link Class} is a primitive number.
      * @param cls the class
      * @return true if the number is a primitive number
      */
@@ -40,7 +40,7 @@ public class Reflection {
     }
 
     /**
-     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * Checks if the supplied {@link Class} is a primitive number.
      * @param cls the class
      * @return true if the number is a primitive number
      */
@@ -54,7 +54,7 @@ public class Reflection {
     }
 
     /**
-     * Checks if the supplied {@link Class<?>} is a primitive number.
+     * Checks if the supplied {@link Class} is a primitive number.
      * @param cls the class
      * @return true if the number is a primitive number
      */
@@ -63,7 +63,7 @@ public class Reflection {
     }
 
     /**
-     * Checks if the supplied {@link Class<?>} is a primitive float.
+     * Checks if the supplied {@link Class} is a primitive float.
      * @param cls the class
      * @return true if the number is a primitive number
      */

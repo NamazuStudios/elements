@@ -1,11 +1,12 @@
-package dev.getelements.elements.rt.exception;
+package dev.getelements.elements.sdk.cluster.ex;
 
 import dev.getelements.elements.rt.ResponseCode;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
 
 /**
  * Created by patricktwohig on 8/14/17.
  */
-public class MethodNotFoundException extends BaseException {
+public class MethodNotFoundException extends NotFoundException {
 
     public MethodNotFoundException() {
     }

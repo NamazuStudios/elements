@@ -1,8 +1,9 @@
-package dev.getelements.elements.rt.exception;
+package dev.getelements.elements.sdk.cluster.ex;
 
 import dev.getelements.elements.rt.ResponseCode;
+import dev.getelements.elements.sdk.model.exception.NotFoundException;
 
-public class ParameterNotFoundException extends BaseException {
+public class ParameterNotFoundException extends NotFoundException {
 
     public ParameterNotFoundException() {
         super();
