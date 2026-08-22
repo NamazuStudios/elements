@@ -25,10 +25,11 @@ public class OidcLoginAttemptRequest {
     private String idToken;
 
     @Schema(description = "The name or ID of an application whose primary profile should be attached to the " +
-            "session, auto-creating it (subject to the application's autoCreateProfile/maxProfiles settings) if " +
-            "it does not exist. Only takes effect for an anonymous (non-linking) attempt. If unspecified, the " +
-            "application encoded in the resulting id_token's own 'aud' claim (if any) is used instead, via the " +
-            "legacy, ungated get-or-create profile behavior rather than the gated auto-create path above.")
+            "session, reusing an existing primary profile if one is already present, or else auto-creating it " +
+            "(subject to the application's autoCreateProfile/maxProfiles settings). Applies to both anonymous " +
+            "and account-linking attempts. If unspecified, the application encoded in the resulting id_token's " +
+            "own 'aud' claim (if any) is used instead, via the legacy, ungated get-or-create profile behavior " +
+            "rather than the gated auto-create path above.")
     private String applicationNameOrId;
 
     public String getProvider() {

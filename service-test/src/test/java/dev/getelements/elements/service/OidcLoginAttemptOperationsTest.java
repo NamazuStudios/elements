@@ -2,6 +2,7 @@ package dev.getelements.elements.service;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
@@ -27,6 +28,7 @@ import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
 import dev.getelements.elements.service.auth.oidc.OidcDiscoveryDocument;
+import dev.getelements.elements.service.auth.oidc.OidcLinkClaims;
 import dev.getelements.elements.service.auth.oidc.OidcLoginAttemptOperations;
 import dev.getelements.elements.service.auth.oidc.OidcProviderConfigurationOperations;
 import dev.getelements.elements.service.auth.oidc.UserOidcAuthService;
@@ -530,6 +532,78 @@ public class OidcLoginAttemptOperationsTest {
 
     }
 
+    @Test
+    public void testHandleCallbackForLinkingAttemptWithApplicationNameOrIdPersistsItExplicitlyOntoClaims() {
+
+        final var state = "linking-state";
+        final var nonce = "linking-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setLinkedUserId("current-user-id");
+        attempt.setApplicationNameOrId("app-1");
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markLinkReady(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        final var claims = deserializeLinkClaims();
+        assertEquals(claims.getApplicationNameOrId(), "app-1");
+        assertTrue(claims.isApplicationExplicitlyRequested());
+
+    }
+
+    @Test
+    public void testHandleCallbackForLinkingAttemptWithoutApplicationNameOrIdFallsBackToAudClaim() {
+
+        final var state = "linking-state";
+        final var nonce = "linking-nonce";
+        final var attempt = pendingAttempt(state, nonce);
+        attempt.setLinkedUserId("current-user-id");
+        // applicationNameOrId intentionally left unset -- aud-claim fallback applies, same as the anonymous path.
+
+        when(oidcLoginAttemptDao.findPendingByState(PROVIDER, state)).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.markLinkReady(eq(state), anyString())).thenReturn(Optional.of(attempt));
+
+        final var idToken = JWT.create()
+                .withIssuer(ISSUER)
+                .withSubject("twitch-sub")
+                .withAudience(CLIENT_ID)
+                .withClaim("nonce", nonce)
+                .withKeyId(KID)
+                .withExpiresAt(new Date(currentTimeMillis() + 60_000))
+                .sign(algorithm);
+
+        stubTokenExchange(idToken);
+
+        operations.handleCallback(PROVIDER, "auth-code", state, null);
+
+        final var claims = deserializeLinkClaims();
+        assertEquals(claims.getApplicationNameOrId(), CLIENT_ID);
+        assertFalse(claims.isApplicationExplicitlyRequested());
+
+    }
+
+    private OidcLinkClaims deserializeLinkClaims() {
+        final var claimsCaptor = ArgumentCaptor.forClass(String.class);
+        verify(oidcLoginAttemptDao).markLinkReady(anyString(), claimsCaptor.capture());
+        try {
+            return new ObjectMapper().readValue(claimsCaptor.getValue(), OidcLinkClaims.class);
+        } catch (final Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     // ── poll() ───────────────────────────────────────────────────────────────
 
     @Test(expectedExceptions = ForbiddenException.class)
@@ -609,6 +683,104 @@ public class OidcLoginAttemptOperationsTest {
 
     }
 
+    @Test
+    public void testConfirmLinkReusesExistingPrimaryProfileIfPresent() {
+
+        final var attempt = linkReadyAttemptWithApplication("app-1", true);
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.claimLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+
+        final var linkedUser = new User();
+        linkedUser.setId("current-user-id");
+        when(userDao.getUser("current-user-id")).thenReturn(linkedUser);
+
+        final var application = new Application();
+        application.setId("app-1");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        final var existingProfile = new Profile();
+        existingProfile.setId("existing-profile");
+
+        when(applicationDao.findActiveApplication("app-1")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("current-user-id", "app-1")).thenReturn(Optional.of(existingProfile));
+
+        final var result = operations.confirmLink("link-ready-id", "correct-token");
+
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.COMPLETE);
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+        assertEquals(result.getSession().getSession().getProfile(), existingProfile);
+        assertEquals(result.getSession().getSession().getApplication(), application);
+
+    }
+
+    @Test
+    public void testConfirmLinkAutoCreatesGatedProfileWhenExplicitlyRequestedAndNoneExists() {
+
+        final var attempt = linkReadyAttemptWithApplication("app-2", true);
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.claimLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+
+        final var linkedUser = new User();
+        linkedUser.setId("current-user-id");
+        when(userDao.getUser("current-user-id")).thenReturn(linkedUser);
+
+        final var application = new Application();
+        application.setId("app-2");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication("app-2")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("current-user-id", "app-2")).thenReturn(Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("created-profile");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        final var result = operations.confirmLink("link-ready-id", "correct-token");
+
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.COMPLETE);
+        verify(profileDao).createSlottedProfile(any(Profile.class), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+        assertEquals(result.getSession().getSession().getProfile(), createdProfile);
+
+    }
+
+    @Test
+    public void testConfirmLinkUsesLegacyUngatedCreateWhenApplicationCameFromAudClaimFallback() {
+
+        // explicitlyRequested=false mirrors what handleCallback persists when applicationNameOrId was never set
+        // on the attempt and the value came from the token's own aud claim instead.
+        final var attempt = linkReadyAttemptWithApplication("app-3", false);
+        when(oidcLoginAttemptDao.findLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+        when(oidcLoginAttemptDao.claimLinkReadyById("link-ready-id")).thenReturn(Optional.of(attempt));
+
+        final var linkedUser = new User();
+        linkedUser.setId("current-user-id");
+        when(userDao.getUser("current-user-id")).thenReturn(linkedUser);
+
+        final var application = new Application();
+        application.setId("app-3");
+        application.setAutoCreateProfile(false); // deliberately not configured -- legacy path ignores this
+        application.setMaxProfiles(0);
+
+        when(applicationDao.findActiveApplication("app-3")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("current-user-id", "app-3")).thenReturn(Optional.empty());
+
+        final var legacyProfile = new Profile();
+        legacyProfile.setId("legacy-profile");
+        when(profileDao.createOrRefreshProfile(any(Profile.class))).thenReturn(legacyProfile);
+
+        final var result = operations.confirmLink("link-ready-id", "correct-token");
+
+        assertEquals(result.getStatus(), dev.getelements.elements.sdk.model.session.OidcLoginAttemptState.COMPLETE);
+        verify(profileDao).createOrRefreshProfile(any(Profile.class));
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+        assertEquals(result.getSession().getSession().getProfile(), legacyProfile);
+
+    }
+
     private OidcLoginAttempt linkReadyAttempt() {
         final var attempt = pendingAttempt("linking-state", "linking-nonce");
         attempt.setId("link-ready-id");
@@ -617,6 +789,16 @@ public class OidcLoginAttemptOperationsTest {
         attempt.setConfirmToken("correct-token");
         attempt.setLinkClaimsJson(
                 "{\"schemeName\":\"twitch\",\"externalUserId\":\"twitch-sub\",\"email\":null,\"profileClaims\":{}}");
+        return attempt;
+    }
+
+    private OidcLoginAttempt linkReadyAttemptWithApplication(final String applicationNameOrId,
+                                                               final boolean explicitlyRequested) {
+        final var attempt = linkReadyAttempt();
+        attempt.setLinkClaimsJson(
+                "{\"schemeName\":\"twitch\",\"externalUserId\":\"twitch-sub\",\"email\":null,\"profileClaims\":{}," +
+                        "\"applicationNameOrId\":\"" + applicationNameOrId + "\"," +
+                        "\"applicationExplicitlyRequested\":" + explicitlyRequested + "}");
         return attempt;
     }
 

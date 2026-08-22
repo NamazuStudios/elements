@@ -229,7 +229,8 @@ public class OidcLoginAttemptOperations {
                 targetUser, claims.getSchemeName(), claims.getExternalUserId(), claims.getEmail(),
                 claims.getProfileClaims());
 
-        final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(linkedUser);
+        final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(
+                linkedUser, claims.getApplicationNameOrId(), claims.isApplicationExplicitlyRequested());
 
         return OidcLoginAttemptStatusResponse.complete(sessionCreation);
 
@@ -288,6 +289,15 @@ public class OidcLoginAttemptOperations {
                 // this (always-unauthenticated) callback cannot itself gate correctly -- it has no way to verify
                 // it's talking to the same party that called begin(). Only the validated external identity is
                 // persisted here.
+                // Same precedence as the anonymous path (OidcAuthServiceOperations#buildSession): the
+                // request-supplied application, or else the token's own 'aud' claim. Resolved here, while the
+                // live token is still in hand, and snapshotted onto the persisted claims -- confirmLink() only
+                // has these claims, not the token, to work from.
+                final var applicationNameOrId = attempt.getApplicationNameOrId() != null
+                        ? attempt.getApplicationNameOrId()
+                        : OidcAuthServiceOperations.claimAsString(
+                                decodedJWT, OidcAuthServiceOperations.Claim.APPLICATION_ID.value);
+
                 final var claims = new OidcLinkClaims();
                 claims.setSchemeName(scheme.getName());
                 claims.setExternalUserId(OidcAuthServiceOperations.claimAsString(
@@ -295,6 +305,8 @@ public class OidcLoginAttemptOperations {
                 claims.setEmail(OidcAuthServiceOperations.claimAsString(
                         decodedJWT, OidcAuthServiceOperations.Claim.EMAIL.value));
                 claims.setProfileClaims(OidcAuthServiceOperations.extractProfileClaims(decodedJWT));
+                claims.setApplicationNameOrId(applicationNameOrId);
+                claims.setApplicationExplicitlyRequested(attempt.getApplicationNameOrId() != null);
 
                 final var linkReady = getOidcLoginAttemptDao().markLinkReady(state, serializeLinkClaims(claims));
 
