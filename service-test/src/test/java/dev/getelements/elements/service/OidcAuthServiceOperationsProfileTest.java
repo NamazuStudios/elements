@@ -227,6 +227,171 @@ public class OidcAuthServiceOperationsProfileTest {
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
     }
 
+    @Test
+    public void testVerifiedTokenPathAutoCreatesPrimaryProfileWhenApplicationNameOrIdSuppliedAndConfigured() {
+
+        final var decodedJWT = JWT.decode(token(null));
+        final var scheme = scheme();
+
+        final var user = new User();
+        user.setId("user-4");
+
+        final var application = new Application();
+        application.setId("app-4");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication("app-4")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-4", "app-4")).thenReturn(Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("profile-4");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        ops.createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper(user), "app-4");
+
+        verify(profileDao).createSlottedProfile(any(Profile.class), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
+        assertEquals(sessionCaptor.getValue().getApplication(), application);
+
+    }
+
+    @Test
+    public void testVerifiedTokenPathWithoutApplicationNameOrIdFallsBackToAudClaim() {
+
+        final var decodedJWT = JWT.decode(token("app-5"));
+        final var scheme = scheme();
+
+        final var user = new User();
+        user.setId("user-5");
+
+        final var application = new Application();
+        application.setId("app-5");
+        application.setAutoCreateProfile(false);
+        application.setMaxProfiles(0);
+
+        when(applicationDao.findActiveApplication("app-5")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-5", "app-5")).thenReturn(Optional.empty());
+
+        final var legacyProfile = new Profile();
+        legacyProfile.setId("legacy-profile-5");
+        when(profileDao.createOrRefreshProfile(any(Profile.class))).thenReturn(legacyProfile);
+
+        ops.createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper(user));
+
+        verify(profileDao).createOrRefreshProfile(any(Profile.class));
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+
+    }
+
+    // ── createSessionForResolvedUser(User, String, boolean) — account-linking confirm path ──────────────────
+
+    @Test
+    public void testCreateSessionForResolvedUserReusesExistingPrimaryProfileIfPresent() {
+
+        final var user = new User();
+        user.setId("user-6");
+
+        final var application = new Application();
+        application.setId("app-6");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        final var existingProfile = new Profile();
+        existingProfile.setId("existing-profile-6");
+
+        when(applicationDao.findActiveApplication("app-6")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-6", "app-6")).thenReturn(Optional.of(existingProfile));
+
+        ops.createSessionForResolvedUser(user, "app-6", true);
+
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getProfile(), existingProfile);
+        assertEquals(sessionCaptor.getValue().getApplication(), application);
+
+    }
+
+    @Test
+    public void testCreateSessionForResolvedUserAutoCreatesWhenExplicitlyRequestedAndConfigured() {
+
+        final var user = new User();
+        user.setId("user-7");
+
+        final var application = new Application();
+        application.setId("app-7");
+        application.setAutoCreateProfile(true);
+        application.setMaxProfiles(1);
+
+        when(applicationDao.findActiveApplication("app-7")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-7", "app-7")).thenReturn(Optional.empty());
+
+        final var createdProfile = new Profile();
+        createdProfile.setId("profile-7");
+        when(profileDao.createSlottedProfile(any(Profile.class), anyMap())).thenReturn(createdProfile);
+
+        ops.createSessionForResolvedUser(user, "app-7", true);
+
+        verify(profileDao).createSlottedProfile(any(Profile.class), anyMap());
+        verify(profileDao, never()).createOrRefreshProfile(any());
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
+
+    }
+
+    @Test
+    public void testCreateSessionForResolvedUserUsesLegacyUngatedCreateWhenNotExplicitlyRequested() {
+
+        final var user = new User();
+        user.setId("user-8");
+
+        final var application = new Application();
+        application.setId("app-8");
+        application.setAutoCreateProfile(false); // deliberately not configured -- legacy path ignores this
+        application.setMaxProfiles(0);
+
+        when(applicationDao.findActiveApplication("app-8")).thenReturn(Optional.of(application));
+        when(profileDao.findPrimaryProfile("user-8", "app-8")).thenReturn(Optional.empty());
+
+        final var legacyProfile = new Profile();
+        legacyProfile.setId("legacy-profile-8");
+        when(profileDao.createOrRefreshProfile(any(Profile.class))).thenReturn(legacyProfile);
+
+        // explicitlyRequested=false mirrors the aud-claim-driven fallback resolved earlier by the caller.
+        ops.createSessionForResolvedUser(user, "app-8", false);
+
+        verify(profileDao).createOrRefreshProfile(any(Profile.class));
+        verify(profileDao, never()).createSlottedProfile(any(), anyMap());
+
+    }
+
+    @Test
+    public void testCreateSessionForResolvedUserWithoutApplicationNameOrIdAttachesNothing() {
+
+        final var user = new User();
+        user.setId("user-9");
+
+        ops.createSessionForResolvedUser(user, null, false);
+
+        verifyNoInteractions(applicationDao);
+        verifyNoInteractions(profileDao);
+
+        final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
+        verify(sessionDao).create(sessionCaptor.capture());
+        assertNull(sessionCaptor.getValue().getProfile());
+        assertNull(sessionCaptor.getValue().getApplication());
+
+    }
+
     private static class TestModule extends AbstractModule {
 
         @Override

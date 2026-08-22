@@ -17,6 +17,10 @@ public class OidcLinkClaims {
 
     private Map<String, String> profileClaims;
 
+    private String applicationNameOrId;
+
+    private boolean applicationExplicitlyRequested;
+
     public String getSchemeName() {
         return schemeName;
     }
@@ -47,6 +51,22 @@ public class OidcLinkClaims {
 
     public void setProfileClaims(Map<String, String> profileClaims) {
         this.profileClaims = profileClaims;
+    }
+
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
+    }
+
+    public boolean isApplicationExplicitlyRequested() {
+        return applicationExplicitlyRequested;
+    }
+
+    public void setApplicationExplicitlyRequested(boolean applicationExplicitlyRequested) {
+        this.applicationExplicitlyRequested = applicationExplicitlyRequested;
     }
 
 }

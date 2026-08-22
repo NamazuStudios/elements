@@ -81,7 +81,7 @@ public class OidcLoginAttemptOperations {
     private long ttlSeconds;
 
     public OidcLoginAttemptBegin begin(final String provider) {
-        return begin(provider, null);
+        return begin(provider, null, null);
     }
 
     /**
@@ -97,6 +97,23 @@ public class OidcLoginAttemptOperations {
      * @return the pending attempt's id, authorize URL, and expiry
      */
     public OidcLoginAttemptBegin begin(final String provider, final User linkingUser) {
+        return begin(provider, linkingUser, null);
+    }
+
+    /**
+     * Same as {@link #begin(String, User)}, additionally snapshotting the requested application name/id onto the
+     * pending attempt, since the callback that later resolves it shares no request body with this call.
+     *
+     * @param provider the provider identifier
+     * @param linkingUser the already-authenticated user to link on success, or {@code null} for an anonymous
+     *                    (first-time login) attempt
+     * @param applicationNameOrId the name or ID of the application whose primary profile should be attached once
+     *                            the attempt resolves, or {@code null} for the legacy JWT aud-claim-driven,
+     *                            ungated behavior
+     * @return the pending attempt's id, authorize URL, and expiry
+     */
+    public OidcLoginAttemptBegin begin(final String provider, final User linkingUser,
+                                        final String applicationNameOrId) {
 
         final var config = findConfigOrThrow(provider);
         final var discoveryDocument = getOidcProviderConfigurationOperations().resolveDiscovery(config);
@@ -123,6 +140,8 @@ public class OidcLoginAttemptOperations {
         if (linkingUser != null) {
             attempt.setLinkedUserId(linkingUser.getId());
         }
+
+        attempt.setApplicationNameOrId(applicationNameOrId);
 
         getOidcLoginAttemptDao().create(attempt);
 
@@ -210,7 +229,8 @@ public class OidcLoginAttemptOperations {
                 targetUser, claims.getSchemeName(), claims.getExternalUserId(), claims.getEmail(),
                 claims.getProfileClaims());
 
-        final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(linkedUser);
+        final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(
+                linkedUser, claims.getApplicationNameOrId(), claims.isApplicationExplicitlyRequested());
 
         return OidcLoginAttemptStatusResponse.complete(sessionCreation);
 
@@ -269,6 +289,15 @@ public class OidcLoginAttemptOperations {
                 // this (always-unauthenticated) callback cannot itself gate correctly -- it has no way to verify
                 // it's talking to the same party that called begin(). Only the validated external identity is
                 // persisted here.
+                // Same precedence as the anonymous path (OidcAuthServiceOperations#buildSession): the
+                // request-supplied application, or else the token's own 'aud' claim. Resolved here, while the
+                // live token is still in hand, and snapshotted onto the persisted claims -- confirmLink() only
+                // has these claims, not the token, to work from.
+                final var applicationNameOrId = attempt.getApplicationNameOrId() != null
+                        ? attempt.getApplicationNameOrId()
+                        : OidcAuthServiceOperations.claimAsString(
+                                decodedJWT, OidcAuthServiceOperations.Claim.APPLICATION_ID.value);
+
                 final var claims = new OidcLinkClaims();
                 claims.setSchemeName(scheme.getName());
                 claims.setExternalUserId(OidcAuthServiceOperations.claimAsString(
@@ -276,6 +305,8 @@ public class OidcLoginAttemptOperations {
                 claims.setEmail(OidcAuthServiceOperations.claimAsString(
                         decodedJWT, OidcAuthServiceOperations.Claim.EMAIL.value));
                 claims.setProfileClaims(OidcAuthServiceOperations.extractProfileClaims(decodedJWT));
+                claims.setApplicationNameOrId(applicationNameOrId);
+                claims.setApplicationExplicitlyRequested(attempt.getApplicationNameOrId() != null);
 
                 final var linkReady = getOidcLoginAttemptDao().markLinkReady(state, serializeLinkClaims(claims));
 
@@ -288,7 +319,7 @@ public class OidcLoginAttemptOperations {
             }
 
             final var sessionCreation = getOidcAuthServiceOperations().createOrUpdateUserWithVerifiedToken(
-                    decodedJWT, scheme, getAnonOidcAuthService()::apply);
+                    decodedJWT, scheme, getAnonOidcAuthService()::apply, attempt.getApplicationNameOrId());
 
             final var completed = getOidcLoginAttemptDao().markComplete(state, serializeSession(sessionCreation));
 
