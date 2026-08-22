@@ -1,8 +1,8 @@
 package dev.getelements.elements.rest.test;
 
 import com.google.inject.Injector;
-import dev.getelements.elements.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
-import dev.getelements.elements.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
+import dev.getelements.elements.sdk.transact.JournalTransactionalResourceServicePersistenceEnvironment;
+import dev.getelements.elements.sdk.transact.unixfs.UnixFSJournalTransactionalPersistenceDriver;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.Response;
 

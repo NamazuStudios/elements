@@ -4,7 +4,7 @@ import dev.getelements.elements.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static dev.getelements.elements.rt.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
 
 /**
  * Module defaults for the code server.

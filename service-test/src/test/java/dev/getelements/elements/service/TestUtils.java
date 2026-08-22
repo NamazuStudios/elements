@@ -1,8 +1,8 @@
 package dev.getelements.elements.service;
 
 import com.google.inject.Injector;
-import dev.getelements.elements.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
-import dev.getelements.elements.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
+import dev.getelements.elements.sdk.transact.JournalTransactionalResourceServicePersistenceEnvironment;
+import dev.getelements.elements.sdk.transact.unixfs.UnixFSJournalTransactionalPersistenceDriver;
 
 import static com.google.inject.Guice.createInjector;
 

@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.cluster.annotation;
 
 import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.cluster.routing.DefaultRoutingStrategy;
 import dev.getelements.elements.sdk.cluster.routing.RoutingStrategy;
 
 import java.lang.annotation.ElementType;

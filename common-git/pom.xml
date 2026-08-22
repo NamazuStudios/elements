@@ -33,7 +33,12 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>service</artifactId>
+            <artifactId>sdk-cluster</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-util</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -54,12 +59,6 @@
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-git</artifactId>
-            <version>${project.version}</version>
-            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -9,7 +9,7 @@ import jakarta.inject.Provider;
 
 import java.io.File;
 
-import static dev.getelements.elements.rt.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
 
 public class FileSystemScriptApplicationRepositoryResolverProvider implements Provider<ApplicationRepositoryResolver> {
 

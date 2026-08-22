@@ -64,11 +64,11 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jersey-guice</artifactId>
+            <artifactId>common-jersey-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>guice</artifactId>
+            <artifactId>common-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -134,7 +134,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-kryo-guice</artifactId>
+            <artifactId>sdk-cluster-kryo-guice</artifactId>
             <scope>compile</scope>
         </dependency>
         <dependency>

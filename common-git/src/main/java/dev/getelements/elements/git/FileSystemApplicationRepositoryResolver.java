@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.function.Consumer;
 
-import static dev.getelements.elements.rt.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
-import static dev.getelements.elements.rt.git.FilesystemGitApplicationAssetLoader.getBareStorageDirectory;
+import static dev.getelements.elements.git.FileSystemScriptStorageGitLoaderProvider.ELEMENT_STORAGE_DIRECTORY;
+import static dev.getelements.elements.git.FilesystemGitApplicationAssetLoader.getBareStorageDirectory;
 
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.

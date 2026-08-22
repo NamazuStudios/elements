@@ -55,19 +55,16 @@
         <module>service</module>
         <module>service-guice</module>
         <module>mongo-dao</module>
-        <module>guice</module>
+        <module>common-guice</module>
         <module>rest-guice</module>
-        <module>rt-jeromq</module>
-        <module>rt-jeromq-guice</module>
-        <module>rt-server-git</module>
-        <module>rt-server-transact</module>
-        <module>rt-server-transact-unixfs</module>
-        <module>rt-server-transact-unixfs-guice</module>
-        <module>rt-server-transact-guice</module>
+        <module>sdk-cluster-transact</module>
+        <module>sdk-cluster-transact-unixfs</module>
+        <module>sdk-cluster-transact-unixfs-guice</module>
+        <module>sdk-cluster-transact-guice</module>
         <module>sdk-cluster-kryo</module>
-        <module>rt-kryo-guice</module>
-        <module>rt-jersey</module>
-        <module>rt-jersey-guice</module>
+        <module>sdk-cluster-kryo-guice</module>
+        <module>common-jersey</module>
+        <module>common-jersey-guice</module>
         <module>docker-config</module>
         <module>common-git</module>
         <module>common-jetty</module>
@@ -220,7 +217,7 @@
             <!-- First-party Dependencies -->
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>guice</artifactId>
+                <artifactId>common-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -336,22 +333,22 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-transact</artifactId>
+                <artifactId>sdk-cluster-transact</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-transact-unixfs</artifactId>
+                <artifactId>sdk-cluster-transact-unixfs</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-transact-unixfs-guice</artifactId>
+                <artifactId>sdk-cluster-transact-unixfs-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-transact-guice</artifactId>
+                <artifactId>sdk-cluster-transact-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -376,12 +373,12 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jersey</artifactId>
+                <artifactId>common-jersey</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jersey-guice</artifactId>
+                <artifactId>common-jersey-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -401,7 +398,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-kryo-guice</artifactId>
+                <artifactId>sdk-cluster-kryo-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -461,17 +458,7 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-git</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>rt-server-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-simple</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,7 +1,7 @@
 package dev.getelements.elements.cdnserve.guice;
 
 import com.google.inject.AbstractModule;
-import dev.getelements.elements.rt.git.GitApplicationAssetLoader;
+import dev.getelements.elements.git.GitApplicationAssetLoader;
 import dev.getelements.elements.cdnserve.FilesystemCdnGitLoaderProvider;
 
 import static com.google.inject.name.Names.named;

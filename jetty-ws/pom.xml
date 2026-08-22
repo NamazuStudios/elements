@@ -79,7 +79,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jersey-guice</artifactId>
+            <artifactId>common-jersey-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
@@ -91,7 +91,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-kryo-guice</artifactId>
+            <artifactId>sdk-cluster-kryo-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>net.sf.jopt-simple</groupId>

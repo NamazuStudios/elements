@@ -1,7 +1,7 @@
 package dev.getelements.elements.cdnserve;
 
-import dev.getelements.elements.rt.git.FilesystemGitApplicationAssetLoader;
-import dev.getelements.elements.rt.git.GitApplicationAssetLoader;
+import dev.getelements.elements.git.FilesystemGitApplicationAssetLoader;
+import dev.getelements.elements.git.GitApplicationAssetLoader;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;

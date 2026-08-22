@@ -30,7 +30,7 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jersey-guice</artifactId>
+            <artifactId>common-jersey-guice</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

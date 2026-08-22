@@ -10,7 +10,7 @@ import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.cdn.CreateDeploymentRequest;
 import dev.getelements.elements.sdk.model.cdn.UpdateDeploymentRequest;
-import dev.getelements.elements.rt.git.GitApplicationAssetLoader;
+import dev.getelements.elements.git.GitApplicationAssetLoader;
 import dev.getelements.elements.sdk.service.application.ApplicationService;
 import dev.getelements.elements.sdk.service.cdn.CdnDeploymentService;
 import jakarta.inject.Inject;

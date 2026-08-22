@@ -3,7 +3,7 @@ package dev.getelements.elements.rest.guice;
 import com.google.inject.Injector;
 import dev.getelements.elements.rest.mission.ProgressResource;
 import dev.getelements.elements.rt.exception.InternalException;
-import dev.getelements.elements.rt.jersey.CsvFeature;
+import dev.getelements.elements.common.jersey.CsvFeature;
 import io.swagger.v3.jaxrs2.SwaggerSerializers;
 import jakarta.inject.Inject;
 import jakarta.servlet.ServletContext;
@@ -98,7 +98,7 @@ public class RestAPIGuiceResourceConfig extends ResourceConfig {
             final Class<?> nativeMultipart = Class.forName("org.glassfish.jersey.media.multipart.MultiPartFeature");
             logger.info("Found Native Multipart support {}", nativeMultipart);
 
-            final Class<?> genericMultipart = Class.forName("dev.getelements.elements.rt.jersey.GenericMultipartFeature");
+            final Class<?> genericMultipart = Class.forName("dev.getelements.elements.common.jersey.GenericMultipartFeature");
             register(nativeMultipart);
             register(genericMultipart);
 
