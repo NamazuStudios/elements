@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.MongoClient;
+import dev.getelements.elements.dao.mongo.migration.PreDatastoreMigrationRunner;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.dao.EntityRegistry;
@@ -49,6 +50,8 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     private Provider<MongoClient> mongoClientProvider;
 
     private Provider<MorphiaConfig> morphiaConfigProvider;
+
+    private Provider<PreDatastoreMigrationRunner> preDatastoreMigrationRunnerProvider;
 
     private AtomicReference<Datastore> datastoreAtomicReference;
 
@@ -123,10 +126,12 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
     private void rebuildDatastore() {
 
-        final var datastore = Morphia.createDatastore(
-                getMongoClientProvider().get(),
-                getMorphiaConfigProvider().get()
-        );
+        final var mongoClient = getMongoClientProvider().get();
+        final var morphiaConfig = getMorphiaConfigProvider().get();
+
+        getPreDatastoreMigrationRunnerProvider().get().run(mongoClient, morphiaConfig);
+
+        final var datastore = Morphia.createDatastore(mongoClient, morphiaConfig);
 
         final var thread = Thread.currentThread();
         elements.forEach(e -> applyChanges(e, thread, datastore));
@@ -179,6 +184,16 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     @Inject
     public void setMorphiaConfigProvider(Provider<MorphiaConfig> morphiaConfigProvider) {
         this.morphiaConfigProvider = morphiaConfigProvider;
+    }
+
+    public Provider<PreDatastoreMigrationRunner> getPreDatastoreMigrationRunnerProvider() {
+        return preDatastoreMigrationRunnerProvider;
+    }
+
+    @Inject
+    public void setPreDatastoreMigrationRunnerProvider(
+            Provider<PreDatastoreMigrationRunner> preDatastoreMigrationRunnerProvider) {
+        this.preDatastoreMigrationRunnerProvider = preDatastoreMigrationRunnerProvider;
     }
 
     public AtomicReference<Datastore> getDatastoreAtomicReference() {

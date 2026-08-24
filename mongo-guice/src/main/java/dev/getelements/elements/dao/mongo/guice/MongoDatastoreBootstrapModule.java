@@ -35,6 +35,8 @@ public class MongoDatastoreBootstrapModule extends AbstractModule {
                 .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
 
+        install(new PreDatastoreMigrationModule());
+
         bind(ElementRegistry.class)
                 .annotatedWith(named(ROOT))
                 .to(Key.get(MutableElementRegistry.class, named(ROOT)));
