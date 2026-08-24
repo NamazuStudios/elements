@@ -60,10 +60,6 @@
         </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-jeromq-guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-jersey-guice</artifactId>
         </dependency>
         <dependency>
@@ -136,15 +132,6 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-cluster-kryo-guice</artifactId>
             <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-guice</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>rt-server-cluster-jeromq-guice</artifactId>
         </dependency>
     </dependencies>
 

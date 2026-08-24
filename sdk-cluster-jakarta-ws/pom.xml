@@ -11,19 +11,18 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>sdk-cluster-kryo</artifactId>
-    <name>${project.artifactId}</name>
+    <artifactId>sdk-cluster-jakarta-ws</artifactId>
     <version>${revision}</version>
-    <url>https://namazustudios.com</url>
+    <name>sdk-cluster-jakarta-ws</name>
 
     <dependencies>
         <dependency>
-            <groupId>jakarta.inject</groupId>
-            <artifactId>jakarta.inject-api</artifactId>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-cluster</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.esotericsoftware.kryo</groupId>
-            <artifactId>kryo</artifactId>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-client-api</artifactId>
         </dependency>
     </dependencies>
 

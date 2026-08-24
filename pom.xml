@@ -1,40 +1,30 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>dev.getelements.elements</groupId>
     <artifactId>eci-elements</artifactId>
-
     <name>Namazu Elements</name>
     <version>${revision}</version>
     <packaging>pom</packaging>
-
     <scm>
         <url>https://github.com/NamazuStudios/elements</url>
         <connection>scm:git:https://github.com/NamazuStudios/elements.git</connection>
         <developerConnection>scm:git:git@github.com:NamazuStudios/elements.git</developerConnection>
     </scm>
-
     <repositories>
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
     </repositories>
-
     <licenses>
         <license>
             <name>Modified GNU AGPL v3.0</name>
             <url>https://raw.githubusercontent.com/NamazuStudios/OSS-Licenses/8e60b05/LICENSE.txt</url>
         </license>
     </licenses>
-
     <url>https://namazustudios.com</url>
-
     <description>Namazu Elements is an Open Source Backend for Games</description>
-
     <developers>
         <developer>
             <name>Keith Hudnall</name>
@@ -47,7 +37,6 @@
             <organization>Namazu Studios LLC</organization>
         </developer>
     </developers>
-
     <modules>
         <module>common-util</module>
         <module>common-servlet</module>
@@ -112,8 +101,8 @@
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
+        <module>sdk-cluster-jakarta-ws</module>
     </modules>
-
     <properties>
         <revision>3.9.0-SNAPSHOT</revision>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -197,7 +186,6 @@
         <shrinkwrap.version>3.3.4</shrinkwrap.version>
         <api.classifier>${project.groupId}.api</api.classifier>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -211,7 +199,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <dependencyManagement>
         <dependencies>
             <!-- First-party Dependencies -->
@@ -312,27 +299,6 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster</artifactId>
-                <version>${project.version}</version>
-                <classifier>tests</classifier>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-node</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-testkit</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-cluster-transact</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -353,42 +319,12 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-jeromq-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>common-jersey</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>common-jersey-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-jeromq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -454,16 +390,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>jetty-ws-test</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-simple-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -590,16 +516,6 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-jakarta-rs</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-node-jeromq</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>rt-server-cluster-node-jeromq-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Third-party Dependencies -->
@@ -912,7 +828,6 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-jaxrs2-jakarta</artifactId>
@@ -1109,7 +1024,6 @@
             <!-- End Dependencies -->
         </dependencies>
     </dependencyManagement>
-
     <build>
         <plugins>
             <!-- Sets Java 21 -->
@@ -1258,7 +1172,6 @@
             </plugin>
         </plugins>
     </build>
-
     <profiles>
         <profile>
             <id>github-publish</id>
@@ -1320,5 +1233,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>

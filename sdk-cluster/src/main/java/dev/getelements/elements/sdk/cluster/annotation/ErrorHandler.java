@@ -15,7 +15,7 @@ import java.util.function.Function;
  * The method must accept a {@link Throwable} because remote invocations may have many reasons why they fail beyond the
  * cause of the invocation itself.
  *
- * This can be used with type such as {@link Consumer<Throwable>} or {@link Function<Throwable, ?>}.
+ * This can be used with type such as {@link Consumer<Throwable>} or {@link Function}.
  */
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)

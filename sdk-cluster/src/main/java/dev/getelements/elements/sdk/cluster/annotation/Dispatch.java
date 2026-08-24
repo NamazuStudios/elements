@@ -1,6 +1,8 @@
 package dev.getelements.elements.sdk.cluster.annotation;
 
-import dev.getelements.elements.rt.remote.AsyncOperation;
+import dev.getelements.elements.sdk.Subscription;
+import dev.getelements.elements.sdk.cluster.util.Reflection;
+import dev.getelements.elements.sdk.cluster.remote.AsyncOperation;
 
 import java.lang.annotation.*;
 import java.lang.reflect.Method;
@@ -8,7 +10,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
-import static dev.getelements.elements.rt.Reflection.format;
 import static java.util.Arrays.stream;
 
 /**
@@ -33,7 +34,8 @@ public @interface Dispatch {
     enum Type {
 
         /**
-         * The method is dispatched, blocking until the method returns or an exception is thrown.
+         * The method is dispatched, blocking until the method returns or an exception is thrown. This models simple
+         * request-response style invocations that block.
          *
          * This mode is automatically selected if a {@link Method} returns an object and neither {@link ResultHandler}
          * or {@link ErrorHandler} are specified in the parameters.  This implies that the return type must be
@@ -63,7 +65,15 @@ public @interface Dispatch {
          * The client method invocation will not block and instead return an instance of {@link Future} which will be
          * used to dispatch the remote invocation.
          */
-        FUTURE;
+        FUTURE,
+
+        /**
+         * This method may use at least one {@link ResultHandler}s and/or an {@link ErrorHandler} to receive results.
+         * The {@link ErrorHandler} fires when a remote error results in the subscription terminating on the remote end.
+         * The method must return an instance of {@link Subscription}. The remote may push any number of results and
+         * will continue to do so indefinitely until the returned {@link Subscription} is closed.
+         */
+        SUBSCRIPTION;
 
         /**
          * Inspects the supplied {@link Method} and determines the type of dispatch used.  If not specified, then this
@@ -98,7 +108,7 @@ public @interface Dispatch {
                 final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), Reflection.format(method));
                 throw new IllegalArgumentException(msg);
             } else {
-                return HYBRID;
+                throw new IllegalArgumentException("Unsupported method: " + method);
             }
 
         }
