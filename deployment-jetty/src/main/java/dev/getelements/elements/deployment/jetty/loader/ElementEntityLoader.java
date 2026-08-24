@@ -21,9 +21,29 @@ public class ElementEntityLoader implements Loader {
     private ElementEntityRegistrar elementEntityRegistrar;
 
     @Override
+    public void load(final PendingDeployment pending, final RuntimeRecord record) {
+        if (elementEntityRegistrar == null) {
+            return;
+        }
+        try (var batch = elementEntityRegistrar.beginBatch()) {
+            record.elements().forEach(batch::registerEntityClasses);
+        }
+    }
+
+    @Override
     public void load(final PendingDeployment pending, final RuntimeRecord record, final Element element) {
         if (elementEntityRegistrar != null) {
             elementEntityRegistrar.registerEntityClasses(element);
+        }
+    }
+
+    @Override
+    public void unload(final RuntimeRecord record) {
+        if (elementEntityRegistrar == null) {
+            return;
+        }
+        try (var batch = elementEntityRegistrar.beginBatch()) {
+            record.elements().forEach(batch::unregisterEntityClasses);
         }
     }
 
