@@ -149,7 +149,51 @@ public class OidcAuthServiceOperations {
             final DecodedJWT decodedJWT,
             final OidcAuthScheme scheme,
             final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
-        return buildSession(decodedJWT, scheme, userMapper, null);
+        return createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper, null);
+    }
+
+    /**
+     * Same as {@link #createOrUpdateUserWithVerifiedToken(DecodedJWT, OidcAuthScheme, BiFunction)}, additionally
+     * requesting that the given application's primary profile be attached to the resulting session (gated
+     * auto-create), exactly as {@link #createOrUpdateUserWithToken} does via
+     * {@link OidcSessionRequest#getApplicationNameOrId()}.
+     *
+     * @param requestedApplicationNameOrId the application name/ID to attach, or {@code null} for the legacy
+     *                                      JWT aud-claim-driven, ungated behavior
+     */
+    public SessionCreation createOrUpdateUserWithVerifiedToken(
+            final DecodedJWT decodedJWT,
+            final OidcAuthScheme scheme,
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
+            final String requestedApplicationNameOrId) {
+        return buildSession(decodedJWT, scheme, userMapper, requestedApplicationNameOrId);
+    }
+
+    /**
+     * Same as {@link #createSessionForResolvedUser(User)}, additionally requesting that the given application's
+     * primary profile be attached to the resulting session, exactly as {@link #buildSession} does for a live
+     * token — reusing an existing primary profile if one is already present, otherwise gated auto-create
+     * (subject to the application's autoCreateProfile/maxProfiles settings) if {@code explicitlyRequested}, or
+     * the legacy, ungated get-or-create behavior otherwise. Used by the login-attempt confirm flow, where the
+     * user was resolved (and any account-link mutation already performed) from claims persisted by an earlier
+     * callback — including the application id/name resolved at that time from the request or the token's own
+     * {@code aud} claim — not a live JWT.
+     *
+     * @param user the already-resolved user
+     * @param applicationNameOrId the application name/ID to attach, or {@code null} for none
+     * @param explicitlyRequested whether {@code applicationNameOrId} came from an explicit request value (gated
+     *                            auto-create) as opposed to the token's {@code aud} claim (legacy, ungated)
+     * @return the created session
+     */
+    public SessionCreation createSessionForResolvedUser(final User user,
+                                                          final String applicationNameOrId,
+                                                          final boolean explicitlyRequested) {
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+        final var session = new Session();
+        session.setUser(user);
+        session.setExpiry(expiry);
+        attachApplicationProfile(session, user, applicationNameOrId, explicitlyRequested);
+        return getSessionDao().create(session);
     }
 
     /**
@@ -161,11 +205,7 @@ public class OidcAuthServiceOperations {
      * @return the created session
      */
     public SessionCreation createSessionForResolvedUser(final User user) {
-        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-        final var session = new Session();
-        session.setUser(user);
-        session.setExpiry(expiry);
-        return getSessionDao().create(session);
+        return createSessionForResolvedUser(user, null, false);
     }
 
     private SessionCreation buildSession(final DecodedJWT decodedJWT,
@@ -188,30 +228,48 @@ public class OidcAuthServiceOperations {
         session.setUser(user);
         session.setExpiry(expiry);
 
-        if(applicationId != null) {
-
-            final var applicationOptional = getApplicationDao().findActiveApplication(applicationId);
-
-            if(applicationOptional.isPresent()) {
-
-                final var application = applicationOptional.get();
-                final var existingProfile = getProfileDao().findPrimaryProfile(user.getId(), application.getId());
-
-                final Profile profile = existingProfile.isPresent()
-                        ? existingProfile.get()
-                        : requestedApplicationNameOrId != null
-                                ? autoCreatePrimaryProfileIfConfigured(user, application)
-                                : getProfileDao().createOrRefreshProfile(map(user, application));
-
-                if (profile != null) {
-                    session.setProfile(profile);
-                    session.setApplication(application);
-                }
-
-            }
-        }
+        attachApplicationProfile(session, user, applicationId, requestedApplicationNameOrId != null);
 
         return getSessionDao().create(session);
+    }
+
+    /**
+     * Resolves the application to attach and, if found, attaches its existing primary profile for {@code user}
+     * if one is already present — otherwise gated auto-create (subject to autoCreateProfile/maxProfiles) if
+     * {@code gatedAutoCreate}, or the legacy, ungated get-or-create behavior otherwise. Shared by
+     * {@link #buildSession} (live token, {@code gatedAutoCreate} true iff the caller explicitly requested an
+     * application) and {@link #createSessionForResolvedUser(User, String, boolean)} (account-linking confirm,
+     * resolved earlier from either the request or the token's own {@code aud} claim).
+     */
+    private void attachApplicationProfile(final Session session,
+                                           final User user,
+                                           final String applicationId,
+                                           final boolean gatedAutoCreate) {
+
+        if (applicationId == null) {
+            return;
+        }
+
+        final var applicationOptional = getApplicationDao().findActiveApplication(applicationId);
+
+        if (applicationOptional.isEmpty()) {
+            return;
+        }
+
+        final var application = applicationOptional.get();
+        final var existingProfile = getProfileDao().findPrimaryProfile(user.getId(), application.getId());
+
+        final Profile profile = existingProfile.isPresent()
+                ? existingProfile.get()
+                : gatedAutoCreate
+                        ? autoCreatePrimaryProfileIfConfigured(user, application)
+                        : getProfileDao().createOrRefreshProfile(map(user, application));
+
+        if (profile != null) {
+            session.setProfile(profile);
+            session.setApplication(application);
+        }
+
     }
 
     private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
