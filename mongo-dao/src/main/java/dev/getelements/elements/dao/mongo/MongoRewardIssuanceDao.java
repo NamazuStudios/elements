@@ -10,6 +10,7 @@ import dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId;
 import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuance;
 import dev.getelements.elements.dao.mongo.model.mission.MongoRewardIssuanceId;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
@@ -33,6 +34,7 @@ import jakarta.inject.Inject;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -65,6 +67,8 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public RewardIssuance getRewardIssuance(final String id) {
@@ -190,7 +194,14 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
             throw new DuplicateException(e);
         }
 
-        return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+        final var createdIssuance = getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdIssuance)
+                .named(REWARD_ISSUANCE_CREATED)
+                .build());
+
+        return createdIssuance;
 
     }
 
@@ -226,7 +237,16 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         final var opts = new ModifyOptions().upsert(false).returnDocument(AFTER);
         final var mongoRewardIssuance = builder.execute(query, opts);
 
-        return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+        final var updatedIssuance = getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+
+        if (mongoRewardIssuance != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(updatedIssuance)
+                    .named(REWARD_ISSUANCE_UPDATED)
+                    .build());
+        }
+
+        return updatedIssuance;
     }
 
     @Override
@@ -334,19 +354,38 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
                  .execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
-        return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+        final var updatedIssuance = getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+
+        if (mongoRewardIssuance != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(updatedIssuance)
+                    .named(REWARD_ISSUANCE_UPDATED)
+                    .build());
+        }
+
+        return updatedIssuance;
 
     }
 
     @Override
     public void delete(String id) {
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(id);
+
+        final var mongoRewardIssuance = getDatastore().find(MongoRewardIssuance.class)
+                .filter(eq("_id", mongoRewardIssuanceId))
+                .first();
+
         final DeleteResult deleteResult = getDatastore().find(MongoRewardIssuance.class)
                 .filter(eq("_id", mongoRewardIssuanceId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Reward Issuance not found: " + mongoRewardIssuanceId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class))
+                .named(REWARD_ISSUANCE_DELETED)
+                .build());
     }
 
     public MapperRegistry getDozerMapper() {
@@ -410,6 +449,15 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

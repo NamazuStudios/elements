@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -10,7 +11,31 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = AppleIapReceiptDao.APPLE_IAP_RECEIPT_CREATED,
+        parameters = AppleIapReceipt.class,
+        description = "Called when a new Apple IAP receipt is created."
+)
+@ElementEventProducer(
+        value = AppleIapReceiptDao.APPLE_IAP_RECEIPT_CREATED,
+        parameters = {AppleIapReceipt.class, Transaction.class},
+        description = "Called when a new Apple IAP receipt is created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = AppleIapReceiptDao.APPLE_IAP_RECEIPT_DELETED,
+        parameters = AppleIapReceipt.class,
+        description = "Called when an Apple IAP receipt is deleted."
+)
+@ElementEventProducer(
+        value = AppleIapReceiptDao.APPLE_IAP_RECEIPT_DELETED,
+        parameters = {AppleIapReceipt.class, Transaction.class},
+        description = "Called when an Apple IAP receipt is deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface AppleIapReceiptDao {
+
+    String APPLE_IAP_RECEIPT_CREATED = "dev.getelements.elements.sdk.model.dao.appleiapreceipt.created";
+
+    String APPLE_IAP_RECEIPT_DELETED = "dev.getelements.elements.sdk.model.dao.appleiapreceipt.deleted";
 
     /**
      * Gets receipts for a given user specifying the offset and the count.

@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.sdk.model.exception.inventory.DistinctInventoryItemNotFoundException;
 import dev.getelements.elements.sdk.model.goods.Item;
@@ -14,12 +15,18 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_CREATED;
+import static dev.getelements.elements.sdk.dao.DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_DELETED;
+import static dev.getelements.elements.sdk.dao.DistinctInventoryItemDao.DISTINCT_INVENTORY_ITEM_UPDATED;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.DISTINCT;
 import static java.util.Collections.unmodifiableList;
 import static java.util.UUID.randomUUID;
@@ -62,6 +69,30 @@ public class MongoDistinctInventorItemDaoTest {
     private List<Profile> profileList;
 
     private final Map<Object, DistinctInventoryItem> intermediates = new ConcurrentHashMap<>();
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case DISTINCT_INVENTORY_ITEM_CREATED -> createdIds.add(
+                        ev.getEventArgument(0, DistinctInventoryItem.class).getId());
+                case DISTINCT_INVENTORY_ITEM_UPDATED -> updatedIds.add(
+                        ev.getEventArgument(0, DistinctInventoryItem.class).getId());
+                case DISTINCT_INVENTORY_ITEM_DELETED -> deletedIds.add(
+                        ev.getEventArgument(0, DistinctInventoryItem.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void setup() {
@@ -208,6 +239,7 @@ public class MongoDistinctInventorItemDaoTest {
         assertEquals(created.getItem(), toCreate.getItem());
         assertEquals(created.getUser(), toCreate.getUser());
         assertEquals(created.getMetadata(), toCreate.getMetadata());
+        assertTrue(createdIds.contains(created.getId()), "Expected DISTINCT_INVENTORY_ITEM_CREATED event for " + created.getId());
         saveIntermediate(created);
     }
 
@@ -298,6 +330,7 @@ public class MongoDistinctInventorItemDaoTest {
         assertEquals(updated.getUser(), toUpdate.getUser());
         assertEquals(updated.getProfile(), toUpdate.getProfile());
         assertEquals(updated.getMetadata(), metadata);
+        assertTrue(updatedIds.contains(updated.getId()), "Expected DISTINCT_INVENTORY_ITEM_UPDATED event for " + updated.getId());
         saveIntermediate(updated);
 
     }
@@ -306,6 +339,7 @@ public class MongoDistinctInventorItemDaoTest {
             dependsOnMethods = {"testUpdate"})
     public void testDelete(final String owner, final DistinctInventoryItem item) {
         underTest.deleteDistinctInventoryItem(item.getId());
+        assertTrue(deletedIds.contains(item.getId()), "Expected DISTINCT_INVENTORY_ITEM_DELETED event for " + item.getId());
     }
 
     @Test(dataProvider = "getIntermediates",

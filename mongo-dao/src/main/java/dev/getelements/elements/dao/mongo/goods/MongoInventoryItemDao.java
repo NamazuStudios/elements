@@ -4,6 +4,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.query.BooleanQueryParser;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.InventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils.ContentionException;
@@ -32,6 +33,7 @@ import dev.morphia.query.Query;
 import jakarta.inject.Inject;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import static dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.FUNGIBLE;
@@ -58,6 +60,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public InventoryItem getInventoryItem(final String inventoryItemId) {
@@ -173,7 +177,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
         query.filter(eq("_id", mongoInventoryItem.getObjectId()));
 
-        return getDozerMapper().map(query.first(), InventoryItem.class);
+        final var createdInventoryItem = getDozerMapper().map(query.first(), InventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdInventoryItem)
+                .named(INVENTORY_ITEM_CREATED)
+                .build());
+
+        return createdInventoryItem;
 
     }
 
@@ -197,7 +208,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new NotFoundException("Inventory item with id of " + inventoryItemId + " does not exist");
         }
 
-        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+        final var updatedInventoryItem = getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedInventoryItem)
+                .named(INVENTORY_ITEM_UPDATED)
+                .build());
+
+        return updatedInventoryItem;
 
     }
 
@@ -238,7 +256,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
                 set("version", randomUUID().toString()))
             .execute(query, opts);
 
-        return getDozerMapper().map(resultMongoInventoryItem, InventoryItem.class);
+        final var resultInventoryItem = getDozerMapper().map(resultMongoInventoryItem, InventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(resultInventoryItem)
+                .named(INVENTORY_ITEM_UPDATED)
+                .build());
+
+        return resultInventoryItem;
 
     }
 
@@ -270,7 +295,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new TooBusyException(ex);
         }
 
-        return getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+        final var adjustedInventoryItem = getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(adjustedInventoryItem)
+                .named(INVENTORY_ITEM_UPDATED)
+                .build());
+
+        return adjustedInventoryItem;
 
     }
 
@@ -333,11 +365,28 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     public void deleteInventoryItem(final String inventoryItemId) {
 
         final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItemId);
+
+        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
+        query.filter(eq("_id", objectId));
+
+        final MongoInventoryItem mongoInventoryItem = query.first();
+
         final DeleteResult deleteResult = getDatastore().find(MongoInventoryItem.class)
                 .filter(eq("_id", objectId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Item Inventory not found: " + inventoryItemId);
+        }
+
+        final var deletedInventoryItem = mongoInventoryItem == null
+                ? null
+                : getDozerMapper().map(mongoInventoryItem, InventoryItem.class);
+
+        if (deletedInventoryItem != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedInventoryItem)
+                    .named(INVENTORY_ITEM_DELETED)
+                    .build());
         }
 
     }
@@ -418,5 +467,13 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         this.booleanQueryParser = booleanQueryParser;
     }
 
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
 
 }

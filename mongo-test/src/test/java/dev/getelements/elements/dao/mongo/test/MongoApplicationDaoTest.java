@@ -1,8 +1,11 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.sdk.model.application.Application;
+import jakarta.inject.Named;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -13,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ApplicationDao.*;
 import static java.util.Arrays.asList;
 import static org.testng.Assert.*;
 
@@ -25,9 +30,30 @@ public class MongoApplicationDaoTest {
     @Inject
     private ApplicationTestFactory applicationTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private ApplicationDao applicationDao;
 
     private List<Application> applications = new CopyOnWriteArrayList<>();
+
+    private final List<Application> createdEvents = new CopyOnWriteArrayList<>();
+
+    private final List<Application> updatedEvents = new CopyOnWriteArrayList<>();
+
+    private final List<Application> deletedEvents = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case APPLICATION_CREATED -> createdEvents.add(ev.getEventArgument(0, Application.class));
+                case APPLICATION_UPDATED -> updatedEvents.add(ev.getEventArgument(0, Application.class));
+                case APPLICATION_DELETED -> deletedEvents.add(ev.getEventArgument(0, Application.class));
+            }
+        });
+    }
 
     @Test(groups = "create_application")
     public void testCreateSimpleApplication() {
@@ -39,6 +65,9 @@ public class MongoApplicationDaoTest {
         assertNotNull(foundApplication);
         assertEquals(application.getDescription(), foundApplication.getDescription());
         applications.add(createdApplication);
+
+        assertTrue(createdEvents.stream().anyMatch(a -> a.getId().equals(createdApplication.getId())),
+                "Expected APPLICATION_CREATED event for " + createdApplication.getId());
     }
 
     @Test(groups = "create_application")
@@ -130,11 +159,18 @@ public class MongoApplicationDaoTest {
         applications.remove(application);
         applications.add(afterUpdate);
 
+        final var updateEvent = afterUpdate;
+        assertTrue(updatedEvents.stream().anyMatch(a ->
+                        a.getId().equals(updateEvent.getId()) && updatedDescription.equals(a.getDescription())),
+                "Expected APPLICATION_UPDATED event for " + updateEvent.getId());
+
     }
 
     @Test(dataProvider = "allApplications", groups = "delete_application", dependsOnGroups = "update_application")
     public void testSoftDeleteApplication(final Application application) {
         getApplicationDao().softDeleteApplication(application.getId());
+        assertTrue(deletedEvents.stream().anyMatch(a -> a.getId().equals(application.getId())),
+                "Expected APPLICATION_DELETED event for " + application.getId());
     }
 
     @Test(dataProvider = "allApplications",

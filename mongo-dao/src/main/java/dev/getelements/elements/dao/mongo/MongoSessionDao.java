@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.client.result.DeleteResult;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.model.Constants;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.dao.mongo.model.MongoProfile;
@@ -30,6 +31,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.dao.mongo.model.MongoSession.Type.STANDARD_ELEMENTS;
@@ -52,6 +54,8 @@ public class MongoSessionDao implements SessionDao {
     private Provider<MessageDigest> messageDigestProvider;
 
     private MapperRegistry mapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Session getBySessionSecret(final String sessionSecret) {
@@ -130,7 +134,14 @@ public class MongoSessionDao implements SessionDao {
             updateProfileLastLogin(profileId, now);
         }
 
-        return getMapper().map(mongoSession, Session.class);
+        final var updatedSession = getMapper().map(mongoSession, Session.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedSession)
+                .named(SESSION_UPDATED)
+                .build());
+
+        return updatedSession;
 
     }
 
@@ -155,9 +166,16 @@ public class MongoSessionDao implements SessionDao {
             updateProfileLastLogin(profileId, mongoSession.getExpiry());
         }
 
+        final var createdSession = getMapper().map(mongoSession, Session.class);
+
         final SessionCreation sessionCreation = new SessionCreation();
         sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
-        sessionCreation.setSession(getMapper().map(mongoSession, Session.class));
+        sessionCreation.setSession(createdSession);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdSession)
+                .named(SESSION_CREATED)
+                .build());
 
         return sessionCreation;
 
@@ -208,6 +226,12 @@ public class MongoSessionDao implements SessionDao {
         query.filter(eq("_id", sessionId))
              .filter(eq("user", mongoUser));
 
+        final var existing = query.first();
+
+        if (existing == null) {
+            throw new NotFoundException("Session Not Found.");
+        }
+
         final DeleteResult dr = query.delete();
 
         if (dr.getDeletedCount() == 0) {
@@ -215,6 +239,13 @@ public class MongoSessionDao implements SessionDao {
         } else if (dr.getDeletedCount() > 1) {
             logger.error("Deleted more than one session: {}", dr.getDeletedCount());
         }
+
+        final var deletedSession = getMapper().map(existing, Session.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedSession)
+                .named(SESSION_DELETED)
+                .build());
 
     }
 
@@ -292,6 +323,15 @@ public class MongoSessionDao implements SessionDao {
     @Inject
     public void setMapper(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

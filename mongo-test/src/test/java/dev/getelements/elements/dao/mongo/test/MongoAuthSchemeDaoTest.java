@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.AuthSchemeDao;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.auth.AuthSchemeNotFoundException;
@@ -7,19 +8,24 @@ import dev.getelements.elements.sdk.model.auth.AuthScheme;
 import dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm;
 import dev.getelements.elements.sdk.model.user.User;
 import org.bson.types.ObjectId;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.AuthSchemeDao.*;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.testng.Assert.*;
@@ -37,7 +43,28 @@ public class MongoAuthSchemeDaoTest {
 
     private AuthSchemeDao authSchemeDao;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private final Map<String, AuthScheme> intermediateAuthSchemes = new ConcurrentHashMap<>();
+
+    private final List<AuthScheme> createdEvents = new CopyOnWriteArrayList<>();
+
+    private final List<AuthScheme> updatedEvents = new CopyOnWriteArrayList<>();
+
+    private final List<AuthScheme> deletedEvents = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case AUTH_SCHEME_CREATED -> createdEvents.add(ev.getEventArgument(0, AuthScheme.class));
+                case AUTH_SCHEME_UPDATED -> updatedEvents.add(ev.getEventArgument(0, AuthScheme.class));
+                case AUTH_SCHEME_DELETED -> deletedEvents.add(ev.getEventArgument(0, AuthScheme.class));
+            }
+        });
+    }
 
     private void updateIntermediate(final AuthScheme authScheme) {
         intermediateAuthSchemes.put(authScheme.getId(), authScheme);
@@ -76,6 +103,11 @@ public class MongoAuthSchemeDaoTest {
         assertEquals(toCreate.getAlgorithm(), created.getAlgorithm());
         assertEquals(toCreate.getAllowedIssuers(), created.getAllowedIssuers());
         assertEquals(toCreate.getUserLevel(), created.getUserLevel());
+
+        assertTrue(
+                createdEvents.stream().anyMatch(e -> e.getId().equals(created.getId())),
+                "Expected AUTH_SCHEME_CREATED event for " + created.getId()
+        );
 
         updateIntermediate(created);
 
@@ -197,6 +229,11 @@ public class MongoAuthSchemeDaoTest {
         assertEquals(toUpdate.getAllowedIssuers(), updated.getAllowedIssuers());
         assertEquals(toUpdate.getUserLevel(), updated.getUserLevel());
 
+        assertTrue(
+                updatedEvents.stream().anyMatch(e -> e.getId().equals(updated.getId())),
+                "Expected AUTH_SCHEME_UPDATED event for " + updated.getId()
+        );
+
         updateIntermediate(updated);
 
     }
@@ -231,6 +268,12 @@ public class MongoAuthSchemeDaoTest {
     public void testDeleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
         getAuthSchemeDao().deleteAuthScheme(authSchemeId);
         assertTrue(getAuthSchemeDao().findAuthScheme(authSchemeId).isEmpty());
+
+        assertTrue(
+                deletedEvents.stream().anyMatch(e -> e.getId().equals(authSchemeId)),
+                "Expected AUTH_SCHEME_DELETED event for " + authSchemeId
+        );
+
         intermediateAuthSchemes.remove(authSchemeId);
     }
 

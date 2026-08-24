@@ -6,6 +6,7 @@ import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.metadata.MongoMetadata;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MetadataDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.ValidationGroups;
@@ -26,6 +27,7 @@ import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -45,6 +47,8 @@ public class MongoMetadataDao implements MetadataDao {
     private ValidationHelper validationHelper;
 
     private MongoMetadataSpecDao mongoMetadataSpecDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public List<Metadata> getAllMetadatasBySpec(final String metadataSpecNameOrId) {
@@ -137,7 +141,14 @@ public class MongoMetadataDao implements MetadataDao {
         getValidationHelper().validateModel(metadata, ValidationGroups.Insert.class);
         final var toInsert = getBeanMapper().map(metadata, MongoMetadata.class);
         final var inserted = getMongoDBUtils().perform(ds -> ds.save(toInsert));
-        return getBeanMapper().map(inserted, Metadata.class);
+        final var createdMetadata = getBeanMapper().map(inserted, Metadata.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdMetadata)
+                .named(METADATA_CREATED)
+                .build());
+
+        return createdMetadata;
     }
 
     @Override
@@ -169,7 +180,14 @@ public class MongoMetadataDao implements MetadataDao {
                 throw new MetadataNotFoundException("Metadata with id not found.");
             }
 
-            return transform(updated);
+            final var updatedMetadata = transform(updated);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(updatedMetadata)
+                    .named(METADATA_UPDATED)
+                    .build());
+
+            return updatedMetadata;
 
         } catch (MongoCommandException ex) {
             throw new ConflictException("Metadata with name " + metadata.getName() + " already exists.");
@@ -188,12 +206,21 @@ public class MongoMetadataDao implements MetadataDao {
                         eq("_id", objectId)
                 );
 
+        final var existing = query.first();
+
         final var result = new UpdateBuilder()
                 .with(unset("name"))
                 .execute(query, new UpdateOptions().upsert(false));
 
         if (result.getModifiedCount() == 0) {
             throw new MetadataNotFoundException();
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(transform(existing))
+                    .named(METADATA_DELETED)
+                    .build());
         }
 
     }
@@ -262,6 +289,15 @@ public class MongoMetadataDao implements MetadataDao {
     @Inject
     public void setMongoMetadataSpecDao(final MongoMetadataSpecDao mongoMetadataSpecDao) {
         this.mongoMetadataSpecDao = mongoMetadataSpecDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

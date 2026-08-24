@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.exception.application.ApplicationNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Optional;
@@ -13,7 +14,43 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_CREATED,
+        parameters = Application.class,
+        description = "Called when an application was created."
+)
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_CREATED,
+        parameters = {Application.class, Transaction.class},
+        description = "Called when an application was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_UPDATED,
+        parameters = Application.class,
+        description = "Called when an application was updated."
+)
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_UPDATED,
+        parameters = {Application.class, Transaction.class},
+        description = "Called when an application was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_DELETED,
+        parameters = Application.class,
+        description = "Called when an application was soft-deleted."
+)
+@ElementEventProducer(
+        value = ApplicationDao.APPLICATION_DELETED,
+        parameters = {Application.class, Transaction.class},
+        description = "Called when an application was soft-deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ApplicationDao {
+
+    String APPLICATION_CREATED = "dev.getelements.elements.sdk.model.dao.application.created";
+
+    String APPLICATION_UPDATED = "dev.getelements.elements.sdk.model.dao.application.updated";
+
+    String APPLICATION_DELETED = "dev.getelements.elements.sdk.model.dao.application.deleted";
 
     /**
      * Creates a new application and inserts it into the database.  The returned value

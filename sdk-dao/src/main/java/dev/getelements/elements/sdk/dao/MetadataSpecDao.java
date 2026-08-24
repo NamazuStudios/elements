@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.dao;
 import dev.getelements.elements.sdk.model.exception.schema.MetadataSpecNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.schema.MetadataSpec;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Optional;
@@ -12,7 +13,43 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_CREATED,
+        parameters = MetadataSpec.class,
+        description = "Called when a metadata spec was created."
+)
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_CREATED,
+        parameters = {MetadataSpec.class, Transaction.class},
+        description = "Called when a metadata spec was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_UPDATED,
+        parameters = MetadataSpec.class,
+        description = "Called when a metadata spec was updated."
+)
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_UPDATED,
+        parameters = {MetadataSpec.class, Transaction.class},
+        description = "Called when a metadata spec was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_DELETED,
+        parameters = MetadataSpec.class,
+        description = "Called when a metadata spec was deleted."
+)
+@ElementEventProducer(
+        value = MetadataSpecDao.METADATA_SPEC_DELETED,
+        parameters = {MetadataSpec.class, Transaction.class},
+        description = "Called when a metadata spec was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface MetadataSpecDao {
+
+    String METADATA_SPEC_CREATED = "dev.getelements.elements.sdk.model.dao.metadata.spec.created";
+
+    String METADATA_SPEC_UPDATED = "dev.getelements.elements.sdk.model.dao.metadata.spec.updated";
+
+    String METADATA_SPEC_DELETED = "dev.getelements.elements.sdk.model.dao.metadata.spec.deleted";
 
     /**
      * Lists all {@link MetadataSpec} instances, specifying a search query.

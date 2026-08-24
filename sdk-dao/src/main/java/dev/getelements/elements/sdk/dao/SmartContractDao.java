@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.blockchain.SmartContractNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainApi;
@@ -14,7 +15,43 @@ import java.util.Optional;
  * Manages smart contracts in the database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_CREATED,
+        parameters = SmartContract.class,
+        description = "Called when a smart contract was created."
+)
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_CREATED,
+        parameters = {SmartContract.class, Transaction.class},
+        description = "Called when a smart contract was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_UPDATED,
+        parameters = SmartContract.class,
+        description = "Called when a smart contract was updated."
+)
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_UPDATED,
+        parameters = {SmartContract.class, Transaction.class},
+        description = "Called when a smart contract was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_DELETED,
+        parameters = SmartContract.class,
+        description = "Called when a smart contract was deleted."
+)
+@ElementEventProducer(
+        value = SmartContractDao.SMART_CONTRACT_DELETED,
+        parameters = {SmartContract.class, Transaction.class},
+        description = "Called when a smart contract was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface SmartContractDao {
+
+    String SMART_CONTRACT_CREATED = "dev.getelements.elements.sdk.model.dao.smart.contract.created";
+
+    String SMART_CONTRACT_UPDATED = "dev.getelements.elements.sdk.model.dao.smart.contract.updated";
+
+    String SMART_CONTRACT_DELETED = "dev.getelements.elements.sdk.model.dao.smart.contract.deleted";
 
     /**
      * Gets the smart contracts in the database.

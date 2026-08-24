@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.mission;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ScheduleEventDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -23,6 +24,7 @@ import jakarta.inject.Inject;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -50,6 +52,8 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
 
     private MongoScheduleDao mongoScheduleDao;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public ScheduleEvent createScheduleEvent(final ScheduleEvent scheduleEvent) {
 
@@ -69,7 +73,14 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
         mongoScheduleEvent.setSchedule(mongoSchedule);
         mongoScheduleEvent.setMissions(mongoMissions);
 
-        return getMongoDBUtils().perform(ds -> ds.save(mongoScheduleEvent), ScheduleEvent.class);
+        final var createdScheduleEvent = getMongoDBUtils().perform(ds -> ds.save(mongoScheduleEvent), ScheduleEvent.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdScheduleEvent)
+                .named(SCHEDULE_EVENT_CREATED)
+                .build());
+
+        return createdScheduleEvent;
 
     }
 
@@ -110,9 +121,18 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
                 .with(begin)
                 .with(end);
 
-        return getMongoDBUtils().perform(ds -> builder
+        final var updatedScheduleEvent = getMongoDBUtils().perform(ds -> builder
                 .modify(query)
                 .execute(new ModifyOptions().returnDocument(AFTER)), ScheduleEvent.class);
+
+        if (updatedScheduleEvent != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(updatedScheduleEvent)
+                    .named(SCHEDULE_EVENT_UPDATED)
+                    .build());
+        }
+
+        return updatedScheduleEvent;
 
     }
 
@@ -261,7 +281,20 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
         final var query = getDatastore().find(MongoScheduleEvent.class)
                 .filter(eq("schedule", mongoSchedule));
 
+        final List<ScheduleEvent> deletedScheduleEvents;
+
+        try (final var stream = query.stream()) {
+            deletedScheduleEvents = stream
+                    .map(ev -> getDozerMapper().map(ev, ScheduleEvent.class))
+                    .collect(toList());
+        }
+
         query.delete();
+
+        deletedScheduleEvents.forEach(scheduleEvent -> getEventPublisher().accept(Event.builder()
+                .argument(scheduleEvent)
+                .named(SCHEDULE_EVENT_DELETED)
+                .build()));
 
     }
 
@@ -269,10 +302,20 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     public void deleteScheduleEvent(final String scheduleNameOrId,
                                     final String scheduleEventId) {
 
+        final var mongoScheduleEvent = findMongoScheduleEventById(scheduleNameOrId, scheduleEventId).orElse(null);
+
         final var result = getQuery(scheduleNameOrId, scheduleEventId).delete();
 
         if (result.getDeletedCount() == 0) {
             throw new ScheduleEventNotFoundException();
+        }
+
+        if (mongoScheduleEvent != null) {
+            final var deletedScheduleEvent = getDozerMapper().map(mongoScheduleEvent, ScheduleEvent.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedScheduleEvent)
+                    .named(SCHEDULE_EVENT_DELETED)
+                    .build());
         }
 
     }
@@ -347,6 +390,15 @@ public class MongoScheduleEventDao implements ScheduleEventDao {
     @Inject
     public void setMongoScheduleDao(MongoScheduleDao mongoScheduleDao) {
         this.mongoScheduleDao = mongoScheduleDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

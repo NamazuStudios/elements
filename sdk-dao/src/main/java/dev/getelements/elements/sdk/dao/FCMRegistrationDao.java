@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.dao;
 
 import dev.getelements.elements.sdk.model.notification.FCMRegistration;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.Set;
@@ -12,7 +13,43 @@ import java.util.stream.Stream;
  * Manipulates instances of {@link FCMRegistration} in the underlying database.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_CREATED,
+        parameters = FCMRegistration.class,
+        description = "Called when an FCM registration was created."
+)
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_CREATED,
+        parameters = {FCMRegistration.class, Transaction.class},
+        description = "Called when an FCM registration was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_UPDATED,
+        parameters = FCMRegistration.class,
+        description = "Called when an FCM registration was updated."
+)
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_UPDATED,
+        parameters = {FCMRegistration.class, Transaction.class},
+        description = "Called when an FCM registration was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_DELETED,
+        parameters = FCMRegistration.class,
+        description = "Called when an FCM registration was deleted."
+)
+@ElementEventProducer(
+        value = FCMRegistrationDao.FCM_REGISTRATION_DELETED,
+        parameters = {FCMRegistration.class, Transaction.class},
+        description = "Called when an FCM registration was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface FCMRegistrationDao {
+
+    String FCM_REGISTRATION_CREATED = "dev.getelements.elements.sdk.model.dao.fcm.registration.created";
+
+    String FCM_REGISTRATION_UPDATED = "dev.getelements.elements.sdk.model.dao.fcm.registration.updated";
+
+    String FCM_REGISTRATION_DELETED = "dev.getelements.elements.sdk.model.dao.fcm.registration.deleted";
 
     /**
      * Creates an instance of {@link FCMRegistration} and stores it in the database.

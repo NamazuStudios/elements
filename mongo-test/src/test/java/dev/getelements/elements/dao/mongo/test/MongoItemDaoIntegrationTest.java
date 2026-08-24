@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
@@ -8,15 +9,22 @@ import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.util.UniqueCodeGenerator;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.bson.types.ObjectId;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ItemDao.ITEM_CREATED;
+import static dev.getelements.elements.sdk.dao.ItemDao.ITEM_DELETED;
+import static dev.getelements.elements.sdk.dao.ItemDao.ITEM_UPDATED;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.FUNGIBLE;
 import static java.lang.String.format;
 import static org.testng.Assert.*;
@@ -30,12 +38,34 @@ public class MongoItemDaoIntegrationTest {
 
     private MatchingMockObjects matchingMockObjects;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdItemIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedItemIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedItemIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case ITEM_CREATED -> createdItemIds.add(ev.getEventArgument(0, Item.class).getId());
+                case ITEM_UPDATED -> updatedItemIds.add(ev.getEventArgument(0, Item.class).getId());
+                case ITEM_DELETED -> deletedItemIds.add(ev.getEventArgument(0, Item.class).getId());
+            }
+        });
+    }
+
     @Test
     public void testCreateAndRead() {
 
         final var item = createMockItem("create_and_read");
         final var createdItem = itemDao.createItem(item);
         assertNotNull(createdItem.getId());
+        assertTrue(createdItemIds.contains(createdItem.getId()), "Expected ITEM_CREATED event for " + createdItem.getId());
 
         final var byName = itemDao.getItemByIdOrName(createdItem.getName());
         assertEquals(byName, createdItem);
@@ -79,6 +109,7 @@ public class MongoItemDaoIntegrationTest {
 
         final var fromUpdate = itemDao.updateItem(createdItem);
         assertEquals(fromUpdate.getDisplayName(), "Different Display Name");
+        assertTrue(updatedItemIds.contains(fromUpdate.getId()), "Expected ITEM_UPDATED event for " + fromUpdate.getId());
 
         final var lookedUpItem = itemDao.getItemByIdOrName(createdItem.getId());
         assertEquals(fromUpdate, lookedUpItem);
@@ -203,6 +234,7 @@ public class MongoItemDaoIntegrationTest {
         assertNotNull(createdItem.getId());
 
         itemDao.deleteItem(createdItem.getId());
+        assertTrue(deletedItemIds.contains(createdItem.getId()), "Expected ITEM_DELETED event for " + createdItem.getId());
 
         var postDelete = itemDao.getItems(0, 100, null, null, null);
 
@@ -213,6 +245,7 @@ public class MongoItemDaoIntegrationTest {
         assertNotNull(createdItem.getName());
 
         itemDao.deleteItem(createdItem.getName());
+        assertTrue(deletedItemIds.contains(recreatedItem.getId()), "Expected ITEM_DELETED event for " + recreatedItem.getId());
 
         postDelete = itemDao.getItems(0, 100, null, null, null);
 

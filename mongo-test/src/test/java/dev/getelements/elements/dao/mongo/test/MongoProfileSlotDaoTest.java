@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.Transaction;
@@ -8,6 +9,7 @@ import dev.getelements.elements.sdk.model.exception.profile.ProfileLimitExceeded
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
 import dev.getelements.elements.sdk.model.user.User;
+import jakarta.inject.Named;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -16,12 +18,16 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ProfileDao.PROFILE_CREATED;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotEquals;
@@ -44,9 +50,24 @@ public class MongoProfileSlotDaoTest {
 
     private Provider<Transaction> transactionProvider;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
     private Application limitedApplication;
 
     private User user;
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            if (PROFILE_CREATED.equals(ev.getEventName())) {
+                createdEventIds.add(ev.getEventArgument(0, Profile.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void setup() {
@@ -66,6 +87,7 @@ public class MongoProfileSlotDaoTest {
 
         final var first = getProfileDao().createSlottedProfile(newProfile(user, limitedApplication, "Primary"), null);
         assertNotNull(first.getId());
+        assertTrue(createdEventIds.contains(first.getId()), "Expected PROFILE_CREATED event for " + first.getId());
 
         final var primary = getProfileDao().getPrimaryProfile(user.getId(), limitedApplication.getId());
         assertEquals(primary.getId(), first.getId());

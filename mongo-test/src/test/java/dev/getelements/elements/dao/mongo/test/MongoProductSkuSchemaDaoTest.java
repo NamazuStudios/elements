@@ -1,19 +1,26 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ProductSkuSchemaDao;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.goods.ProductSkuSchema;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.bson.types.ObjectId;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.ProductSkuSchemaDao.PRODUCT_SKU_SCHEMA_CREATED;
+import static dev.getelements.elements.sdk.dao.ProductSkuSchemaDao.PRODUCT_SKU_SCHEMA_DELETED;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -25,6 +32,28 @@ public class MongoProductSkuSchemaDaoTest {
 
     /** Schemas created during testCreateProductSkuSchema, shared with dependent tests. */
     private final Map<String, ProductSkuSchema> createdSchemas = new ConcurrentHashMap<>();
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdSchemaIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedSchemaIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case PRODUCT_SKU_SCHEMA_CREATED -> createdSchemaIds.add(
+                        ev.getEventArgument(0, ProductSkuSchema.class).id()
+                );
+                case PRODUCT_SKU_SCHEMA_DELETED -> deletedSchemaIds.add(
+                        ev.getEventArgument(0, ProductSkuSchema.class).id()
+                );
+            }
+        });
+    }
 
     @DataProvider
     public Object[][] schemaIterations() {
@@ -52,6 +81,11 @@ public class MongoProductSkuSchemaDaoTest {
 
         assertNotNull(created.id(), "id should be assigned on create");
         assertEquals(created.schema(), toCreate.schema());
+
+        assertTrue(
+                createdSchemaIds.contains(created.id()),
+                "Expected " + PRODUCT_SKU_SCHEMA_CREATED + " event for " + created.id()
+        );
 
         createdSchemas.put(created.id(), created);
     }
@@ -95,6 +129,11 @@ public class MongoProductSkuSchemaDaoTest {
         assertNotNull(result.id(), "ensureProductSkuSchema should assign an id for new schemas");
         assertEquals(result.schema(), uniqueSchema);
 
+        assertTrue(
+                createdSchemaIds.contains(result.id()),
+                "Expected " + PRODUCT_SKU_SCHEMA_CREATED + " event for " + result.id()
+        );
+
         // Clean up
         getProductSkuSchemaDao().deleteProductSkuSchema(result.id());
     }
@@ -110,6 +149,11 @@ public class MongoProductSkuSchemaDaoTest {
         assertEquals(first.id(), second.id(), "ensureProductSkuSchema should return the same record on repeat calls");
         assertEquals(first.schema(), second.schema());
 
+        assertTrue(
+                createdSchemaIds.contains(first.id()),
+                "Expected " + PRODUCT_SKU_SCHEMA_CREATED + " event for " + first.id()
+        );
+
         // Clean up
         getProductSkuSchemaDao().deleteProductSkuSchema(first.id());
     }
@@ -122,6 +166,12 @@ public class MongoProductSkuSchemaDaoTest {
           dataProvider = "createdSchemaEntries")
     public void testDeleteProductSkuSchema(final String id, final ProductSkuSchema schema) {
         getProductSkuSchemaDao().deleteProductSkuSchema(id);
+
+        assertTrue(
+                deletedSchemaIds.contains(id),
+                "Expected " + PRODUCT_SKU_SCHEMA_DELETED + " event for " + id
+        );
+
         createdSchemas.remove(id);
     }
 

@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.test;
 
 import dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItemId;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.InventoryItemDao;
 import dev.getelements.elements.sdk.dao.ItemDao;
 import dev.getelements.elements.sdk.dao.RewardIssuanceDao;
@@ -13,6 +14,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.goods.Item;
 import dev.getelements.elements.sdk.model.inventory.InventoryItem;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
+import jakarta.inject.Named;
 import org.bson.types.ObjectId;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
@@ -25,8 +27,13 @@ import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.RewardIssuanceDao.REWARD_ISSUANCE_CREATED;
+import static dev.getelements.elements.sdk.dao.RewardIssuanceDao.REWARD_ISSUANCE_UPDATED;
+import static dev.getelements.elements.sdk.dao.RewardIssuanceDao.REWARD_ISSUANCE_DELETED;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.State.*;
 import static dev.getelements.elements.sdk.model.reward.RewardIssuance.Type.*;
@@ -53,6 +60,33 @@ public class MongoRewardIssuanceDaoTest {
     private Item testItem;
 
     private UserTestFactory userTestFactory;
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdIssuanceIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedIssuanceIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedIssuanceIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case REWARD_ISSUANCE_CREATED -> createdIssuanceIds.add(
+                        ev.getEventArgument(0, RewardIssuance.class).getId()
+                );
+                case REWARD_ISSUANCE_UPDATED -> updatedIssuanceIds.add(
+                        ev.getEventArgument(0, RewardIssuance.class).getId()
+                );
+                case REWARD_ISSUANCE_DELETED -> deletedIssuanceIds.add(
+                        ev.getEventArgument(0, RewardIssuance.class).getId()
+                );
+            }
+        });
+    }
 
     @BeforeClass
     public void createTestItems() {
@@ -207,6 +241,11 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(createdRewardIssuance.getSource(), "test");
         assertTrue(createdRewardIssuance.getTags().contains("tagtest"));
         assertEquals(createdRewardIssuance.getTags().size(), 1);
+
+        assertTrue(
+                createdIssuanceIds.contains(createdRewardIssuance.getId()),
+                "Expected " + REWARD_ISSUANCE_CREATED + " event for " + createdRewardIssuance.getId()
+        );
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
@@ -310,6 +349,11 @@ public class MongoRewardIssuanceDaoTest {
 
         final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
         assertEquals(postModified.getState(), REDEEMED);
+
+        assertTrue(
+                updatedIssuanceIds.contains(rewardIssuance.getId()),
+                "Expected " + REWARD_ISSUANCE_UPDATED + " event for " + rewardIssuance.getId()
+        );
     }
 
     @Test(dataProvider = "getRedeemedPersistentRewardIssuances", dependsOnMethods = "testRedeemPersistent")
@@ -356,12 +400,23 @@ public class MongoRewardIssuanceDaoTest {
             // this is expected
         }
 
+        // NON_PERSISTENT issuances are implicitly deleted (rather than updated) upon redemption.
+        assertTrue(
+                deletedIssuanceIds.contains(rewardIssuance.getId()),
+                "Expected " + REWARD_ISSUANCE_DELETED + " event for " + rewardIssuance.getId()
+        );
+
     }
 
     @Test(dataProvider = "getAllRewardIssuances",
             dependsOnMethods = {"testRedeemPersistent", "testAlreadyRedeemedPersistent", "testRedeemNonPersistent"})
     public void deleteIssuances(final RewardIssuance rewardIssuance) {
         getRewardIssuanceDao().delete(rewardIssuance.getId());
+
+        assertTrue(
+                deletedIssuanceIds.contains(rewardIssuance.getId()),
+                "Expected " + REWARD_ISSUANCE_DELETED + " event for " + rewardIssuance.getId()
+        );
     }
 
     @Test(dependsOnMethods = {"deleteIssuances"})

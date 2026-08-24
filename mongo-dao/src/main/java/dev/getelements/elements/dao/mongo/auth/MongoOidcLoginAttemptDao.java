@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.auth;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.auth.MongoOidcLoginAttempt;
 import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
@@ -12,6 +13,7 @@ import jakarta.inject.Inject;
 
 import java.sql.Timestamp;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.mongodb.client.model.ReturnDocument.BEFORE;
@@ -29,11 +31,20 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
 
     private MapperRegistry beanMapper;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public OidcLoginAttempt create(final OidcLoginAttempt attempt) {
         final var entity = getBeanMapper().map(attempt, MongoOidcLoginAttempt.class);
         getDatastore().insert(entity);
-        return transform(entity);
+        final var created = transform(entity);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(created)
+                .named(OIDC_LOGIN_ATTEMPT_CREATED)
+                .build());
+
+        return created;
     }
 
     @Override
@@ -62,7 +73,7 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
                 set("sessionToken", sessionCreationJson)
         ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER)));
 
-        return Optional.ofNullable(entity).map(this::transform);
+        return Optional.ofNullable(entity).map(this::transform).map(this::publishUpdated);
 
     }
 
@@ -77,7 +88,7 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
                 set("failureReason", reason)
         ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER)));
 
-        return Optional.ofNullable(entity).map(this::transform);
+        return Optional.ofNullable(entity).map(this::transform).map(this::publishUpdated);
 
     }
 
@@ -139,7 +150,7 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
                 unset("sessionToken")
         ).execute(new ModifyOptions().upsert(false).returnDocument(BEFORE)));
 
-        return notExpired(entity).map(this::transform);
+        return notExpired(entity).map(this::transform).map(this::publishUpdated);
 
     }
 
@@ -177,6 +188,14 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
         return getBeanMapper().map(entity, OidcLoginAttempt.class);
     }
 
+    private OidcLoginAttempt publishUpdated(final OidcLoginAttempt attempt) {
+        getEventPublisher().accept(Event.builder()
+                .argument(attempt)
+                .named(OIDC_LOGIN_ATTEMPT_UPDATED)
+                .build());
+        return attempt;
+    }
+
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
     }
@@ -202,6 +221,15 @@ public class MongoOidcLoginAttemptDao implements OidcLoginAttemptDao {
     @Inject
     public void setBeanMapper(MapperRegistry beanMapper) {
         this.beanMapper = beanMapper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

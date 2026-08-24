@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.client.model.ReturnDocument;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.DistinctInventoryItemDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoProfileDao;
@@ -23,6 +24,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import jakarta.inject.Inject;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static dev.getelements.elements.sdk.model.goods.ItemCategory.DISTINCT;
@@ -46,6 +48,8 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     private MongoDBUtils mongoDBUtils;
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public DistinctInventoryItem createDistinctInventoryItem(final DistinctInventoryItem distinctInventoryItem) {
@@ -77,7 +81,14 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         mongoDistinctInventoryItem.setMetadata(distinctInventoryItem.getMetadata());
 
         final var result = getDatastore().save(mongoDistinctInventoryItem);
-        return getMapper().map(result, DistinctInventoryItem.class);
+        final var createdDistinctInventoryItem = getMapper().map(result, DistinctInventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdDistinctInventoryItem)
+                .named(DISTINCT_INVENTORY_ITEM_CREATED)
+                .build());
+
+        return createdDistinctInventoryItem;
 
     }
 
@@ -265,7 +276,14 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             throw new DistinctInventoryItemNotFoundException("No such inventory item.");
         }
 
-        return getMapper().map(result, DistinctInventoryItem.class);
+        final var updatedDistinctInventoryItem = getMapper().map(result, DistinctInventoryItem.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedDistinctInventoryItem)
+                .named(DISTINCT_INVENTORY_ITEM_UPDATED)
+                .build());
+
+        return updatedDistinctInventoryItem;
 
     }
 
@@ -280,8 +298,18 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
                 .find(MongoDistinctInventoryItem.class)
                 .filter(eq("_id", objectId));
 
+        final var mongoDistinctInventoryItem = query.first();
+
         if (query.delete().getDeletedCount() == 0) {
             throw new DistinctInventoryItemNotFoundException("No such inventory item.");
+        }
+
+        if (mongoDistinctInventoryItem != null) {
+            final var deletedDistinctInventoryItem = getMapper().map(mongoDistinctInventoryItem, DistinctInventoryItem.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedDistinctInventoryItem)
+                    .named(DISTINCT_INVENTORY_ITEM_DELETED)
+                    .build());
         }
 
     }
@@ -387,6 +415,15 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

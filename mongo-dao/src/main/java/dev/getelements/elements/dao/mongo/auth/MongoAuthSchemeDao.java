@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.auth;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -17,6 +18,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -33,6 +35,8 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     private MapperRegistry beanMapperRegistry;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<AuthScheme> getAuthSchemes(final int offset,
@@ -86,7 +90,14 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         getValidationHelper().validateModel(authScheme, ValidationGroups.Insert.class);
         final var mongoAuthScheme = getBeanMapper().map(authScheme, MongoAuthScheme.class);
         final var result = getMongoDBUtils().perform(ds -> getDatastore().save(mongoAuthScheme));
-        return transform(result);
+        final var created = transform(result);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(created)
+                .named(AUTH_SCHEME_CREATED)
+                .build());
+
+        return created;
     }
 
     @Override
@@ -118,7 +129,14 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authScheme.getId());
         }
 
-        return transform(mongoAuthScheme);
+        final var updated = transform(mongoAuthScheme);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(AUTH_SCHEME_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -126,6 +144,15 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     public void deleteAuthScheme(final String authSchemeId) {
 
         final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
+
+        final var existing = getDatastore()
+                .find(MongoAuthScheme.class)
+                .filter(eq("_id", objectId))
+                .first();
+
+        if (existing == null) {
+            throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
+        }
 
         final var result = getDatastore()
             .find(MongoAuthScheme.class)
@@ -135,6 +162,11 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         if (result.getDeletedCount() == 0) {
             throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(transform(existing))
+                .named(AUTH_SCHEME_DELETED)
+                .build());
 
     }
 
@@ -176,6 +208,15 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.blockchain.VaultNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.blockchain.wallet.Vault;
@@ -11,7 +12,43 @@ import java.util.Optional;
  * Manages instance of the {@link Vault}.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = VaultDao.VAULT_CREATED,
+        parameters = Vault.class,
+        description = "Called when a vault was created."
+)
+@ElementEventProducer(
+        value = VaultDao.VAULT_CREATED,
+        parameters = {Vault.class, Transaction.class},
+        description = "Called when a vault was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = VaultDao.VAULT_UPDATED,
+        parameters = Vault.class,
+        description = "Called when a vault was updated."
+)
+@ElementEventProducer(
+        value = VaultDao.VAULT_UPDATED,
+        parameters = {Vault.class, Transaction.class},
+        description = "Called when a vault was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = VaultDao.VAULT_DELETED,
+        parameters = Vault.class,
+        description = "Called when a vault was deleted."
+)
+@ElementEventProducer(
+        value = VaultDao.VAULT_DELETED,
+        parameters = {Vault.class, Transaction.class},
+        description = "Called when a vault was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface VaultDao {
+
+    String VAULT_CREATED = "dev.getelements.elements.sdk.model.dao.vault.created";
+
+    String VAULT_UPDATED = "dev.getelements.elements.sdk.model.dao.vault.updated";
+
+    String VAULT_DELETED = "dev.getelements.elements.sdk.model.dao.vault.deleted";
 
     /**
      * Gets all vaults in the system.

@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SmartContractDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -24,6 +25,7 @@ import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.*;
@@ -42,6 +44,8 @@ public class MongoSmartContractDao implements SmartContractDao {
     private MongoVaultDao mongoVaultDao;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<SmartContract> getSmartContracts(
@@ -142,7 +146,14 @@ public class MongoSmartContractDao implements SmartContractDao {
             throw new SmartContractNotFoundException();
         }
 
-        return getMapper().map(mongoSmartContract, SmartContract.class);
+        final var updatedSmartContract = getMapper().map(mongoSmartContract, SmartContract.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedSmartContract)
+                .named(SMART_CONTRACT_UPDATED)
+                .build());
+
+        return updatedSmartContract;
 
     }
 
@@ -165,7 +176,14 @@ public class MongoSmartContractDao implements SmartContractDao {
         mongoSmartContract.setVault(mongoVault);
         getDatastore().insert(mongoSmartContract);
 
-        return getMapper().map(mongoSmartContract, SmartContract.class);
+        final var createdSmartContract = getMapper().map(mongoSmartContract, SmartContract.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdSmartContract)
+                .named(SMART_CONTRACT_CREATED)
+                .build());
+
+        return createdSmartContract;
 
     }
 
@@ -174,11 +192,21 @@ public class MongoSmartContractDao implements SmartContractDao {
 
         final var objectId = getMongoDBUtils().parseOrThrow(contractId, SmartContractNotFoundException::new);
         final var query = getDatastore().find(MongoSmartContract.class);
+
+        final var toDelete = query.filter(eq("_id", objectId)).first();
+
         final var result = query.filter(eq("_id", objectId)).delete();
 
         if (result.getDeletedCount() == 0) {
             throw new SmartContractNotFoundException();
         }
+
+        final var deletedSmartContract = getMapper().map(toDelete, SmartContract.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedSmartContract)
+                .named(SMART_CONTRACT_DELETED)
+                .build());
 
     }
 
@@ -225,6 +253,15 @@ public class MongoSmartContractDao implements SmartContractDao {
     @Inject
     public void setMongoVaultDao(MongoVaultDao mongoVaultDao) {
         this.mongoVaultDao = mongoVaultDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

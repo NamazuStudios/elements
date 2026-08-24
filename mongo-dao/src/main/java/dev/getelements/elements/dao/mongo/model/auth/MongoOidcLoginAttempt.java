@@ -54,6 +54,9 @@ public class MongoOidcLoginAttempt {
     private String linkedUserId;
 
     @Property
+    private String applicationNameOrId;
+
+    @Property
     private String linkClaimsJson;
 
     @Property
@@ -147,6 +150,14 @@ public class MongoOidcLoginAttempt {
         this.linkedUserId = linkedUserId;
     }
 
+    public String getApplicationNameOrId() {
+        return applicationNameOrId;
+    }
+
+    public void setApplicationNameOrId(String applicationNameOrId) {
+        this.applicationNameOrId = applicationNameOrId;
+    }
+
     public String getLinkClaimsJson() {
         return linkClaimsJson;
     }
@@ -179,6 +190,7 @@ public class MongoOidcLoginAttempt {
                 && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
                 && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl())
                 && Objects.equals(getLinkedUserId(), that.getLinkedUserId())
+                && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId())
                 && Objects.equals(getLinkClaimsJson(), that.getLinkClaimsJson())
                 && Objects.equals(getConfirmToken(), that.getConfirmToken());
     }
@@ -187,7 +199,7 @@ public class MongoOidcLoginAttempt {
     public int hashCode() {
         return Objects.hash(getId(), getProvider(), getState(), getNonce(), getStatus(),
                 getSessionToken(), getFailureReason(), getExpiry(), getSuccessRedirectUrl(), getErrorRedirectUrl(),
-                getLinkedUserId(), getLinkClaimsJson(), getConfirmToken());
+                getLinkedUserId(), getApplicationNameOrId(), getLinkClaimsJson(), getConfirmToken());
     }
 
 }

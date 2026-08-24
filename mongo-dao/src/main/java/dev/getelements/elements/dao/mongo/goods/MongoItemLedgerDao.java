@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.goods;
 
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItemLedgerEntry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.inventory.ItemLedgerEntry;
@@ -13,6 +14,7 @@ import dev.morphia.query.Query;
 import jakarta.inject.Inject;
 
 import java.util.Date;
+import java.util.function.Consumer;
 
 import static dev.morphia.query.Sort.descending;
 import static dev.morphia.query.filters.Filters.eq;
@@ -27,12 +29,22 @@ public class MongoItemLedgerDao implements ItemLedgerDao {
 
     private MapperRegistry mapperRegistry;
 
+    private Consumer<Event> eventPublisher;
+
     @Override
     public ItemLedgerEntry createLedgerEntry(final ItemLedgerEntry entry) {
         final var mongo = getMapperRegistry().map(entry, MongoItemLedgerEntry.class);
         mongo.setTimestamp(new Date());
         getDatastore().insert(mongo);
-        return getMapperRegistry().map(mongo, ItemLedgerEntry.class);
+
+        final var createdEntry = getMapperRegistry().map(mongo, ItemLedgerEntry.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdEntry)
+                .named(ITEM_LEDGER_ENTRY_CREATED)
+                .build());
+
+        return createdEntry;
     }
 
     @Override
@@ -102,5 +114,14 @@ public class MongoItemLedgerDao implements ItemLedgerDao {
     @Inject
     public void setMapperRegistry(final MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(final Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

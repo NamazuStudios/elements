@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.auth;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.auth.MongoOidcProviderConfiguration;
@@ -17,6 +18,7 @@ import jakarta.inject.Inject;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -31,6 +33,8 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
     private MapperRegistry beanMapper;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<OidcProviderConfiguration> getProviderConfigurations(final int offset,
@@ -64,7 +68,14 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
         getValidationHelper().validateModel(providerConfiguration, ValidationGroups.Insert.class);
         final var entity = getBeanMapper().map(providerConfiguration, MongoOidcProviderConfiguration.class);
         final var result = getMongoDBUtils().perform(ds -> getDatastore().save(entity));
-        return transform(result);
+        final var created = transform(result);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(created)
+                .named(OIDC_PROVIDER_CONFIGURATION_CREATED)
+                .build());
+
+        return created;
     }
 
     @Override
@@ -100,7 +111,14 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
             throw new OidcProviderConfigurationNotFoundException("Provider configuration not found: " + providerConfiguration.getId());
         }
 
-        return transform(entity);
+        final var updated = transform(entity);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updated)
+                .named(OIDC_PROVIDER_CONFIGURATION_UPDATED)
+                .build());
+
+        return updated;
 
     }
 
@@ -112,6 +130,14 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
                 OidcProviderConfigurationNotFoundException::new
         );
 
+        final var existing = getDatastore().find(MongoOidcProviderConfiguration.class)
+                .filter(eq("_id", objectId))
+                .first();
+
+        if (existing == null) {
+            throw new OidcProviderConfigurationNotFoundException("Provider configuration not found: " + providerConfigurationId);
+        }
+
         final var result = getDatastore().find(MongoOidcProviderConfiguration.class)
                 .filter(eq("_id", objectId))
                 .delete();
@@ -119,6 +145,11 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
         if (result.getDeletedCount() == 0) {
             throw new OidcProviderConfigurationNotFoundException("Provider configuration not found: " + providerConfigurationId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(transform(existing))
+                .named(OIDC_PROVIDER_CONFIGURATION_DELETED)
+                .build());
 
     }
 
@@ -160,6 +191,15 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

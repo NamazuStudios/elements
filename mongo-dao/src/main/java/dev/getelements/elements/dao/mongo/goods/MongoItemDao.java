@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo.goods;
 
 import com.mongodb.client.model.ReturnDocument;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.model.goods.MongoItem;
 import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -52,6 +54,8 @@ public class MongoItemDao implements ItemDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoMetadataSpecDao mongoMetadataSpecDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Item getItemByIdOrName(final String identifier) {
@@ -213,7 +217,14 @@ public class MongoItemDao implements ItemDao {
             throw new ItemNotFoundException("Item with ID not found: " + item.getId());
         }
 
-        return getDozerMapper().map(updatedMongoItem, Item.class);
+        final var updatedItem = getDozerMapper().map(updatedMongoItem, Item.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedItem)
+                .named(ITEM_UPDATED)
+                .build());
+
+        return updatedItem;
 
     }
 
@@ -239,7 +250,15 @@ public class MongoItemDao implements ItemDao {
         if (updatedMongoItem == null) {
             throw new ItemNotFoundException("Item with ID not found: " + item.getId());
         }
-        return getDozerMapper().map(updatedMongoItem, Item.class);
+
+        final var updatedItem = getDozerMapper().map(updatedMongoItem, Item.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedItem)
+                .named(ITEM_UPDATED)
+                .build());
+
+        return updatedItem;
     }
 
     @Override
@@ -259,7 +278,14 @@ public class MongoItemDao implements ItemDao {
         final Query<MongoItem> query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", mongoItem.getObjectId()));
 
-        return getDozerMapper().map(query.first(), Item.class);
+        final var createdItem = getDozerMapper().map(query.first(), Item.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdItem)
+                .named(ITEM_CREATED)
+                .build());
+
+        return createdItem;
     }
 
     @Override
@@ -269,9 +295,17 @@ public class MongoItemDao implements ItemDao {
         final var filter = objectId != null ? eq("_id", objectId) : eq("name", identifier);
         final var options = new ModifyOptions().returnDocument(ReturnDocument.AFTER);
 
-        getDatastore().find(MongoItem.class)
+        final var deletedMongoItem = getDatastore().find(MongoItem.class)
                 .filter(filter)
                 .modify(options, unset("name"));
+
+        if (deletedMongoItem != null) {
+            final var deletedItem = getDozerMapper().map(deletedMongoItem, Item.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedItem)
+                    .named(ITEM_DELETED)
+                    .build());
+        }
     }
 
     private void normalize(Item item) {
@@ -328,5 +362,14 @@ public class MongoItemDao implements ItemDao {
     @Inject
     public void setMongoMetadataSpecDao(MongoMetadataSpecDao mongoMetadataSpecDao) {
         this.mongoMetadataSpecDao = mongoMetadataSpecDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

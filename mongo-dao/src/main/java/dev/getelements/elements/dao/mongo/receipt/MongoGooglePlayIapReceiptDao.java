@@ -4,6 +4,7 @@ import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.GooglePlayIapReceiptDao;
 import dev.getelements.elements.dao.mongo.model.receipt.MongoGooglePlayIapReceipt;
 import dev.getelements.elements.dao.mongo.model.MongoUser;
@@ -24,6 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
 
+import java.util.function.Consumer;
+
 import static com.google.common.base.Strings.nullToEmpty;
 
 public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
@@ -39,6 +42,8 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
     private MongoDBUtils mongoDBUtils;
 
     private MongoUserDao mongoUserDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
@@ -98,17 +103,35 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
         final Query<MongoGooglePlayIapReceipt> query = getDatastore().find(MongoGooglePlayIapReceipt.class);
         query.filter(Filters.eq("_id", mongoGooglePlayIapReceipt.getOrderId()));
-        return getDozerMapper().map(query.first(), GooglePlayIapReceipt.class);
+
+        final var createdGooglePlayIapReceipt = getDozerMapper().map(query.first(), GooglePlayIapReceipt.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdGooglePlayIapReceipt)
+                .named(GOOGLE_PLAY_IAP_RECEIPT_CREATED)
+                .build());
+
+        return createdGooglePlayIapReceipt;
     }
 
     @Override
     public void deleteGooglePlayIapReceipt(String orderId) {
+
+        final var mongoGooglePlayIapReceipt = getDatastore().find(MongoGooglePlayIapReceipt.class)
+                .filter(Filters.eq("_id", orderId))
+                .first();
+
         final DeleteResult deleteResult = getDatastore().find(MongoGooglePlayIapReceipt.class)
                 .filter(Filters.eq("_id", orderId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Google Play IAP Receipt not found: " + orderId);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getDozerMapper().map(mongoGooglePlayIapReceipt, GooglePlayIapReceipt.class))
+                .named(GOOGLE_PLAY_IAP_RECEIPT_DELETED)
+                .build());
     }
 
     public Datastore getDatastore() {
@@ -154,5 +177,14 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
     @Inject
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

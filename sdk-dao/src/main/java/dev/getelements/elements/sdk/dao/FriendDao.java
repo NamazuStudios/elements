@@ -4,13 +4,26 @@ import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.friend.Friend;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Provides database-level access to {@link Friend} instances.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = FriendDao.FRIEND_DELETED,
+        parameters = Friend.class,
+        description = "Called when a friend relationship was deleted."
+)
+@ElementEventProducer(
+        value = FriendDao.FRIEND_DELETED,
+        parameters = {Friend.class, Transaction.class},
+        description = "Called when a friend relationship was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface FriendDao {
+
+    String FRIEND_DELETED = "dev.getelements.elements.sdk.model.dao.friend.deleted";
 
     /**
      * Fetches all {@link Friend} instances for the supplied {@link User}.

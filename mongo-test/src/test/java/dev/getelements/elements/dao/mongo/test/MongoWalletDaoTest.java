@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.VaultDao;
 import dev.getelements.elements.sdk.dao.WalletDao;
 import dev.getelements.elements.sdk.model.exception.blockchain.WalletNotFoundException;
@@ -18,13 +19,19 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.WalletDao.WALLET_CREATED;
+import static dev.getelements.elements.sdk.dao.WalletDao.WALLET_DELETED;
+import static dev.getelements.elements.sdk.dao.WalletDao.WALLET_UPDATED;
 import static dev.getelements.elements.sdk.model.crypto.PrivateKeyCrytpoAlgorithm.RSA_512;
 import static dev.getelements.elements.sdk.util.Hex.Case.UPPER;
 import static dev.getelements.elements.sdk.util.Hex.forNibble;
@@ -49,6 +56,27 @@ public class MongoWalletDaoTest {
     private List<Vault> regularUsersVaults;
 
     private final Map<String, Wallet> wallets = new ConcurrentHashMap<>();
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final Set<String> createdWalletIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedWalletIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedWalletIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case WALLET_CREATED -> createdWalletIds.add(ev.getEventArgument(0, Wallet.class).getId());
+                case WALLET_UPDATED -> updatedWalletIds.add(ev.getEventArgument(0, Wallet.class).getId());
+                case WALLET_DELETED -> deletedWalletIds.add(ev.getEventArgument(0, Wallet.class).getId());
+            }
+        });
+    }
 
     @BeforeClass
     public void createTestUsers() {
@@ -187,6 +215,7 @@ public class MongoWalletDaoTest {
         assertEquals(created.getNetworks(), wallet.getNetworks());
         assertEquals(created.getUser(), wallet.getUser());
         assertEquals(created.getApi(), wallet.getApi());
+        assertTrue(createdWalletIds.contains(created.getId()), "Expected WALLET_CREATED event for " + created.getId());
 
         wallets.put(created.getId(), created);
 
@@ -213,6 +242,7 @@ public class MongoWalletDaoTest {
         final var updated = getUnderTest().updateWallet(update);
         assertEquals(updated, update);
         assertNotEquals(updated, wallet);
+        assertTrue(updatedWalletIds.contains(updated.getId()), "Expected WALLET_UPDATED event for " + updated.getId());
 
         wallets.put(updated.getId(), updated);
 
@@ -345,6 +375,7 @@ public class MongoWalletDaoTest {
     @Test(dataProvider = "wallets", groups = "delete", dependsOnGroups = "pre delete")
     public void deleteWallet(final Wallet wallet) {
         getUnderTest().deleteWallet(wallet.getId());
+        assertTrue(deletedWalletIds.contains(wallet.getId()), "Expected WALLET_DELETED event for " + wallet.getId());
     }
 
     @Test(dataProvider = "wallets",
@@ -375,6 +406,7 @@ public class MongoWalletDaoTest {
         final var created = getUnderTest().createWallet(wallet);
         getUnderTest().deleteWalletForUser(created.getId(), vault.getUser().getId());
         assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
+        assertTrue(deletedWalletIds.contains(created.getId()), "Expected WALLET_DELETED event for " + created.getId());
 
     }
 
@@ -397,6 +429,7 @@ public class MongoWalletDaoTest {
         final var created = getUnderTest().createWallet(wallet);
         getUnderTest().deleteWalletForVault(created.getId(), vault.getId());
         assertTrue(getUnderTest().findWallet(created.getId()).isEmpty());
+        assertTrue(deletedWalletIds.contains(created.getId()), "Expected WALLET_DELETED event for " + created.getId());
 
     }
 

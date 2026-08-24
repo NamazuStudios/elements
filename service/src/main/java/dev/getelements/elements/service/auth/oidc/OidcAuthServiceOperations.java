@@ -5,6 +5,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.jwk.Curve;
+import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.util.Base64URL;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
@@ -29,13 +34,9 @@ import jakarta.ws.rs.client.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,7 +54,9 @@ public class OidcAuthServiceOperations {
 
     private static final Logger logger = LoggerFactory.getLogger(OidcAuthServiceOperations.class);
 
-    private static final String RSA_ALGO = "RSA";
+    private static final String RSA_KTY = "RSA";
+
+    private static final String EC_KTY = "EC";
 
     private Client client;
 
@@ -146,7 +149,51 @@ public class OidcAuthServiceOperations {
             final DecodedJWT decodedJWT,
             final OidcAuthScheme scheme,
             final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper) {
-        return buildSession(decodedJWT, scheme, userMapper, null);
+        return createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper, null);
+    }
+
+    /**
+     * Same as {@link #createOrUpdateUserWithVerifiedToken(DecodedJWT, OidcAuthScheme, BiFunction)}, additionally
+     * requesting that the given application's primary profile be attached to the resulting session (gated
+     * auto-create), exactly as {@link #createOrUpdateUserWithToken} does via
+     * {@link OidcSessionRequest#getApplicationNameOrId()}.
+     *
+     * @param requestedApplicationNameOrId the application name/ID to attach, or {@code null} for the legacy
+     *                                      JWT aud-claim-driven, ungated behavior
+     */
+    public SessionCreation createOrUpdateUserWithVerifiedToken(
+            final DecodedJWT decodedJWT,
+            final OidcAuthScheme scheme,
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
+            final String requestedApplicationNameOrId) {
+        return buildSession(decodedJWT, scheme, userMapper, requestedApplicationNameOrId);
+    }
+
+    /**
+     * Same as {@link #createSessionForResolvedUser(User)}, additionally requesting that the given application's
+     * primary profile be attached to the resulting session, exactly as {@link #buildSession} does for a live
+     * token — reusing an existing primary profile if one is already present, otherwise gated auto-create
+     * (subject to the application's autoCreateProfile/maxProfiles settings) if {@code explicitlyRequested}, or
+     * the legacy, ungated get-or-create behavior otherwise. Used by the login-attempt confirm flow, where the
+     * user was resolved (and any account-link mutation already performed) from claims persisted by an earlier
+     * callback — including the application id/name resolved at that time from the request or the token's own
+     * {@code aud} claim — not a live JWT.
+     *
+     * @param user the already-resolved user
+     * @param applicationNameOrId the application name/ID to attach, or {@code null} for none
+     * @param explicitlyRequested whether {@code applicationNameOrId} came from an explicit request value (gated
+     *                            auto-create) as opposed to the token's {@code aud} claim (legacy, ungated)
+     * @return the created session
+     */
+    public SessionCreation createSessionForResolvedUser(final User user,
+                                                          final String applicationNameOrId,
+                                                          final boolean explicitlyRequested) {
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+        final var session = new Session();
+        session.setUser(user);
+        session.setExpiry(expiry);
+        attachApplicationProfile(session, user, applicationNameOrId, explicitlyRequested);
+        return getSessionDao().create(session);
     }
 
     /**
@@ -158,11 +205,7 @@ public class OidcAuthServiceOperations {
      * @return the created session
      */
     public SessionCreation createSessionForResolvedUser(final User user) {
-        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
-        final var session = new Session();
-        session.setUser(user);
-        session.setExpiry(expiry);
-        return getSessionDao().create(session);
+        return createSessionForResolvedUser(user, null, false);
     }
 
     private SessionCreation buildSession(final DecodedJWT decodedJWT,
@@ -185,30 +228,48 @@ public class OidcAuthServiceOperations {
         session.setUser(user);
         session.setExpiry(expiry);
 
-        if(applicationId != null) {
-
-            final var applicationOptional = getApplicationDao().findActiveApplication(applicationId);
-
-            if(applicationOptional.isPresent()) {
-
-                final var application = applicationOptional.get();
-                final var existingProfile = getProfileDao().findPrimaryProfile(user.getId(), application.getId());
-
-                final Profile profile = existingProfile.isPresent()
-                        ? existingProfile.get()
-                        : requestedApplicationNameOrId != null
-                                ? autoCreatePrimaryProfileIfConfigured(user, application)
-                                : getProfileDao().createOrRefreshProfile(map(user, application));
-
-                if (profile != null) {
-                    session.setProfile(profile);
-                    session.setApplication(application);
-                }
-
-            }
-        }
+        attachApplicationProfile(session, user, applicationId, requestedApplicationNameOrId != null);
 
         return getSessionDao().create(session);
+    }
+
+    /**
+     * Resolves the application to attach and, if found, attaches its existing primary profile for {@code user}
+     * if one is already present — otherwise gated auto-create (subject to autoCreateProfile/maxProfiles) if
+     * {@code gatedAutoCreate}, or the legacy, ungated get-or-create behavior otherwise. Shared by
+     * {@link #buildSession} (live token, {@code gatedAutoCreate} true iff the caller explicitly requested an
+     * application) and {@link #createSessionForResolvedUser(User, String, boolean)} (account-linking confirm,
+     * resolved earlier from either the request or the token's own {@code aud} claim).
+     */
+    private void attachApplicationProfile(final Session session,
+                                           final User user,
+                                           final String applicationId,
+                                           final boolean gatedAutoCreate) {
+
+        if (applicationId == null) {
+            return;
+        }
+
+        final var applicationOptional = getApplicationDao().findActiveApplication(applicationId);
+
+        if (applicationOptional.isEmpty()) {
+            return;
+        }
+
+        final var application = applicationOptional.get();
+        final var existingProfile = getProfileDao().findPrimaryProfile(user.getId(), application.getId());
+
+        final Profile profile = existingProfile.isPresent()
+                ? existingProfile.get()
+                : gatedAutoCreate
+                        ? autoCreatePrimaryProfileIfConfigured(user, application)
+                        : getProfileDao().createOrRefreshProfile(map(user, application));
+
+        if (profile != null) {
+            session.setProfile(profile);
+            session.setApplication(application);
+        }
+
     }
 
     private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
@@ -260,7 +321,9 @@ public class OidcAuthServiceOperations {
         //no other source of truth, so its keys are always trusted as-is.
         if(jwk != null && !(scheme.getKeysUrl() != null && isKeysStale(scheme))) {
             final var algorithm = getAlgorithmFromJWK(jwk);
-            attemptVerify(jwt, algorithm);
+            if (attemptVerify(jwt, algorithm) == null) {
+                throw new ForbiddenException("Signature verification failed");
+            }
             return;
         }
 
@@ -327,22 +390,45 @@ public class OidcAuthServiceOperations {
                 .map(this::getAlgorithmFromJWK);
     }
 
-    private Algorithm getAlgorithmFromJWK(JWK k) {
+    private Algorithm getAlgorithmFromJWK(final JWK k) {
 
-        final BigInteger n = new BigInteger(1, Base64.getUrlDecoder().decode(k.getN()));
-        final BigInteger e = new BigInteger(1, Base64.getUrlDecoder().decode(k.getE()));
-
-        final RSAPublicKey publicKey;
+        final PublicKey publicKey;
 
         try {
-            final RSAPublicKeySpec keySpec = new RSAPublicKeySpec(n, e);
-            publicKey = (RSAPublicKey) KeyFactory.getInstance(RSA_ALGO).generatePublic(keySpec);
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
+            if (RSA_KTY.equalsIgnoreCase(k.getKty())) {
+                publicKey = new RSAKey.Builder(Base64URL.from(k.getN()), Base64URL.from(k.getE()))
+                        .build()
+                        .toRSAPublicKey();
+            } else if (EC_KTY.equalsIgnoreCase(k.getKty())) {
+                final var curve = Curve.parse(k.getCrv());
+                publicKey = new ECKey.Builder(curve, Base64URL.from(k.getX()), Base64URL.from(k.getY()))
+                        .build()
+                        .toECPublicKey();
+            } else {
+                throw new InternalException("Unsupported JWK key type: " + k.getKty());
+            }
+        } catch (JOSEException ex) {
             throw new InternalException(ex);
         }
 
-        //TODO: Get algorithm type from JWK or JWT header
-        return Algorithm.RSA256(publicKey, null);
+        return algorithmFor(k.getAlg(), publicKey);
+
+    }
+
+    private Algorithm algorithmFor(final String alg, final PublicKey publicKey) {
+        if (alg == null) {
+            throw new InternalException("JWK is missing its 'alg' property");
+        }
+
+        return switch (alg) {
+            case "RS256" -> Algorithm.RSA256((RSAPublicKey) publicKey, null);
+            case "RS384" -> Algorithm.RSA384((RSAPublicKey) publicKey, null);
+            case "RS512" -> Algorithm.RSA512((RSAPublicKey) publicKey, null);
+            case "ES256" -> Algorithm.ECDSA256((ECPublicKey) publicKey, null);
+            case "ES384" -> Algorithm.ECDSA384((ECPublicKey) publicKey, null);
+            case "ES512" -> Algorithm.ECDSA512((ECPublicKey) publicKey, null);
+            default -> throw new InternalException("Unsupported JWK alg: " + alg);
+        };
     }
 
     private Profile map(final User user,

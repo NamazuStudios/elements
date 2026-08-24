@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.mongo.model.MongoUidVerificationToken;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UidVerificationTokenDao;
 import dev.getelements.elements.sdk.model.user.UidVerificationToken;
 import dev.getelements.elements.sdk.model.user.User;
@@ -12,6 +13,7 @@ import jakarta.inject.Inject;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static dev.morphia.query.filters.Filters.eq;
 
@@ -22,6 +24,8 @@ public class MongoUidVerificationTokenDao implements UidVerificationTokenDao {
     private MongoUserDao mongoUserDao;
 
     private MapperRegistry mapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public String createToken(final User user, final String scheme, final String uidId, final Timestamp expiry) {
@@ -36,6 +40,14 @@ public class MongoUidVerificationTokenDao implements UidVerificationTokenDao {
         entity.setExpiry(expiry);
 
         getDatastore().insert(entity);
+
+        final var createdToken = getMapperRegistry().map(entity, UidVerificationToken.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdToken)
+                .named(UID_VERIFICATION_TOKEN_CREATED)
+                .build());
+
         return token;
     }
 
@@ -60,9 +72,25 @@ public class MongoUidVerificationTokenDao implements UidVerificationTokenDao {
 
     @Override
     public void deleteToken(final String token) {
-        getDatastore().find(MongoUidVerificationToken.class)
-                .filter(eq("_id", token))
-                .delete();
+
+        final var query = getDatastore().find(MongoUidVerificationToken.class)
+                .filter(eq("_id", token));
+
+        final var entity = query.first();
+
+        if (entity == null) {
+            return;
+        }
+
+        query.delete();
+
+        final var deletedToken = getMapperRegistry().map(entity, UidVerificationToken.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedToken)
+                .named(UID_VERIFICATION_TOKEN_DELETED)
+                .build());
+
     }
 
     @Override
@@ -71,6 +99,12 @@ public class MongoUidVerificationTokenDao implements UidVerificationTokenDao {
         getDatastore().find(MongoUidVerificationToken.class)
                 .filter(eq("user", mongoUser))
                 .delete(new DeleteOptions().multi(true));
+
+        getEventPublisher().accept(Event.builder()
+                .argument(user)
+                .named(UID_VERIFICATION_TOKENS_TRUNCATED)
+                .build());
+
     }
 
     public Datastore getDatastore() {
@@ -98,6 +132,15 @@ public class MongoUidVerificationTokenDao implements UidVerificationTokenDao {
     @Inject
     public void setMapperRegistry(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

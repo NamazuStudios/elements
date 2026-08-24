@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -14,7 +15,43 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_CREATED,
+        parameters = InventoryItem.class,
+        description = "Called when an inventory item was created."
+)
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_CREATED,
+        parameters = {InventoryItem.class, Transaction.class},
+        description = "Called when an inventory item was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_UPDATED,
+        parameters = InventoryItem.class,
+        description = "Called when an inventory item was updated."
+)
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_UPDATED,
+        parameters = {InventoryItem.class, Transaction.class},
+        description = "Called when an inventory item was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_DELETED,
+        parameters = InventoryItem.class,
+        description = "Called when an inventory item was deleted."
+)
+@ElementEventProducer(
+        value = InventoryItemDao.INVENTORY_ITEM_DELETED,
+        parameters = {InventoryItem.class, Transaction.class},
+        description = "Called when an inventory item was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface InventoryItemDao {
+
+    String INVENTORY_ITEM_CREATED = "dev.getelements.elements.sdk.model.dao.inventoryitem.created";
+
+    String INVENTORY_ITEM_UPDATED = "dev.getelements.elements.sdk.model.dao.inventoryitem.updated";
+
+    String INVENTORY_ITEM_DELETED = "dev.getelements.elements.sdk.model.dao.inventoryitem.deleted";
 
     /**
      * The priority for use by the {@link InventoryItemDao}

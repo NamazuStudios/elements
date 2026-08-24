@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.model.mission.Mission;
 import dev.getelements.elements.sdk.model.mission.Progress;
 import dev.getelements.elements.sdk.model.mission.ProgressRow;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.List;
@@ -20,7 +21,43 @@ import java.util.Optional;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_CREATED,
+        parameters = Progress.class,
+        description = "Called when a progress was created."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_CREATED,
+        parameters = {Progress.class, Transaction.class},
+        description = "Called when a progress was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_UPDATED,
+        parameters = Progress.class,
+        description = "Called when a progress was updated."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_UPDATED,
+        parameters = {Progress.class, Transaction.class},
+        description = "Called when a progress was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_DELETED,
+        parameters = Progress.class,
+        description = "Called when a progress was deleted."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_DELETED,
+        parameters = {Progress.class, Transaction.class},
+        description = "Called when a progress was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ProgressDao {
+
+    String PROGRESS_CREATED = "dev.getelements.elements.sdk.model.dao.progress.created";
+
+    String PROGRESS_UPDATED = "dev.getelements.elements.sdk.model.dao.progress.updated";
+
+    String PROGRESS_DELETED = "dev.getelements.elements.sdk.model.dao.progress.deleted";
 
     /**
      * Gets progresses specifying the user, offset and the count.

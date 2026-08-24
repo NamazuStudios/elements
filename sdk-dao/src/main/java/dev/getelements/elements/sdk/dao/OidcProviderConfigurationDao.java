@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
@@ -10,7 +11,43 @@ import java.util.Optional;
 
 /** DAO for {@link OidcProviderConfiguration} instances, admin-managed via SUPERUSER CRUD. */
 @ElementServiceExport
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_CREATED,
+        parameters = OidcProviderConfiguration.class,
+        description = "Called when an OIDC provider configuration was created."
+)
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_CREATED,
+        parameters = {OidcProviderConfiguration.class, Transaction.class},
+        description = "Called when an OIDC provider configuration was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_UPDATED,
+        parameters = OidcProviderConfiguration.class,
+        description = "Called when an OIDC provider configuration was updated."
+)
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_UPDATED,
+        parameters = {OidcProviderConfiguration.class, Transaction.class},
+        description = "Called when an OIDC provider configuration was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_DELETED,
+        parameters = OidcProviderConfiguration.class,
+        description = "Called when an OIDC provider configuration was deleted."
+)
+@ElementEventProducer(
+        value = OidcProviderConfigurationDao.OIDC_PROVIDER_CONFIGURATION_DELETED,
+        parameters = {OidcProviderConfiguration.class, Transaction.class},
+        description = "Called when an OIDC provider configuration was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface OidcProviderConfigurationDao {
+
+    String OIDC_PROVIDER_CONFIGURATION_CREATED = "dev.getelements.elements.sdk.model.dao.oidc.provider.configuration.created";
+
+    String OIDC_PROVIDER_CONFIGURATION_UPDATED = "dev.getelements.elements.sdk.model.dao.oidc.provider.configuration.updated";
+
+    String OIDC_PROVIDER_CONFIGURATION_DELETED = "dev.getelements.elements.sdk.model.dao.oidc.provider.configuration.deleted";
 
     /**
      * Lists all provider configurations.

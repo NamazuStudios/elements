@@ -3,13 +3,50 @@ package dev.getelements.elements.sdk.dao;
 import dev.getelements.elements.sdk.model.exception.auth.AuthSchemeNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.auth.*;
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 import java.util.List;
 import java.util.Optional;
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_CREATED,
+        parameters = OAuth2AuthScheme.class,
+        description = "Called when an OAuth2 auth scheme was created."
+)
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_CREATED,
+        parameters = {OAuth2AuthScheme.class, Transaction.class},
+        description = "Called when an OAuth2 auth scheme was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_UPDATED,
+        parameters = OAuth2AuthScheme.class,
+        description = "Called when an OAuth2 auth scheme was updated."
+)
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_UPDATED,
+        parameters = {OAuth2AuthScheme.class, Transaction.class},
+        description = "Called when an OAuth2 auth scheme was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_DELETED,
+        parameters = OAuth2AuthScheme.class,
+        description = "Called when an OAuth2 auth scheme was deleted."
+)
+@ElementEventProducer(
+        value = OAuth2AuthSchemeDao.OAUTH2_AUTH_SCHEME_DELETED,
+        parameters = {OAuth2AuthScheme.class, Transaction.class},
+        description = "Called when an OAuth2 auth scheme was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface OAuth2AuthSchemeDao {
+
+    String OAUTH2_AUTH_SCHEME_CREATED = "dev.getelements.elements.sdk.model.dao.oauth2.auth.scheme.created";
+
+    String OAUTH2_AUTH_SCHEME_UPDATED = "dev.getelements.elements.sdk.model.dao.oauth2.auth.scheme.updated";
+
+    String OAUTH2_AUTH_SCHEME_DELETED = "dev.getelements.elements.sdk.model.dao.oauth2.auth.scheme.deleted";
 
     /**
      * Lists all {@link AuthScheme} instances

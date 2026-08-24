@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.model.exception.LeaderboardNotFoundException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.leaderboard.Leaderboard;
@@ -10,7 +11,43 @@ import dev.getelements.elements.sdk.annotation.ElementServiceExport;
  */
 
 @ElementServiceExport
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_CREATED,
+        parameters = Leaderboard.class,
+        description = "Called when a leaderboard was created."
+)
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_CREATED,
+        parameters = {Leaderboard.class, Transaction.class},
+        description = "Called when a leaderboard was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_UPDATED,
+        parameters = Leaderboard.class,
+        description = "Called when a leaderboard was updated."
+)
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_UPDATED,
+        parameters = {Leaderboard.class, Transaction.class},
+        description = "Called when a leaderboard was updated. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_DELETED,
+        parameters = Leaderboard.class,
+        description = "Called when a leaderboard was deleted."
+)
+@ElementEventProducer(
+        value = LeaderboardDao.LEADERBOARD_DELETED,
+        parameters = {Leaderboard.class, Transaction.class},
+        description = "Called when a leaderboard was deleted. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface LeaderboardDao {
+
+    String LEADERBOARD_CREATED = "dev.getelements.elements.sdk.model.dao.leaderboard.created";
+
+    String LEADERBOARD_UPDATED = "dev.getelements.elements.sdk.model.dao.leaderboard.updated";
+
+    String LEADERBOARD_DELETED = "dev.getelements.elements.sdk.model.dao.leaderboard.deleted";
 
     /**
      * Lists all leaderboards, specifying offset and count.

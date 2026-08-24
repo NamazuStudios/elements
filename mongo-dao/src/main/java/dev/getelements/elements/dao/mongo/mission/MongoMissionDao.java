@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo.mission;
 
 import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.dao.mongo.goods.MongoItemDao;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MissionDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
@@ -36,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -59,6 +61,8 @@ public class MongoMissionDao implements MissionDao {
     private MongoItemDao mongoItemDao;
 
     private BooleanQueryParser booleanQueryParser;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
@@ -223,7 +227,14 @@ public class MongoMissionDao implements MissionDao {
             throw new MissionNotFoundException("Mission with id or name of " + (mission.getId() != null ? mission.getId() : mission.getName()) + " does not exist");
         }
 
-        return getDozerMapper().map(updatedMongoItem, Mission.class);
+        final var updatedMission = getDozerMapper().map(updatedMongoItem, Mission.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedMission)
+                .named(MISSION_UPDATED)
+                .build());
+
+        return updatedMission;
 
     }
 
@@ -286,7 +297,14 @@ public class MongoMissionDao implements MissionDao {
             throw new MissionNotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
 
-        return getDozerMapper().map(updatedMongoItem, Mission.class);
+        final var updatedMission = getDozerMapper().map(updatedMongoItem, Mission.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedMission)
+                .named(MISSION_UPDATED)
+                .build());
+
+        return updatedMission;
 
     }
 
@@ -312,7 +330,14 @@ public class MongoMissionDao implements MissionDao {
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
         query.filter(eq("_id", mongoMission.getObjectId()));
 
-        return getDozerMapper().map(query.first(), Mission.class);
+        final var createdMission = getDozerMapper().map(query.first(), Mission.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdMission)
+                .named(MISSION_CREATED)
+                .build());
+
+        return createdMission;
 
     }
 
@@ -367,12 +392,22 @@ public class MongoMissionDao implements MissionDao {
     @Override
     public void deleteMission(final String missionNameOrID) {
 
+        final var mongoMission = findMongoMissionByNameOrId(missionNameOrID).orElse(null);
+
         final var modifiedCount = getQueryForNameOrId(missionNameOrID)
                 .update(new UpdateOptions(), unset("name"))
                 .getModifiedCount();
 
         if (modifiedCount == 0) {
             throw new NotFoundException("Mission not found: " + missionNameOrID);
+        }
+
+        if (mongoMission != null) {
+            final var deletedMission = getDozerMapper().map(mongoMission, Mission.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedMission)
+                    .named(MISSION_DELETED)
+                    .build());
         }
 
     }
@@ -429,6 +464,15 @@ public class MongoMissionDao implements MissionDao {
     @Inject
     public void setBooleanQueryParser(BooleanQueryParser booleanQueryParser) {
         this.booleanQueryParser = booleanQueryParser;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

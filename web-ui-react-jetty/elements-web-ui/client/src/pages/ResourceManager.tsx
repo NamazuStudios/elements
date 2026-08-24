@@ -659,9 +659,16 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   // Memoize columns to prevent table remounting during refetch
   // MUST be before early returns to follow Rules of Hooks
   const columns = useMemo(() => {
-    if (!items || items.length === 0) return [];
-    
-    const keys = Object.keys(items[0]);
+    // Real items always win (avoids deriving columns from a draft's possibly-incomplete keys); fall back to
+    // the draft only while real items haven't loaded yet, so the table doesn't render zero data columns (which
+    // makes the sticky Actions cell appear to span the whole row) while a draft-only row is already showing.
+    const columnSource = items && items.length > 0
+      ? items
+      : (itemsWithDraft && itemsWithDraft.length > 0 ? itemsWithDraft : null);
+
+    if (!columnSource) return [];
+
+    const keys = Object.keys(columnSource[0]);
         
         // Custom column filtering and ordering for Profiles resource
         if (resourceName === 'Profiles') {
@@ -787,7 +794,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         }
         
     return keys;
-  }, [items, resourceName]);
+  }, [items, itemsWithDraft, resourceName]);
 
   // Only show full-page loading on initial load (no cached data)
   if (isLoading && !items) {

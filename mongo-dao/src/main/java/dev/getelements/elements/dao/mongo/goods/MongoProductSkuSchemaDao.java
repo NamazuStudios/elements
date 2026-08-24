@@ -4,6 +4,7 @@ import com.mongodb.client.result.DeleteResult;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.UpdateBuilder;
 import dev.getelements.elements.dao.mongo.model.goods.MongoProductSkuSchema;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ProductSkuSchemaDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -16,6 +17,7 @@ import jakarta.inject.Inject;
 import org.bson.types.ObjectId;
 
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -29,6 +31,8 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
     private MapperRegistry dozerMapperRegistry;
 
     private MongoDBUtils mongoDBUtils;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<ProductSkuSchema> getProductSkuSchemas(final int offset, final int count) {
@@ -67,6 +71,12 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
     @Override
     public ProductSkuSchema ensureProductSkuSchema(final String schema) {
 
+        // Snapshot existence before the upsert so we can tell whether this call actually inserted a new
+        // document (setOnInsert leaves existing documents untouched, so it is never an "update").
+        final var existing = getDatastore().find(MongoProductSkuSchema.class)
+                .filter(eq("schema", schema))
+                .first();
+
         final var query = getDatastore().find(MongoProductSkuSchema.class)
                 .filter(eq("schema", schema));
 
@@ -74,7 +84,16 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
                 setOnInsert(Map.of("schema", schema))
         ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER));
 
-        return getDozerMapperRegistry().map(result, ProductSkuSchema.class);
+        final var productSkuSchema = getDozerMapperRegistry().map(result, ProductSkuSchema.class);
+
+        if (existing == null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(productSkuSchema)
+                    .named(PRODUCT_SKU_SCHEMA_CREATED)
+                    .build());
+        }
+
+        return productSkuSchema;
     }
 
     @Override
@@ -84,6 +103,10 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
             throw new NotFoundException("Unable to find Product SKU Schema with id: " + id);
         }
 
+        final var mongo = getDatastore().find(MongoProductSkuSchema.class)
+                .filter(eq("_id", new ObjectId(id)))
+                .first();
+
         final var deleteResult = getDatastore().find(MongoProductSkuSchema.class)
                 .filter(eq("_id", new ObjectId(id)))
                 .delete();
@@ -91,6 +114,11 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Product SKU Schema not found: " + id);
         }
+
+        getEventPublisher().accept(Event.builder()
+                .argument(getDozerMapperRegistry().map(mongo, ProductSkuSchema.class))
+                .named(PRODUCT_SKU_SCHEMA_DELETED)
+                .build());
     }
 
     public Datastore getDatastore() {
@@ -118,6 +146,15 @@ public class MongoProductSkuSchemaDao implements ProductSkuSchemaDao {
     @Inject
     public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
         this.mongoDBUtils = mongoDBUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

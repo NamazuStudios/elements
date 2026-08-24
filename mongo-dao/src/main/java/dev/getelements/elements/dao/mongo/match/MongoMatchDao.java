@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.match;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.MatchDao;
 import dev.getelements.elements.sdk.dao.Matchmaker;
 import dev.getelements.elements.dao.mongo.MongoConcurrentUtils;
@@ -24,6 +25,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.sql.Timestamp;
+import java.util.function.Consumer;
 
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -49,6 +51,8 @@ public class MongoMatchDao implements MatchDao {
     private Provider<Matchmaker> matchmakerProvider;
 
     private MongoMatchUtils mongoMatchUtils;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Match getMatchForPlayer(final String playerId, final String matchId) throws NotFoundException {
@@ -129,7 +133,14 @@ public class MongoMatchDao implements MatchDao {
 
         getDatastore().save(mongoMatch);
 
-        return getDozerMapper().map(mongoMatch, Match.class);
+        final var createdMatch = getDozerMapper().map(mongoMatch, Match.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdMatch)
+                .named(MATCH_CREATED)
+                .build());
+
+        return createdMatch;
 
     }
 
@@ -154,6 +165,13 @@ public class MongoMatchDao implements MatchDao {
         } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
+
+        final var deletedMatch = getDozerMapper().map(toDelete, Match.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedMatch)
+                .named(MATCH_DELETED)
+                .build());
 
     }
 
@@ -237,6 +255,15 @@ public class MongoMatchDao implements MatchDao {
     @Inject
     public void setMongoMatchUtils(MongoMatchUtils mongoMatchUtils) {
         this.mongoMatchUtils = mongoMatchUtils;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

@@ -1,8 +1,12 @@
 package dev.getelements.elements.sdk.mongo.test;
 
+import com.mongodb.MongoException;
+import com.mongodb.client.MongoClients;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.ShutdownHooks;
+import org.bson.BsonDocument;
+import org.bson.BsonInt32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,6 +88,8 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
 
             }
 
+            waitForPrimary(port);
+
             this.uuid = uuid;
             this.process = process;
             this.running = true;
@@ -130,6 +136,41 @@ public abstract class CliMongoTestInstance implements MongoTestInstance {
                 sleep(CONNECT_POLLING_RATE);
             }
         }
+
+    }
+
+    /**
+     * A single-node replica set accepts the connection and returns from {@code rs.initiate()} well before it
+     * finishes electing itself PRIMARY. Writing (e.g. Guice eager singletons in test bootstrap) before that
+     * election completes fails with {@code MongoNotPrimaryException}, so poll {@code hello} until the server
+     * reports itself writable.
+     */
+    private void waitForPrimary(final int port) throws InterruptedException {
+
+        final var connectionString = format("mongodb://127.0.0.1:%d/?connectTimeoutMS=1000&serverSelectionTimeoutMS=1000", port);
+
+        for (int i = 0; i < CONNECT_POLLING_CYCLES; ++i) {
+            try (final var client = MongoClients.create(connectionString)) {
+
+                final var hello = client.getDatabase("admin")
+                        .runCommand(new BsonDocument("hello", new BsonInt32(1)));
+
+                final var writablePrimary = hello.containsKey("isWritablePrimary")
+                        ? hello.get("isWritablePrimary")
+                        : hello.get("ismaster");
+
+                if (Boolean.TRUE.equals(writablePrimary)) {
+                    return;
+                }
+
+            } catch (MongoException ex) {
+                logger.debug("Mongo not yet ready for writes.", ex);
+            }
+
+            sleep(CONNECT_POLLING_RATE);
+        }
+
+        logger.warn("Timed out waiting for Mongo instance on port {} to become writable primary.", port);
 
     }
 

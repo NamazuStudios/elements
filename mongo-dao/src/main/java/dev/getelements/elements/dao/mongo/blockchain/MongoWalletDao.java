@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.WalletDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
@@ -26,6 +27,7 @@ import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.eq;
@@ -47,6 +49,8 @@ public class MongoWalletDao implements WalletDao {
     private MongoDBUtils mongoDBUtils;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Wallet> getWallets(
@@ -248,7 +252,14 @@ public class MongoWalletDao implements WalletDao {
             throw new WalletNotFoundException();
         }
 
-        return getMapper().map(mongoWallet, Wallet.class);
+        final var updatedWallet = getMapper().map(mongoWallet, Wallet.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedWallet)
+                .named(WALLET_UPDATED)
+                .build());
+
+        return updatedWallet;
 
     }
 
@@ -288,7 +299,14 @@ public class MongoWalletDao implements WalletDao {
 
         getDatastore().insert(mongoWallet);
 
-        return getMapper().map(mongoWallet, Wallet.class);
+        final var createdWallet = getMapper().map(mongoWallet, Wallet.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdWallet)
+                .named(WALLET_CREATED)
+                .build());
+
+        return createdWallet;
 
     }
 
@@ -301,10 +319,19 @@ public class MongoWalletDao implements WalletDao {
                 .find(MongoWallet.class)
                 .filter(eq("_id", objectId));
 
+        final var mongoWallet = query.first();
+
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0)
             throw new WalletNotFoundException();
+
+        final var deletedWallet = getMapper().map(mongoWallet, Wallet.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedWallet)
+                .named(WALLET_DELETED)
+                .build());
 
     }
 
@@ -325,10 +352,19 @@ public class MongoWalletDao implements WalletDao {
 
         query.filter(eq("user", mongoUser.get()));
 
+        final var mongoWallet = query.first();
+
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0)
             throw new WalletNotFoundException();
+
+        final var deletedWallet = getMapper().map(mongoWallet, Wallet.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedWallet)
+                .named(WALLET_DELETED)
+                .build());
 
     }
 
@@ -348,10 +384,19 @@ public class MongoWalletDao implements WalletDao {
 
         query.filter(eq("vault", mongoVault.get()));
 
+        final var mongoWallet = query.first();
+
         final var result = query.delete();
 
         if (result.getDeletedCount() == 0)
             throw new WalletNotFoundException();
+
+        final var deletedWallet = getMapper().map(mongoWallet, Wallet.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedWallet)
+                .named(WALLET_DELETED)
+                .build());
 
     }
 
@@ -418,6 +463,15 @@ public class MongoWalletDao implements WalletDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

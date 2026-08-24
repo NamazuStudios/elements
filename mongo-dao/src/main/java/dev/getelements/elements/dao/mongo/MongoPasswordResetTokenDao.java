@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.mongo.model.user.MongoPasswordResetToken;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.PasswordResetTokenDao;
 import dev.getelements.elements.sdk.model.user.PasswordResetToken;
 import dev.getelements.elements.sdk.model.user.User;
@@ -12,6 +13,7 @@ import jakarta.inject.Inject;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static dev.morphia.query.filters.Filters.eq;
 
@@ -22,6 +24,8 @@ public class MongoPasswordResetTokenDao implements PasswordResetTokenDao {
     private MongoUserDao mongoUserDao;
 
     private MapperRegistry mapperRegistry;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public String createToken(final User user, final Timestamp expiry) {
@@ -35,6 +39,13 @@ public class MongoPasswordResetTokenDao implements PasswordResetTokenDao {
         entity.setExpiry(expiry);
 
         getDatastore().insert(entity);
+
+        final var createdToken = getMapperRegistry().map(entity, PasswordResetToken.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdToken)
+                .named(PASSWORD_RESET_TOKEN_CREATED)
+                .build());
 
         return token;
     }
@@ -62,9 +73,25 @@ public class MongoPasswordResetTokenDao implements PasswordResetTokenDao {
 
     @Override
     public void deleteToken(final String token) {
-        getDatastore().find(MongoPasswordResetToken.class)
-                .filter(eq("_id", token))
-                .delete();
+
+        final var query = getDatastore().find(MongoPasswordResetToken.class)
+                .filter(eq("_id", token));
+
+        final var entity = query.first();
+
+        if (entity == null) {
+            return;
+        }
+
+        query.delete();
+
+        final var deletedToken = getMapperRegistry().map(entity, PasswordResetToken.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedToken)
+                .named(PASSWORD_RESET_TOKEN_DELETED)
+                .build());
+
     }
 
     @Override
@@ -75,6 +102,12 @@ public class MongoPasswordResetTokenDao implements PasswordResetTokenDao {
         getDatastore().find(MongoPasswordResetToken.class)
                 .filter(eq("user", mongoUser))
                 .delete(new DeleteOptions().multi(true));
+
+        getEventPublisher().accept(Event.builder()
+                .argument(user)
+                .named(PASSWORD_RESET_TOKENS_TRUNCATED)
+                .build());
+
     }
 
     public Datastore getDatastore() {
@@ -102,6 +135,15 @@ public class MongoPasswordResetTokenDao implements PasswordResetTokenDao {
     @Inject
     public void setMapperRegistry(MapperRegistry mapperRegistry) {
         this.mapperRegistry = mapperRegistry;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

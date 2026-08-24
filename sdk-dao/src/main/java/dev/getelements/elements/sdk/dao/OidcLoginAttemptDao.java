@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.auth.OidcLoginAttempt;
 
@@ -12,7 +13,31 @@ import java.util.Optional;
  * so that a replayed callback delivery or a concurrent double-poll cannot observe or create a session twice.
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = OidcLoginAttemptDao.OIDC_LOGIN_ATTEMPT_CREATED,
+        parameters = OidcLoginAttempt.class,
+        description = "Called when an OIDC login attempt was created."
+)
+@ElementEventProducer(
+        value = OidcLoginAttemptDao.OIDC_LOGIN_ATTEMPT_CREATED,
+        parameters = {OidcLoginAttempt.class, Transaction.class},
+        description = "Called when an OIDC login attempt was created. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = OidcLoginAttemptDao.OIDC_LOGIN_ATTEMPT_UPDATED,
+        parameters = OidcLoginAttempt.class,
+        description = "Called when an OIDC login attempt transitioned status (e.g. marked complete, marked failed, or claimed)."
+)
+@ElementEventProducer(
+        value = OidcLoginAttemptDao.OIDC_LOGIN_ATTEMPT_UPDATED,
+        parameters = {OidcLoginAttempt.class, Transaction.class},
+        description = "Called when an OIDC login attempt transitioned status. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface OidcLoginAttemptDao {
+
+    String OIDC_LOGIN_ATTEMPT_CREATED = "dev.getelements.elements.sdk.model.dao.oidc.login.attempt.created";
+
+    String OIDC_LOGIN_ATTEMPT_UPDATED = "dev.getelements.elements.sdk.model.dao.oidc.login.attempt.updated";
 
     /**
      * Creates and persists a new PENDING attempt.

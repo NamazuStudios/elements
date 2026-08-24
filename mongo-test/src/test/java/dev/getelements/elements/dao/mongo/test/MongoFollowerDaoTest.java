@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.FollowerDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
@@ -18,11 +19,36 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.FollowerDao.FOLLOWER_CREATED;
+import static dev.getelements.elements.sdk.dao.FollowerDao.FOLLOWER_DELETED;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoFollowerDaoTest {
+
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
+    private final List<Profile> createdEvents = new CopyOnWriteArrayList<>();
+
+    private final List<Profile> deletedEvents = new CopyOnWriteArrayList<>();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case FOLLOWER_CREATED -> createdEvents.add(ev.getEventArgument(0, Profile.class));
+                case FOLLOWER_DELETED -> deletedEvents.add(ev.getEventArgument(0, Profile.class));
+            }
+        });
+    }
 
     private FollowerDao followerDao;
 
@@ -56,6 +82,10 @@ public class MongoFollowerDaoTest {
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(testProfileB.getId());
         getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest.getFollowedId());
+        assertTrue(
+                createdEvents.stream().anyMatch(p -> p.getId().equals(testProfileB.getId())),
+                "Expected FOLLOWER_CREATED event for profile: " + testProfileB.getId()
+        );
     }
 
     @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = DuplicateException.class)
@@ -98,6 +128,10 @@ public class MongoFollowerDaoTest {
     @Test(dependsOnMethods = {"testGetFollower", "testGetFollowers"})
     public void testDeleteFollower(){
         getFollowerDao().deleteFollowerForProfile(testProfileA.getId(), testProfileB.getId());
+        assertTrue(
+                deletedEvents.stream().anyMatch(p -> p.getId().equals(testProfileB.getId())),
+                "Expected FOLLOWER_DELETED event for profile: " + testProfileB.getId()
+        );
     }
 
     @Test(dependsOnMethods = {"testGetFollower", "testGetFollowers"}, expectedExceptions = NotFoundException.class)

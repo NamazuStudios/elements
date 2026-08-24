@@ -1,5 +1,6 @@
 package dev.getelements.elements.dao.mongo.blockchain;
 
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.VaultDao;
 import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.dao.mongo.MongoUserDao;
@@ -20,6 +21,7 @@ import dev.getelements.elements.sdk.model.util.MapperRegistry;
 
 import jakarta.inject.Inject;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.filters.Filters.and;
@@ -39,6 +41,8 @@ public class MongoVaultDao implements VaultDao {
     private MongoWalletDao mongoWalletDao;
 
     private ValidationHelper validationHelper;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Vault> getVaults(final int offset, final int count, final String userId) {
@@ -133,7 +137,14 @@ public class MongoVaultDao implements VaultDao {
         }
 
         getDatastore().insert(mongoVault);
-        return getMapper().map(mongoVault, Vault.class);
+        final var createdVault = getMapper().map(mongoVault, Vault.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdVault)
+                .named(VAULT_CREATED)
+                .build());
+
+        return createdVault;
 
     }
 
@@ -165,7 +176,14 @@ public class MongoVaultDao implements VaultDao {
             throw new VaultNotFoundException();
         }
 
-        return getMapper().map(updated, Vault.class);
+        final var updatedVault = getMapper().map(updated, Vault.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedVault)
+                .named(VAULT_UPDATED)
+                .build());
+
+        return updatedVault;
 
     }
 
@@ -201,6 +219,12 @@ public class MongoVaultDao implements VaultDao {
             return Optional.empty();
         } else {
             final var mapped = getMapper().map(updated, Vault.class);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(mapped)
+                    .named(VAULT_UPDATED)
+                    .build());
+
             return Optional.of(mapped);
         }
 
@@ -221,6 +245,13 @@ public class MongoVaultDao implements VaultDao {
         }
 
         getMongoWalletDao().deleteWalletsInMongoVault(deleted);
+
+        final var deletedVault = getMapper().map(deleted, Vault.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedVault)
+                .named(VAULT_DELETED)
+                .build());
 
     }
 
@@ -244,6 +275,13 @@ public class MongoVaultDao implements VaultDao {
         }
 
         getMongoWalletDao().deleteWalletsInMongoVault(deleted);
+
+        final var deletedVault = getMapper().map(deleted, Vault.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(deletedVault)
+                .named(VAULT_DELETED)
+                .build());
 
     }
 
@@ -299,6 +337,15 @@ public class MongoVaultDao implements VaultDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 
 }

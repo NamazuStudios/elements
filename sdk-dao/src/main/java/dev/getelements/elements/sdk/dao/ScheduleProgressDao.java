@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.dao;
 
+import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.mission.Mission;
@@ -15,6 +16,26 @@ import java.util.List;
  * Manages {@link Progress} instances for the
  */
 @ElementServiceExport
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_CREATED,
+        parameters = Progress.class,
+        description = "Called when a progress was created as a result of assigning a schedule's missions to a profile."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_CREATED,
+        parameters = {Progress.class, Transaction.class},
+        description = "Called when a progress was created as a result of assigning a schedule's missions to a profile. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_DELETED,
+        parameters = Progress.class,
+        description = "Called when a progress was deleted as a result of unassigning a schedule's missions from a profile."
+)
+@ElementEventProducer(
+        value = ProgressDao.PROGRESS_DELETED,
+        parameters = {Progress.class, Transaction.class},
+        description = "Called when a progress was deleted as a result of unassigning a schedule's missions from a profile. This variant includes the transaction so that reactions to this event can be performed in the same transaction."
+)
 public interface ScheduleProgressDao {
 
     /**

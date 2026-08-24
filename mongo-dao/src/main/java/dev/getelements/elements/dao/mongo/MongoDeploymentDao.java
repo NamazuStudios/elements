@@ -1,6 +1,7 @@
 package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.DeploymentDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.model.MongoDeployment;
@@ -20,6 +21,7 @@ import jakarta.inject.Inject;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.Sort.descending;
@@ -36,6 +38,8 @@ public class MongoDeploymentDao implements DeploymentDao {
     private MapperRegistry beanMapperRegistry;
 
     private MongoApplicationDao mongoApplicationDao;
+
+    private Consumer<Event> eventPublisher;
 
     @Override
     public Pagination<Deployment> getDeployments(String applicationId, final int offset, final int count) {
@@ -122,7 +126,14 @@ public class MongoDeploymentDao implements DeploymentDao {
 
         }
 
-        return getBeanMapper().map(result, Deployment.class);
+        final var updatedDeployment = getBeanMapper().map(result, Deployment.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(updatedDeployment)
+                .named(DEPLOYMENT_UPDATED)
+                .build());
+
+        return updatedDeployment;
 
     }
 
@@ -139,7 +150,14 @@ public class MongoDeploymentDao implements DeploymentDao {
             throw new DuplicateException(ex);
         }
 
-        return getBeanMapper().map(mongoDeployment, Deployment.class);
+        final var createdDeployment = getBeanMapper().map(mongoDeployment, Deployment.class);
+
+        getEventPublisher().accept(Event.builder()
+                .argument(createdDeployment)
+                .named(DEPLOYMENT_CREATED)
+                .build());
+
+        return createdDeployment;
 
     }
 
@@ -155,12 +173,21 @@ public class MongoDeploymentDao implements DeploymentDao {
             eq("application", application)
         );
 
+        final var existing = query.first();
+
         final var writeResult = query.delete();
 
         if (writeResult.getDeletedCount() == 0) {
             throw new NotFoundException("Deployment not found: " + deploymentId);
         } else if (writeResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
+        }
+
+        if (existing != null) {
+            getEventPublisher().accept(Event.builder()
+                    .argument(getBeanMapper().map(existing, Deployment.class))
+                    .named(DEPLOYMENT_DELETED)
+                    .build());
         }
 
     }
@@ -201,5 +228,14 @@ public class MongoDeploymentDao implements DeploymentDao {
     @Inject
     public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
         this.mongoApplicationDao = mongoApplicationDao;
+    }
+
+    public Consumer<Event> getEventPublisher() {
+        return eventPublisher;
+    }
+
+    @Inject
+    public void setEventPublisher(Consumer<Event> eventPublisher) {
+        this.eventPublisher = eventPublisher;
     }
 }

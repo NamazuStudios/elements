@@ -1,7 +1,11 @@
 package dev.getelements.elements.dao.mongo.test;
 
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.UniqueCodeDao;
+import dev.getelements.elements.sdk.model.ucode.UniqueCode;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -9,6 +13,8 @@ import org.testng.annotations.Test;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
+import static dev.getelements.elements.sdk.dao.UniqueCodeDao.*;
 import static io.smallrye.common.constraint.Assert.assertFalse;
 import static org.hibernate.validator.internal.util.Contracts.assertTrue;
 import static org.testng.Assert.assertEquals;
@@ -25,7 +31,28 @@ public class MongoUniqueCodeDaoTest {
 
     private ApplicationTestFactory applicationTestFactory;
 
+    @Inject
+    @Named(ROOT)
+    private ElementRegistry elementRegistry;
+
     private final Set<String> generated = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> createdEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> updatedEventIds = ConcurrentHashMap.newKeySet();
+
+    private final Set<String> deletedEventIds = ConcurrentHashMap.newKeySet();
+
+    @BeforeClass
+    public void setupEventHandlers() {
+        elementRegistry.onEvent(ev -> {
+            switch (ev.getEventName()) {
+                case UNIQUE_CODE_CREATED -> createdEventIds.add(ev.getEventArgument(0, UniqueCode.class).getId());
+                case UNIQUE_CODE_UPDATED -> updatedEventIds.add(ev.getEventArgument(0, UniqueCode.class).getId());
+                case UNIQUE_CODE_DELETED -> deletedEventIds.add(ev.getEventArgument(0, UniqueCode.class).getId());
+            }
+        });
+    }
 
     @DataProvider(parallel = true)
     public Object[][] lengths() {
@@ -54,6 +81,8 @@ public class MongoUniqueCodeDaoTest {
         assertEquals(parameters.timeout(), code.getTimeout(), "Expected timeout to match.");
         assertNull(code.getUser(), "Expected user to be null.");
         assertNull(code.getProfile(), "Expected profile to be null.");
+
+        assertTrue(createdEventIds.contains(code.getId()), "Expected UNIQUE_CODE_CREATED event for " + code.getId());
 
     }
 
@@ -124,6 +153,9 @@ public class MongoUniqueCodeDaoTest {
         final var uniqueCode = getUniqueCodeDao().getCode(code);
         assertEquals(code, uniqueCode.getId());
 
+        getUniqueCodeDao().resetTimeout(code);
+        assertTrue(updatedEventIds.contains(code), "Expected UNIQUE_CODE_UPDATED event for " + code);
+
     }
 
     @Test(groups = "releaseUniqueCode", dataProvider = "codes", dependsOnGroups = "getUniqueCode")
@@ -131,6 +163,7 @@ public class MongoUniqueCodeDaoTest {
         getUniqueCodeDao().releaseCode(code);
         assertFalse(getUniqueCodeDao().tryReleaseCode(code));
         assertFalse(getUniqueCodeDao().findCode(code).isPresent());
+        assertTrue(deletedEventIds.contains(code), "Expected UNIQUE_CODE_DELETED event for " + code);
     }
 
     public UniqueCodeDao getUniqueCodeDao() {
