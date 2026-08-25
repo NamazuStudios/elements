@@ -15,58 +15,13 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 /**
  * Holds a connection to the remote service and dispatches {@link Invocation}.
  */
-public interface RemoteInvoker {
-
-    /**
-     * The default timeout for the {@link RemoteInvoker}
-     */
-    long DEFAULT_TIMEOUT = 5;
-
-    /**
-     * The default time unit for the {@link RemoteInvoker}.
-     */
-    TimeUnit DEFAULT_TIMEOUT_UNITS = MINUTES;
-
-    /**
-     * The minimum underlying connections to maintain.
-     */
-    String REMOTE_INVOKER_MIN_CONNECTIONS = "dev.getelements.elements.sdk.cluster.remote.RemoteInvoker.minConnections";
-
-    /**
-     * The maximum underlying connections to maintain.
-     */
-    String REMOTE_INVOKER_MAX_CONNECTIONS = "dev.getelements.elements.sdk.cluster.remote.RemoteInvoker.maxConnections";
-
-    /**
-     * Gets the connection address for this {@link RemoteInvoker}. This should be the last value passed to
-     * {@link #start(String)} or {@link #start(String, long, TimeUnit)}.
-     *
-     * @return the connect address
-     */
-    String getConnectAddress();
-
-    /**
-     * Starts this {@link RemoteInvoker} and connects to the supplied address.
-     *
-     * @param connectAddress the connect address
-     */
-    default void start(final String connectAddress) { start(connectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS); }
-
-    /**
-     * Starts up thin is complete.
-     *
-     * The default implementation of this method does nothing in case no setup is necessary.
-     */
-    void start(String connectAddress, long timeout, TimeUnit timeoutTimeUnit);
+public interface RemoteInvoker extends AutoCloseable {
 
     /**
      * Stops this {@link RemoteInvoker}.  This method must gracefully shut down all connections and stop any worker
-     * threads.
-     *
-     * THe default implementation of this method does nothing in case no shutdown is necessary.
-     *
+     * threads. The default implementation of this method does nothing in case no shutdown is necessary.
      */
-    default void stop() {}
+    default void close() {}
 
     /**
      *

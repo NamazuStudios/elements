@@ -160,6 +160,7 @@
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.9.25</kotlin.version>
+        <kotlinx-coroutines.version>1.8.0</kotlinx-coroutines.version>
         <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
         <google-api-client.version>2.0.0</google-api-client.version>
         <near-java-api.version>0.2.0</near-java-api.version>
@@ -819,6 +820,16 @@
                 <version>${kotlin.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <!--
+                Depend on the "-jvm" artifact directly rather than the multiplatform "kotlinx-coroutines-core"
+                artifact. Maven does not understand Gradle module metadata, so resolving the plain artifact
+                pulls the common/metadata variant instead of the actual JVM classes.
+            -->
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-core-jvm</artifactId>
+                <version>${kotlinx-coroutines.version}</version>
             </dependency>
             <!-- Third Party Dependencies (With Specific Exclusions) -->
             <dependency>
