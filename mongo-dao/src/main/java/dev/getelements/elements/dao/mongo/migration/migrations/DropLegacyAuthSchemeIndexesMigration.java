@@ -21,6 +21,9 @@ import org.slf4j.LoggerFactory;
  * never collides going forward; this migration removes the old, orphaned index so upgraded deployments end
  * up fully clean.
  *
+ * NOTE: The catch-all introduced in PR #68 made this migration irrelevant, but I'm leaving it in for now as
+ * an example.
+ *
  * <p>A no-op if the old index (or the collection itself) is already gone.
  */
 public class DropLegacyAuthSchemeIndexesMigration implements PreDatastoreMigration {
