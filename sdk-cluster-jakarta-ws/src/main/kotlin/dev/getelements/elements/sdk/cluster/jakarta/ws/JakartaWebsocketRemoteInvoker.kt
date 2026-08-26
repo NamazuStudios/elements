@@ -20,7 +20,15 @@ class JakartaWebsocketRemoteInvoker(
         invocation: Invocation,
         asyncInvocationResultConsumerList: List<Consumer<InvocationResult>>,
         asyncInvocationErrorConsumer: InvocationErrorConsumer
-    ): AsyncOperation? = null
+    ): AsyncOperation {
+        val operation = JakartaWebsocketAsyncOperation(
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer
+        )
+        operation.send()
+        return operation
+    }
 
     override fun invokeCompletionStage(
         invocation: Invocation,
@@ -29,6 +37,6 @@ class JakartaWebsocketRemoteInvoker(
     ): CompletionStage<Any> = JakartaWebsocketRemoteInvocation(
         invocation,
         asyncInvocationResultConsumerList,
-        asyncInvocationErrorConsumer).send();
+        asyncInvocationErrorConsumer).send()
 
 }

@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.Envelope.Type
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationErrorEnvelope
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope.Mode
+import dev.getelements.elements.sdk.cluster.remote.AsyncOperation
 import dev.getelements.elements.sdk.cluster.remote.Invocation
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
 import dev.getelements.elements.sdk.cluster.remote.InvocationResult
@@ -14,20 +15,19 @@ import jakarta.websocket.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.yield
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.BitSet
-import java.util.concurrent.CompletableFuture
 
 class JakartaWebsocketAsyncOperation(
     private val invocation: Invocation,
     private val asyncInvocationResultConsumerList: List<java.util.function.Consumer<InvocationResult>>,
     private val asyncInvocationErrorConsumer: InvocationErrorConsumer
-) {
+) : AsyncOperation {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(JakartaWebsocketAsyncOperation::class.java)
@@ -45,7 +45,10 @@ class JakartaWebsocketAsyncOperation(
 
     private var asyncCompleted: BitSet = BitSet(asyncInvocationResultConsumerList.size)
 
-    fun send() : CompletableFuture<Any?> = scope.future {
+    @Volatile
+    private var canceled: Boolean = false
+
+    fun send() = scope.launch {
 
         logger.trace("Waiting for connection to send invocation.")
 
@@ -133,12 +136,16 @@ class JakartaWebsocketAsyncOperation(
 
         }
 
-        asyncInvocationResultConsumerList.get(envelope.param).accept(envelope.payload)
+        asyncInvocationResultConsumerList[envelope.param].accept(envelope.payload)
 
     }
 
-    private fun fail(envelope: Envelope<Any>) {
+    private fun fail(envelope: Envelope<*>) {
         error = InternalException("Received unexpected message type:${envelope.type}}")
+    }
+
+    override fun cancel() {
+        canceled = true
     }
 
 }

@@ -4,7 +4,6 @@ import dev.getelements.elements.sdk.cluster.annotation.Dispatch.Type;
 import dev.getelements.elements.sdk.cluster.annotation.RemotelyInvokable;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**'
  * A special return type which can be returnd by methods annotated with {@link RemotelyInvokable} which also meet the
@@ -21,24 +20,8 @@ public interface AsyncOperation {
     void cancel();
 
     /**
-     * Sets the operation to automatically cancel after the supplied time has elapsed.
-     *
-     * @param time the time to wait
-     * @param timeUnit the time unit to wait
-     */
-    void timeout(long time, TimeUnit timeUnit);
-
-    /**
      * Used as a default return value when implementing methods that return an instance of {@link AsyncOperation}.
      */
-    AsyncOperation DEFAULT = new AsyncOperation() {
-
-        @Override
-        public void cancel() {}
-
-        @Override
-        public void timeout(long time, TimeUnit timeUnit) {}
-
-    };
+    AsyncOperation DEFAULT = () -> {};
 
 }

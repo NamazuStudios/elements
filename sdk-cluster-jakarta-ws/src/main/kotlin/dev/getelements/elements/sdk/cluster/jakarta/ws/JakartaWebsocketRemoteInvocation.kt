@@ -51,7 +51,7 @@ class JakartaWebsocketRemoteInvocation(
 
     private var asyncCompleted: BitSet = BitSet(asyncInvocationResultConsumerList.size)
 
-    fun send() : CompletableFuture<Any?> = scope.future {
+    fun send() : CompletableFuture<Any> = scope.future {
 
         logger.trace("Waiting for connection to send invocation.")
 
@@ -98,7 +98,7 @@ class JakartaWebsocketRemoteInvocation(
         }
 
         logger.trace("Response sent. Returning sync result.")
-        syncResult?.payload
+        syncResult!!.payload
 
     }
 
