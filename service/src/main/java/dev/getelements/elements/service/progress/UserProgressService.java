@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.progress;
 
+import dev.getelements.elements.sdk.dao.MissionDao;
 import dev.getelements.elements.sdk.dao.ProgressDao;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -21,6 +22,8 @@ public class UserProgressService implements ProgressService {
     private Supplier<Profile> currentProfileSupplier;
 
     private ProgressDao progressDao;
+
+    private MissionDao missionDao;
 
     @Override
     public Progress getProgress(final String progressId) {
@@ -70,6 +73,26 @@ public class UserProgressService implements ProgressService {
     @Override
     public void deleteProgress(String progressNameOrId) { throw new ForbiddenException("Unprivileged requests are unable to modify progress."); }
 
+    @Override
+    public Progress advanceProgress(final String progressId, final int actions) {
+
+        final var progress = getProgressDao().getProgress(progressId);
+
+        if (!progress.getProfile().getId().equals(getCurrentProfileSupplier().get().getId())) {
+            throw new NotFoundException();
+        }
+
+        final var mission = getMissionDao().getMissionByNameOrId(progress.getMission().getId());
+
+        if (mission.getAuthoritative() == null || mission.getAuthoritative()) {
+            throw new ForbiddenException(
+                    "This mission's progress is authoritative and can only be advanced by server-side Element code.");
+        }
+
+        return getProgressDao().advanceProgress(progress, actions);
+
+    }
+
     public ProgressDao getProgressDao() {
         return progressDao;
     }
@@ -77,6 +100,15 @@ public class UserProgressService implements ProgressService {
     @Inject
     public void setProgressDao(ProgressDao progressDao) {
         this.progressDao = progressDao;
+    }
+
+    public MissionDao getMissionDao() {
+        return missionDao;
+    }
+
+    @Inject
+    public void setMissionDao(MissionDao missionDao) {
+        this.missionDao = missionDao;
     }
 
     public Supplier<Profile> getCurrentProfileSupplier() {

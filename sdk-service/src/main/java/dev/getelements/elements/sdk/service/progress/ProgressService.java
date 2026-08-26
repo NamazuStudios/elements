@@ -100,4 +100,19 @@ public interface ProgressService {
      */
     void deleteProgress(String progressNameOrId);
 
+    /**
+     * Advances the {@link Progress} identified by {@code progressId} by the specified number of actions,
+     * decrementing {@link Progress#getRemaining()} and, as steps are completed, advancing to subsequent
+     * {@link dev.getelements.elements.sdk.model.mission.Step}s and issuing their rewards.
+     * <p>
+     * This is only permitted for {@link dev.getelements.elements.sdk.model.mission.Mission}s explicitly marked
+     * non-authoritative ({@code Mission#getAuthoritative() == false}) when called by an unprivileged user;
+     * superuser callers may always advance progress regardless of the mission's authoritative setting.
+     *
+     * @param progressId the progress ID
+     * @param actions the number of actions to apply
+     * @return the {@link Progress} as it was written to the database
+     */
+    Progress advanceProgress(String progressId, int actions);
+
 }

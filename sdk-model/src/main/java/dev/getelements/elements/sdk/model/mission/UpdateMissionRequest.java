@@ -33,6 +33,11 @@ public class UpdateMissionRequest implements Taggable {
     @Schema(description = "The metadata for this mission")
     private Map<String, Object> metadata;
 
+    @Schema(description = "Whether this mission's Progress is authoritative (server-only mutation via " +
+            "Element code) or may be advanced directly by a client via the REST API. Omit to leave the " +
+            "mission's current value unchanged.")
+    private Boolean authoritative;
+
     /**
      * Returns the display name for the mission.
      *
@@ -141,15 +146,33 @@ public class UpdateMissionRequest implements Taggable {
         this.metadata = metadata;
     }
 
+    /**
+     * Returns whether this mission's progress is authoritative (server-only mutation).
+     *
+     * @return whether progress is authoritative, or null to leave unchanged
+     */
+    public Boolean getAuthoritative() {
+        return authoritative;
+    }
+
+    /**
+     * Sets whether this mission's progress is authoritative (server-only mutation).
+     *
+     * @param authoritative whether progress is authoritative
+     */
+    public void setAuthoritative(Boolean authoritative) {
+        this.authoritative = authoritative;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof UpdateMissionRequest that)) return false;
-        return Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && Objects.equals(tags, that.tags) && Objects.equals(steps, that.steps) && Objects.equals(finalRepeatStep, that.finalRepeatStep) && Objects.equals(metadata, that.metadata);
+        return Objects.equals(displayName, that.displayName) && Objects.equals(description, that.description) && Objects.equals(tags, that.tags) && Objects.equals(steps, that.steps) && Objects.equals(finalRepeatStep, that.finalRepeatStep) && Objects.equals(metadata, that.metadata) && Objects.equals(authoritative, that.authoritative);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(displayName, description, tags, steps, finalRepeatStep, metadata);
+        return Objects.hash(displayName, description, tags, steps, finalRepeatStep, metadata, authoritative);
     }
 
     @Override
@@ -161,6 +184,7 @@ public class UpdateMissionRequest implements Taggable {
                 ", steps=" + steps +
                 ", finalRepeatStep=" + finalRepeatStep +
                 ", metadata=" + metadata +
+                ", authoritative=" + authoritative +
                 '}';
     }
 }
