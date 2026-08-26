@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.cluster.remote.Invocation
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
 import dev.getelements.elements.sdk.cluster.remote.InvocationResult
 import dev.getelements.elements.sdk.model.exception.InternalException
+import jakarta.websocket.ClientEndpoint
 import jakarta.websocket.OnMessage
 import jakarta.websocket.Session
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +24,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.BitSet
 
+@ClientEndpoint
 class JakartaWebsocketAsyncOperation(
     private val invocation: Invocation,
     private val asyncInvocationResultConsumerList: List<java.util.function.Consumer<InvocationResult>>,
