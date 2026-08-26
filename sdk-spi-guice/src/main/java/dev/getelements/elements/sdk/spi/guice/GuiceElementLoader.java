@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.annotation.ElementService;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.guice.GuiceServiceLocatorModule;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.spi.ElementScopedElementRegistry;
 import dev.getelements.elements.sdk.spi.ElementScopedElementRegistrySupplier;
@@ -28,15 +29,18 @@ import static dev.getelements.elements.sdk.ElementType.ISOLATED_CLASSPATH;
  *     <li>Each specification of {@link ElementServiceExport} will expose the the service exposed.</li>
  * </ul>
  *
- * <p>Element injectors are built with {@link Stage#PRODUCTION}, so every {@code @Singleton}-scoped binding
- * (not just explicit {@code .asEagerSingleton()} bindings) is constructed at Element-load time rather than
- * on first use, and every binding is eagerly validated up front (a misconfigured binding fails fast at load
- * time, not at first invocation). Because of this, a service class an Element author marks
- * {@code @Singleton} must obtain any shared mutable dependency (e.g. the platform's Mongo {@code Datastore})
- * through the SDK-provided live-delegating proxy/{@code Provider} rather than a raw injected reference —
- * otherwise eager construction can freeze a stale snapshot of that dependency (the failure mode from a past
- * incident where a raw {@code Datastore} was frozen into an eager singleton while the shared reference it
- * came from was later swapped for a fresh one).</p>
+ * <p>Element injectors are built with the {@link Stage} resolved by {@link GuiceStages#get()} — by default
+ * {@link Stage#DEVELOPMENT}, but configurable to {@link Stage#PRODUCTION} via
+ * {@value GuiceStages#STAGE_PROPERTY} / {@value GuiceStages#STAGE_ENV_VAR} for real server deployments.
+ * Under {@link Stage#PRODUCTION}, every {@code @Singleton}-scoped binding (not just explicit
+ * {@code .asEagerSingleton()} bindings) is constructed at Element-load time rather than on first use, and
+ * every binding is eagerly validated up front (a misconfigured binding fails fast at load time, not at
+ * first invocation). Because of this, a service class an Element author marks {@code @Singleton} must
+ * obtain any shared mutable dependency (e.g. the platform's Mongo {@code Datastore}) through the
+ * SDK-provided live-delegating proxy/{@code Provider} rather than a raw injected reference — otherwise
+ * eager construction can freeze a stale snapshot of that dependency (the failure mode from a past incident
+ * where a raw {@code Datastore} was frozen into an eager singleton while the shared reference it came from
+ * was later swapped for a fresh one).</p>
  */
 public class GuiceElementLoader implements ElementLoader {
 
@@ -46,7 +50,7 @@ public class GuiceElementLoader implements ElementLoader {
     public Element load(final MutableElementRegistry parent) {
 
         final var injector = Guice.createInjector(
-                Stage.PRODUCTION,
+                GuiceStages.get(),
                 newCoreModule(parent),
                 new GuiceServiceLocatorModule(),
                 new AbstractModule() {
