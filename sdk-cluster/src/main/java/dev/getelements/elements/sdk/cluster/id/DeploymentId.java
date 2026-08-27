@@ -10,10 +10,16 @@ import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.TASK;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
-public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
+public class DeploymentId implements
+        Serializable,
+        HasCompoundId<V1CompoundId> {
+
     final V1CompoundId v1CompoundId;
+
     private transient volatile int hash;
+
     private transient volatile byte[] bytes;
+
     private transient volatile String string;
 
     private DeploymentId() { v1CompoundId = null; }
@@ -23,7 +29,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
             this.v1CompoundId = new V1CompoundId.Builder()
                     .with(v1CompoundId)
                     .without(INSTANCE, RESOURCE, TASK)
-                    .only(APPLICATION)
+                    .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidApplicationIdException(ex);
@@ -36,8 +42,8 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
     public DeploymentId(final UUID applicationUuid) {
         try {
             v1CompoundId = new V1CompoundId.Builder()
-                    .with(APPLICATION, applicationUuid)
-                    .only(APPLICATION)
+                    .with(DEPLOYMENT, applicationUuid)
+                    .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidApplicationIdException(ex);
@@ -53,7 +59,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
         try {
             v1CompoundId = new V1CompoundId.Builder()
                     .with(stringRepresentation)
-                    .only(APPLICATION)
+                    .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidApplicationIdException(ex);
@@ -69,7 +75,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
         try {
             v1CompoundId = new V1CompoundId.Builder()
                     .with(byteRepresentation)
-                    .only(APPLICATION)
+                    .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidApplicationIdException(ex);
@@ -97,7 +103,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
      * @return the {@link UUID} for the application
      */
     public UUID getApplicationUUID() {
-        return v1CompoundId.getComponent(APPLICATION).getValue();
+        return v1CompoundId.getComponent(DEPLOYMENT).getValue();
     }
 
     /**
@@ -105,7 +111,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
      * @return the value as bytes
      */
     public byte[] asBytes() {
-        return bytes == null ? (bytes = v1CompoundId.asBytes(APPLICATION)) : bytes;
+        return bytes == null ? (bytes = v1CompoundId.asBytes(DEPLOYMENT)) : bytes;
     }
 
     /**
@@ -114,7 +120,7 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asEncodedString(APPLICATION)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(DEPLOYMENT)) : string;
     }
 
     /**
@@ -156,12 +162,12 @@ public class DeploymentId implements Serializable, HasCompoundId<V1CompoundId> {
         if (this == o) return true;
         if (!ApplicationId.class.equals(o.getClass())) return false;
         final ApplicationId applicationId = (ApplicationId) o;
-        return v1CompoundId.equals(applicationId.v1CompoundId, APPLICATION);
+        return v1CompoundId.equals(applicationId.v1CompoundId, DEPLOYMENT);
     }
 
     @Override
     public int hashCode() {
-        return hash == 0 ? (hash = v1CompoundId.hashCode(APPLICATION)) : hash;
+        return hash == 0 ? (hash = v1CompoundId.hashCode(DEPLOYMENT)) : hash;
     }
 
     @Override

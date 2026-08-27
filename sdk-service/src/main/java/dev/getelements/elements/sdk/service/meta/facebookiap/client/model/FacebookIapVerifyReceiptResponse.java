@@ -1,11 +1,11 @@
 package dev.getelements.elements.sdk.service.meta.facebookiap.client.model;
 
-import dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy;
+import dev.getelements.elements.sdk.model.annotation.ClientSerializationStrategy;
 
 import java.util.List;
 import java.util.Objects;
 
-import static dev.getelements.elements.sdk.cluster.annotation.ClientSerializationStrategy.META_GRAPH;
+import static dev.getelements.elements.sdk.model.annotation.ClientSerializationStrategy.META_GRAPH;
 
 @ClientSerializationStrategy(META_GRAPH)
 public class FacebookIapVerifyReceiptResponse {

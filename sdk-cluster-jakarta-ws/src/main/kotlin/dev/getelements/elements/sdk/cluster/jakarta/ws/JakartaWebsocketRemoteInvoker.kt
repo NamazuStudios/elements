@@ -1,9 +1,9 @@
 package dev.getelements.elements.sdk.cluster.jakarta.ws
 
 import dev.getelements.elements.sdk.cluster.remote.AsyncOperation
-import dev.getelements.elements.sdk.cluster.remote.Invocation
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
-import dev.getelements.elements.sdk.cluster.remote.InvocationResult
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker
 import dev.getelements.elements.sdk.util.io.PayloadReader
 import dev.getelements.elements.sdk.util.io.PayloadWriter

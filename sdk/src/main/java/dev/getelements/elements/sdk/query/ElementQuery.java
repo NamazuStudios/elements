@@ -2,19 +2,46 @@ package dev.getelements.elements.sdk.query;
 
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.address.ElementAddress;
 import dev.getelements.elements.sdk.exception.SdkServiceNotFoundException;
 import dev.getelements.elements.sdk.record.ElementServiceKey;
 
 import java.util.Optional;
 
 /**
- * The beginning queyr for a {@link Element} instance based on a {@link ElementRegistry}.
+ * The beginning query for a {@link Element} instance based on a {@link ElementRegistry}.
  *
- * @param registry
- * @param name
- * @param index
+ * @param registry the registry from which to fetch the {@link Element}
+ * @param element the {@link Element}
  */
-public record ElementQuery(ElementRegistry registry, String name, int index) implements Query<Element> {
+public record ElementQuery(ElementRegistry registry, ElementAddress element) implements Query<Element> {
+
+    /**
+     * Legacy adapter method to ensure backwards compatibility with existing code.
+     *
+     * @param registry the registry
+     * @param name the name
+     * @param index the index
+     */
+    public ElementQuery(ElementRegistry registry, String name, int index) {
+        this(registry, new ElementAddress(name, index));
+    }
+
+    /**
+     * The name as specified int he element address.
+     * @return the name
+     */
+    public String name() {
+        return element.name();
+    }
+
+    /**
+     * The index as specified in the element address.
+     * @return the index
+     */
+    public int index() {
+        return element.index();
+    }
 
     /**
      * Gets the {@link Element} for this {@link ElementQuery}.

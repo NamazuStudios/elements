@@ -5,7 +5,10 @@ package dev.getelements.elements.sdk.cluster.id;
  * 
  * @param <CompoundIdT>
  */
-interface HasCompoundId<CompoundIdT extends Comparable<CompoundIdT>> extends Comparable<HasCompoundId<CompoundIdT>>  {
+interface HasCompoundId<CompoundIdT extends Comparable<CompoundIdT>> extends
+        HasNodeId,
+        HasInstanceId,
+        Comparable<HasCompoundId<CompoundIdT>> {
 
     /**
      * Gets the compound ID instance.

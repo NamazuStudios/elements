@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.cluster.jakarta.ws.dto
 
-import dev.getelements.elements.sdk.cluster.remote.InvocationError
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError
 
 /**
  * Houses the invocation error type.

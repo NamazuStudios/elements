@@ -1,11 +1,13 @@
 package dev.getelements.elements.sdk.cluster.id;
 
 
+import dev.getelements.elements.sdk.cluster.id.exception.InvalidInstanceIdException;
 import dev.getelements.elements.sdk.cluster.id.exception.InvalidResourceIdException;
 import dev.getelements.elements.sdk.cluster.id.exception.InvalidTaskIdException;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.*;
@@ -23,12 +25,16 @@ import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.*;
  * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
-public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId>  {
+public class TaskId implements
+        Serializable,
+        HasNodeId,
+        HasInstanceId,
+        HasCompoundId<V1CompoundId>  {
 
     private static final int SIZE = new TaskId(new V1CompoundId.Builder()
             .with(INSTANCE, UUID.randomUUID())
             .with(RESOURCE, UUID.randomUUID())
-            .with(APPLICATION, UUID.randomUUID())
+            .with(DEPLOYMENT, UUID.randomUUID())
             .with(TASK, UUID.randomUUID())
             .build()).asBytes().length;
 
@@ -40,9 +46,9 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
 
     private transient volatile String string;
 
-    private transient volatile NodeId nodeId;
-
     private transient volatile ResourceId resourceId;
+
+    private transient volatile Optional<NodeId> nodeId;
 
     private TaskId() { v1CompoundId = null; }
 
@@ -50,7 +56,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             this.v1CompoundId = new V1CompoundId.Builder()
                     .with(v1CompoundId)
-                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE, TASK)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidResourceIdException(ex);
@@ -65,7 +71,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
             v1CompoundId = new V1CompoundId.Builder()
                     .with(resourceId.v1CompoundId)
                     .with(TASK, UUID.randomUUID())
-                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE, TASK)
                 .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidTaskIdException(ex);
@@ -81,7 +87,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             v1CompoundId = new V1CompoundId.Builder()
                     .with(stringRepresentation)
-                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE, TASK)
                 .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidTaskIdException(ex);
@@ -97,7 +103,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             v1CompoundId = new V1CompoundId.Builder()
                     .with(byteRepresentation)
-                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE, TASK)
                     .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidTaskIdException(ex);
@@ -110,13 +116,15 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     /**
-     * Returns the {@link NodeId} attached to this {@link TaskId}.
+     * Returns the {@link NodeId} assocaited with this {@link ResourceId}.
      *
      * @return the {@link NodeId}
      */
     @Override
-    public NodeId getNodeId() {
-        return nodeId == null ? (nodeId = new NodeId(v1CompoundId)) : nodeId;
+    public Optional<NodeId> findNodeId() {
+        return nodeId == null
+                ? (nodeId = Optional.of(new NodeId(v1CompoundId)))
+                : nodeId;
     }
 
     /**
@@ -128,12 +136,17 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         return resourceId == null ? (resourceId = new ResourceId(v1CompoundId)) : resourceId;
     }
 
+    @Override
+    public InstanceId getInstanceId() throws InvalidInstanceIdException {
+        return getResourceId().getInstanceId();
+    }
+
     /**
      * Returns the {@link byte[]} representation of this {@link TaskId}
      * @return
      */
     public byte[] asBytes() {
-        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION, RESOURCE, TASK)) : bytes;
+        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, DEPLOYMENT, RESOURCE, TASK)) : bytes;
     }
 
     /**
@@ -142,7 +155,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, APPLICATION, RESOURCE, TASK)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, DEPLOYMENT, RESOURCE, TASK)) : string;
     }
 
     /**
@@ -151,7 +164,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @param byteBuffer the {@link ByteBuffer} to receive the {@link TaskId}
      */
     public void toByteBuffer(final ByteBuffer byteBuffer) {
-        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, APPLICATION, RESOURCE, TASK);
+        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, DEPLOYMENT, RESOURCE, TASK);
     }
 
     /**
@@ -162,7 +175,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @param position the position at which to write the byte buffer
      */
     public void toByteBuffer(final ByteBuffer byteBuffer, int position) {
-        v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, APPLICATION, RESOURCE, TASK);
+        v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, DEPLOYMENT, RESOURCE, TASK);
     }
 
     /**
@@ -178,7 +191,7 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
             final int byteBufferPosition) {
         return new TaskId(new V1CompoundId.Builder()
                 .with(byteBufferRepresentation, byteBufferPosition, SIZE)
-                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                .only(INSTANCE, DEPLOYMENT, RESOURCE, TASK)
                 .build());
     }
 
@@ -187,12 +200,12 @@ public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         if (this == o) return true;
         if (!TaskId.class.equals(o.getClass())) return false;
         final TaskId taskId = (TaskId) o;
-        return v1CompoundId.equals(taskId.v1CompoundId, INSTANCE, APPLICATION, RESOURCE, TASK);
+        return v1CompoundId.equals(taskId.v1CompoundId, INSTANCE, DEPLOYMENT, RESOURCE, TASK);
     }
 
     @Override
     public int hashCode() {
-        return hash == 0 ? (hash = v1CompoundId.hashCode(INSTANCE, APPLICATION, RESOURCE, TASK)) : hash;
+        return hash == 0 ? (hash = v1CompoundId.hashCode(INSTANCE, DEPLOYMENT, RESOURCE, TASK)) : hash;
     }
 
     @Override

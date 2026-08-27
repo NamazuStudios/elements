@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.cluster.jakarta.ws.dto
 
-import dev.getelements.elements.sdk.cluster.remote.InvocationResult
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 
 /**
  * The invocation result envelope. Stores the response payload as well as wire info

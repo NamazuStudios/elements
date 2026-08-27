@@ -15,7 +15,10 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Finds a {@link Callback} from within a service type.
+ *
+ * @deprecated use {@link ElementMethodQuery} instead.
  */
+@Deprecated
 public record ElementCallbackQuery<ServiceT>(
         ElementServiceKey<? extends ServiceT> serviceKey,
         Supplier<? extends ServiceT> supplier,

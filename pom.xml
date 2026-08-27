@@ -805,6 +805,11 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.javolution</groupId>
+                <artifactId>javolution-core-java</artifactId>
+                <version>${javolution.version}</version>
+            </dependency>
             <!-- Jersey BOM -->
             <dependency>
                 <groupId>org.glassfish.jersey</groupId>

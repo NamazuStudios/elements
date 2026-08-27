@@ -375,9 +375,9 @@ class V1CompoundId implements Serializable, Comparable<V1CompoundId> {
         INSTANCE,
 
         /**
-         * Indicates the application ID.
+         * Indicates the deployment ID.
          */
-        APPLICATION,
+        DEPLOYMENT,
 
         /**
          * Indicates the Resource ID

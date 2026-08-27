@@ -1,7 +1,10 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
-import dev.getelements.elements.sdk.cluster.annotation.*;
-import dev.getelements.elements.sdk.cluster.routing.RoutingStrategy;
+import dev.getelements.elements.sdk.cluster.remote.annotation.*;
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
+import dev.getelements.elements.sdk.cluster.remote.routing.RoutingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,14 +174,13 @@ public class RemoteInvocationHandlerBuilder {
             route.setRoutingStrategyType(routingStrategyType);
             route.setRoutingStrategyName(routingStrategyName);
 
-            final Invocation invocation = new Invocation();
-
-            invocation.setDispatchType(getDispatchType());
-            invocation.setType(getType().getName());
-            invocation.setName(getName());
-            invocation.setMethod(getMethod().getName());
-            invocation.setParameters(parameters);
-            invocation.setArguments(parameterAssembler.apply(args));
+            final Invocation invocation = new Invocation(
+                getType().getName(),
+                getName(),
+                getMethod().getName(),
+                parameters,
+                parameterAssembler.apply(args),
+                getDispatchType());
 
             final InvocationErrorConsumer invocationErrorConsumer;
             invocationErrorConsumer = invocationErrorConsumerAssembler.apply(args);
@@ -259,7 +261,7 @@ public class RemoteInvocationHandlerBuilder {
         final int index = errorHandlerIndex(method);
 
         if (index < 0) {
-            return objects -> invocationError -> logger.error("Got invocation error.", invocationError.getThrowable());
+            return objects -> invocationError -> logger.error("Got invocation error.", invocationError.throwable());
         }
 
         final Parameter parameter = method.getParameters()[index];
@@ -272,7 +274,7 @@ public class RemoteInvocationHandlerBuilder {
             return invocationError -> {
                 try {
 
-                    final Throwable throwable = invocationError.getThrowable();
+                    final Throwable throwable = invocationError.throwable();
 
                     if (called.getAndSet(true)) {
                         // Remote calls may end up sending multiple errors for any number of reasons, so we ensure
@@ -317,16 +319,14 @@ public class RemoteInvocationHandlerBuilder {
 
                 return (Consumer<InvocationResult>) invocationResult -> {
                     try {
-                        handlerMethod.invoke(object, invocationResult.getResult());
+                        handlerMethod.invoke(object, invocationResult.result());
                     } catch (IllegalAccessException e) {
                         logger.error("Caught exception executing handler.", e);
-                        final InvocationError invocationError = new InvocationError();
-                        invocationError.setThrowable(e);
+                        final InvocationError invocationError = new InvocationError(e);
                         errorConsumer.acceptAndLogError(logger, invocationError);
                     } catch (InvocationTargetException e) {
                         logger.info("Caught exception calling handler.", e.getTargetException());
-                        final InvocationError invocationError = new InvocationError();
-                        invocationError.setThrowable(e.getTargetException());
+                        final InvocationError invocationError = new InvocationError(e.getTargetException());
                         errorConsumer.acceptAndLogError(logger, invocationError);
                     }
                 };

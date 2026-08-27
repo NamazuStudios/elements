@@ -5,9 +5,9 @@ import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.Envelope.Type
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationErrorEnvelope
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope
 import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope.Mode
-import dev.getelements.elements.sdk.cluster.remote.Invocation
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
-import dev.getelements.elements.sdk.cluster.remote.InvocationResult
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 import dev.getelements.elements.sdk.model.exception.InternalException
 import jakarta.websocket.ClientEndpoint
 import jakarta.websocket.OnMessage

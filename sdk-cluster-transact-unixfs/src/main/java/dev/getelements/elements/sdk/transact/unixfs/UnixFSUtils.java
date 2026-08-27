@@ -365,7 +365,7 @@ public class UnixFSUtils {
      */
     public Path resolveNodeStorageRoot(final HasNodeId hasNodeId) {
         return hasNodeId
-                .getOptionalNodeId()
+                .findNodeId()
                 .map(nodeId -> getNodeStorageRoot().resolve(nodeId.asString()))
                 .orElseThrow(() -> new IllegalArgumentException(format("%s must nave a node id", hasNodeId)))
                 .toAbsolutePath();

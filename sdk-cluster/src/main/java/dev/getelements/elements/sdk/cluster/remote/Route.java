@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
-import dev.getelements.elements.sdk.cluster.routing.RoutingStrategy;
+import dev.getelements.elements.sdk.cluster.remote.routing.RoutingStrategy;
 
 import java.util.List;
 import java.util.Objects;

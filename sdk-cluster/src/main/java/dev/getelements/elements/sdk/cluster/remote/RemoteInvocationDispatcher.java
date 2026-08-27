@@ -1,6 +1,9 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
-import dev.getelements.elements.sdk.cluster.annotation.Dispatch;
+import dev.getelements.elements.sdk.cluster.remote.annotation.Dispatch;
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
 
 import java.util.List;
 import java.util.concurrent.Future;

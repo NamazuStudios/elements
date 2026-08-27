@@ -25,7 +25,7 @@ public class StandardSnapshotBuilder implements Snapshot.Builder {
 
     @Override
     public StandardSnapshotBuilder load(final Path path) {
-        path.getOptionalNodeId().orElseThrow(() -> new IllegalArgumentException("Path must have NodeId"));
+        path.findNodeId().orElseThrow(() -> new IllegalArgumentException("Path must have NodeId"));
         pathList.add(path);
         return this;
     }

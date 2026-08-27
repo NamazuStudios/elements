@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.cluster.path;
 import dev.getelements.elements.sdk.cluster.id.exception.InvalidNodeIdException;
 import dev.getelements.elements.sdk.cluster.id.HasNodeId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
+import dev.getelements.elements.sdk.cluster.path.exception.InvalidPathException;
 
 import java.io.File;
 import java.io.Serializable;
@@ -31,10 +32,13 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Stream.concat;
 
 /**
- * Represents the path scheme for use in the server.
+ * Represents the path scheme for use in the server. This is used for routing and addressing resources within the
+ * cluster. Paths are a universal way to specify remote network resources in a variety of ways. This utility class can
+ * be used to parse the paths and structure the data. Additionally, it allows for parsing of separators and wildcards
+ * with alternative representations if necessary.
  *
- * This implements {@link HasNodeId} which uses the {@link #getContext()} to attempt to derive the {@link NodeId} or
- * throw an exception if the context does not produce a valid {@link NodeId}.
+ * Additionally, This implements {@link HasNodeId} which uses the {@link #getContext()} to attempt to derive the
+ * {@link NodeId} or throw an exception if the context does not produce a valid {@link NodeId}.
  *
  * If the path has a wildcard context, then it returns a null {@link NodeId}.
  *
@@ -146,9 +150,9 @@ public final class Path implements Serializable, HasNodeId {
     private static List<String> components(final Path parent, final Path path) {
 
         if (parent.hasContext() && path.hasContext() && !Objects.equals(path.getContext(), parent.getContext())) {
-            throw new IllegalArgumentException("Parent path must match " + parent.getContext() + "!=" + path.getComponents());
+            throw new InvalidPathException("Parent path must match " + parent.getContext() + "!=" + path.getComponents());
         } if (!parent.hasContext() && path.hasContext()) {
-            throw new IllegalArgumentException("Parent path must have context if child has context.");
+            throw new InvalidPathException("Parent path must have context if child has context.");
         }
 
         return concat(parent.getComponents().stream(), path.getComponents().stream()).collect(toList());
@@ -190,7 +194,7 @@ public final class Path implements Serializable, HasNodeId {
         this.wildcardRecursive = wildcardRecursiveIndex >= 0;
 
         if (this.wildcardRecursive && wildcardRecursiveIndex != components.size() - 1) {
-            throw new IllegalArgumentException("Wildcard recursive paths must end with " + WILDCARD_RECURSIVE);
+            throw new InvalidPathException("Wildcard recursive paths must end with " + WILDCARD_RECURSIVE);
         }
 
         this.wildcardIndices = IntStream.range(0,  components.size())
@@ -198,17 +202,17 @@ public final class Path implements Serializable, HasNodeId {
                 .toArray();
 
         if (WILDCARD_RECURSIVE.equals(context)) {
-            throw new IllegalArgumentException("Context cannot be: " + WILDCARD_RECURSIVE);
+            throw new InvalidPathException("Context cannot be: " + WILDCARD_RECURSIVE);
         }
 
         for (final var component : components) {
 
             if (component.contains(PATH_SEPARATOR)) {
-                throw new IllegalArgumentException(component + " cannot contain separator.");
+                throw new InvalidPathException(component + " cannot contain separator.");
             }
 
             if (!VALID_PATH_COMPONENT.matcher(component).matches()) {
-                throw new IllegalArgumentException(component + " has invalid characters");
+                throw new InvalidPathException(component + " has invalid characters");
             }
 
         }
@@ -593,7 +597,7 @@ public final class Path implements Serializable, HasNodeId {
      *
      * @param newContext the context
      * @return the Path, or this if the context matches
-     * @throws IllegalArgumentException if the context mismatches
+     * @throws InvalidPathException if the context mismatches
      */
     public Path toPathWithContext(final String newContext) {
         return Objects.equals(getContext(), newContext)
@@ -606,7 +610,7 @@ public final class Path implements Serializable, HasNodeId {
      *
      * @param hasNodeId the {@link HasNodeId} instance
      * @return the Path, or this if the context matches
-     * @throws IllegalArgumentException if the context mismatches
+     * @throws InvalidPathException if the context mismatches
      */
     public Path toPathWithContextIfAbsent(final HasNodeId hasNodeId) {
         return hasContext()
@@ -619,7 +623,7 @@ public final class Path implements Serializable, HasNodeId {
      *
      * @param newContext the context
      * @return the Path, or this if the context matches
-     * @throws IllegalArgumentException if the context mismatches
+     * @throws InvalidPathException if the context mismatches
      */
     public Path toPathWithContextIfAbsent(final String newContext) {
         return hasContext()
@@ -652,6 +656,11 @@ public final class Path implements Serializable, HasNodeId {
     @Override
     public NodeId getNodeId() throws InvalidNodeIdException {
         return !hasContext() ? null : nodeId == null ? (nodeId = nodeIdFromString(getContext())) : nodeId;
+    }
+
+    @Override
+    public Optional<NodeId> findNodeId() {
+        return Optional.empty();
     }
 
     @Override
@@ -722,7 +731,7 @@ public final class Path implements Serializable, HasNodeId {
     public static Path fromContextAndComponents(final HasNodeId hasNodeId, final String ... components) {
 
         final String context = hasNodeId
-            .getOptionalNodeId()
+            .findNodeId()
             .map(NodeId::asString)
             .orElse(null);
 
@@ -839,7 +848,7 @@ public final class Path implements Serializable, HasNodeId {
                 .collect(toList());
 
         if (contextAndPath.size() != 2) {
-            throw new IllegalArgumentException("Expected two results when splitting path with '://': " + path);
+            throw new InvalidPathException("Expected two results when splitting path with '://': " + path);
         }
 
         final var context = contextAndPath.get(0);

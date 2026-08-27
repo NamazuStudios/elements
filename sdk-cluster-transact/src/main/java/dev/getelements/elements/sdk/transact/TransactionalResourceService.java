@@ -359,7 +359,7 @@ public class TransactionalResourceService implements ResourceService {
     }
 
     private Path normalize(final Path path) {
-        return path.getOptionalNodeId().isPresent()
+        return path.findNodeId().isPresent()
                 ? path
                 : path.toPathWithContext(getNodeId().asString());
     }

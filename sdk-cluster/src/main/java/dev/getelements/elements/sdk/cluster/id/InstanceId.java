@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.exception.SdkException;
 
 import java.io.*;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.UUID;
 
 import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Builder;
@@ -17,7 +18,10 @@ import static java.util.UUID.randomUUID;
 /**
  * Represents an ID for an instance.
  */
-public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
+public class InstanceId implements
+        Serializable,
+        HasInstanceId,
+        HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;
 
@@ -74,7 +78,7 @@ public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
         try {
             this.v1CompoundId = new Builder()
                     .with(v1CompoundId)
-                    .without(APPLICATION, RESOURCE, TASK)
+                    .without(DEPLOYMENT, RESOURCE, TASK)
                     .only(INSTANCE)
                 .build();
 
@@ -92,8 +96,13 @@ public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
         return v1CompoundId.getComponent(INSTANCE).getValue();
     }
 
+    @Override
+    public InstanceId getInstanceId() throws InvalidInstanceIdException {
+        return this;
+    }
+
     /**
-     * Returns the compound Id string representation of this {@link NodeId}
+     * Returns the compound id string representation of this {@link NodeId}
      *
      * @return the string representation
      */

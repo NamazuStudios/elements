@@ -16,12 +16,15 @@ import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.*;
  * E.g. if we have three games/apps represented by UUIDs A1, A2, A3, and the workload necessitates horizontal scaling
  * across two ec2 instances represented by UUIDs I1, I2, then we will have six workers in the deployment addressable
  * with the pairs (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
+ *
+ * @deprecated Requests are no longer routed by {@link NodeId}
  */
+@Deprecated
 public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId> {
 
     private static final int SIZE = new NodeId(new V1CompoundId.Builder()
             .with(INSTANCE, UUID.randomUUID())
-            .with(APPLICATION, UUID.randomUUID())
+            .with(DEPLOYMENT, UUID.randomUUID())
         .build()).asBytes().length;
 
     final V1CompoundId v1CompoundId;
@@ -48,7 +51,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
             this.v1CompoundId = new V1CompoundId.Builder()
                     .with(v1CompoundId)
                     .without(TASK, RESOURCE)
-                    .only(INSTANCE, APPLICATION)
+                    .only(INSTANCE, DEPLOYMENT)
                 .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidNodeIdException(ex);
@@ -79,7 +82,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, APPLICATION)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, DEPLOYMENT)) : string;
     }
 
     /**
@@ -88,7 +91,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @return the bytes of this {@link NodeId}.
      */
     public byte[] asBytes() {
-        return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION)) : bytes).clone();
+        return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, DEPLOYMENT)) : bytes).clone();
     }
 
     /**
@@ -99,7 +102,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @param byteBuffer the byteBuffer to receive the {@link NodeId}
      */
     public void toByteBuffer(final ByteBuffer byteBuffer) {
-        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, APPLICATION);
+        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, DEPLOYMENT);
     }
 
     /**
@@ -110,7 +113,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      * @param position the position at which to write the byte buffer
      */
     public void toByteBuffer(final ByteBuffer byteBuffer, int position) {
-        v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, APPLICATION);
+        v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, DEPLOYMENT);
     }
 
     @Override
@@ -124,8 +127,8 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     @Override
-    public Optional<NodeId> getOptionalNodeId() {
-        return Optional.empty();
+    public Optional<NodeId> findNodeId() {
+        return Optional.of(this);
     }
 
     @Override
@@ -133,12 +136,12 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         if (o == null) return false;
         if (!NodeId.class.equals(o.getClass())) return false;
         final NodeId other = (NodeId)o;
-        return v1CompoundId.equals(other.v1CompoundId, INSTANCE, APPLICATION);
+        return v1CompoundId.equals(other.v1CompoundId, INSTANCE, DEPLOYMENT);
     }
 
     @Override
     public int hashCode() {
-        return hash == 0 ? (hash = v1CompoundId.hashCode(INSTANCE, APPLICATION)) : hash;
+        return hash == 0 ? (hash = v1CompoundId.hashCode(INSTANCE, DEPLOYMENT)) : hash;
     }
 
     @Override
@@ -162,7 +165,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
      */
     public boolean isMaster() {
         final var i = v1CompoundId.getComponent(INSTANCE).getValue();
-        final var n = v1CompoundId.getComponent(APPLICATION).getValue();
+        final var n = v1CompoundId.getComponent(DEPLOYMENT).getValue();
         return i.equals(n);
     }
 
@@ -184,7 +187,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     public static NodeId randomNodeId() {
         return new NodeId(new V1CompoundId.Builder()
                 .with(INSTANCE, UUID.randomUUID())
-                .with(APPLICATION, UUID.randomUUID())
+                .with(DEPLOYMENT, UUID.randomUUID())
                 .build()
         );
     }
@@ -203,8 +206,8 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
 
             final V1CompoundId v1CompoundId = new V1CompoundId.Builder()
                     .with(instanceId.v1CompoundId)
-                    .with(APPLICATION, instanceId.v1CompoundId.getComponent(INSTANCE).getValue())
-                    .only(INSTANCE, APPLICATION)
+                    .with(DEPLOYMENT, instanceId.v1CompoundId.getComponent(INSTANCE).getValue())
+                    .only(INSTANCE, DEPLOYMENT)
                 .build();
 
             return new NodeId(v1CompoundId);
@@ -225,8 +228,8 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             return new NodeId(new V1CompoundId.Builder()
                 .with(instanceId.v1CompoundId)
-                .with(applicationId.v1CompoundId.getComponent(APPLICATION))
-                .only(INSTANCE, APPLICATION)
+                .with(applicationId.v1CompoundId.getComponent(DEPLOYMENT))
+                .only(INSTANCE, DEPLOYMENT)
                 .build()
             );
         } catch (IllegalArgumentException ex) {
@@ -244,7 +247,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             return new NodeId(new V1CompoundId.Builder()
                     .with(stringRepresentation)
-                    .only(INSTANCE, APPLICATION)
+                    .only(INSTANCE, DEPLOYMENT)
                 .build()
             );
         } catch (IllegalArgumentException ex) {
@@ -261,7 +264,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     public static NodeId nodeIdFromBytes(final byte[] byteRepresentation) {
         return new NodeId(new V1CompoundId.Builder()
                 .with(byteRepresentation)
-                .only(INSTANCE, APPLICATION)
+                .only(INSTANCE, DEPLOYMENT)
             .build()
         );
     }
@@ -281,7 +284,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
         try {
             return new NodeId(new V1CompoundId.Builder()
                     .with(byteBufferRepresentation.limit(newLimit))
-                    .only(INSTANCE, APPLICATION, RESOURCE)
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE)
                     .build());
         } finally {
             byteBufferRepresentation.limit(oldLimit);
@@ -300,7 +303,7 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     public static NodeId nodeIdFromByteBuffer(final ByteBuffer byteBufferRepresentation, int byteBufferPosition) {
         return new NodeId(new V1CompoundId.Builder()
                 .with(byteBufferRepresentation, byteBufferPosition, SIZE)
-                .only(INSTANCE, APPLICATION)
+                .only(INSTANCE, DEPLOYMENT)
             .build());
     }
 

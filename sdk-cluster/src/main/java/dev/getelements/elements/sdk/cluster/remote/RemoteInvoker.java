@@ -1,16 +1,17 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import static dev.getelements.elements.sdk.cluster.annotation.Dispatch.Type;
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static dev.getelements.elements.sdk.cluster.remote.annotation.Dispatch.Type;
 
 /**
  * Holds a connection to the remote service and dispatches {@link Invocation}.

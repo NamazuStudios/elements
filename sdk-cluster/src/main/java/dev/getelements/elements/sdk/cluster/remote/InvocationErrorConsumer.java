@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
+import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
 import org.slf4j.Logger;
 
 import java.util.function.Consumer;

@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.cluster.util;
 
-import dev.getelements.elements.sdk.cluster.annotation.ErrorHandler;
+import dev.getelements.elements.sdk.cluster.remote.annotation.ErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

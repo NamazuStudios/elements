@@ -1,7 +1,8 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
-import dev.getelements.elements.sdk.cluster.annotation.Dispatch.Type;
-import dev.getelements.elements.sdk.cluster.annotation.RemotelyInvokable;
+import dev.getelements.elements.sdk.cluster.remote.annotation.Dispatch.Type;
+import dev.getelements.elements.sdk.cluster.remote.annotation.RemotelyInvokable;
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 
 import java.util.List;
 
