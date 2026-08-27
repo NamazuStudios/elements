@@ -3,13 +3,18 @@ package dev.getelements.elements.spi.shrinkwrap;
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.Set;
 
+import static dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader.LOCAL_REPOSITORY_PROPERTY;
+import static dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader.applyLocalRepositoryOverride;
 import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 public class CachingShrinkwrapElementArtifactLoaderTest {
@@ -34,7 +39,15 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
             "com.example:does-not-exist:0.0.1"
     );
 
+    private static final String MAVEN_LOCAL_REPO_PROPERTY = "maven.repo.local";
+
     private final ElementArtifactLoader loader = new CachingShrinkwrapElementArtifactLoader();
+
+    @AfterMethod
+    public void clearProperties() {
+        System.clearProperty(LOCAL_REPOSITORY_PROPERTY);
+        System.clearProperty(MAVEN_LOCAL_REPO_PROPERTY);
+    }
 
     @DataProvider
     public Object[][] getTestArtifacts() {
@@ -74,6 +87,27 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
         final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, all);
         assertTrue(result.isPresent());
 
+    }
+
+    @Test
+    public void testLocalRepositoryOverridePromotesConfiguredProperty() {
+        System.setProperty(LOCAL_REPOSITORY_PROPERTY, "/tmp/custom-m2-repo");
+        applyLocalRepositoryOverride();
+        assertEquals(System.getProperty(MAVEN_LOCAL_REPO_PROPERTY), "/tmp/custom-m2-repo");
+    }
+
+    @Test
+    public void testLocalRepositoryOverrideNoOpWhenNeitherSet() {
+        applyLocalRepositoryOverride();
+        assertNull(System.getProperty(MAVEN_LOCAL_REPO_PROPERTY));
+    }
+
+    @Test
+    public void testLocalRepositoryOverrideDoesNotClobberExplicitShrinkwrapProperty() {
+        System.setProperty(MAVEN_LOCAL_REPO_PROPERTY, "/tmp/operator-set-repo");
+        System.setProperty(LOCAL_REPOSITORY_PROPERTY, "/tmp/custom-m2-repo");
+        applyLocalRepositoryOverride();
+        assertEquals(System.getProperty(MAVEN_LOCAL_REPO_PROPERTY), "/tmp/operator-set-repo");
     }
 
 }
