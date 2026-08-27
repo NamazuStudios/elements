@@ -11,6 +11,7 @@ import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.FieldInfo;
 import io.github.classgraph.MethodInfo;
+import io.github.classgraph.ScanResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,55 +77,59 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
             final ClassLoader classLoader,
             final ElementDefinitionRecord elementDefinitionRecord) {
 
-        final var elementServices = scanForElementServices(classLoader, elementDefinitionRecord);
-        final var elementProducedEvents = scanForProducedEvents(classLoader, elementDefinitionRecord);
-        final var elementConsumedEvents = scanForConsumedEvents(classLoader, elementDefinitionRecord, elementServices);
-        final var elementDefaultAttributes = scanForDefaultAttributes(classLoader, elementDefinitionRecord);
-        final var elementRequiredAttributes = scanForRequiredAttributes(classLoader, elementDefinitionRecord);
-        final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
-        final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
-        final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
+        try (final var result = scanElementPackage(classLoader, elementDefinitionRecord)) {
 
-        // Priority (last wins):
-        //   SYSTEM_ATTRIBUTES (all scan defaults + operator-set)
-        //   < element @ElementDefaultAttribute
-        //   < GLOBAL_ELEMENT_ATTRIBUTES (operator-set explicit, inside `attributes`)
-        //   < per-element path attributes (inside `attributes`)
-        // SYSTEM_ATTRIBUTES is the floor: elements read any server default they need, and can
-        // re-declare individual keys via @ElementDefaultAttribute to change the default for that
-        // element. Operator-explicit overrides (GLOBAL_ELEMENT_ATTRIBUTES) then beat element
-        // defaults, and per-element path attributes beat everything.
-        final var elementResolvedAttributes = new SimpleAttributes.Builder()
-                .from(defaultAttributes)
-                .from(elementDefaultAttributes)
-                .from(attributes)
-                .build()
-                .immutableCopy();
+            final var elementServices = extractElementServices(result, elementDefinitionRecord);
+            final var elementProducedEvents = extractProducedEvents(result);
+            final var elementConsumedEvents = extractConsumedEvents(result, elementServices);
+            final var elementDefaultAttributes = extractDefaultAttributes(result);
+            final var elementRequiredAttributes = extractRequiredAttributes(result);
+            final var elementDependencies = ElementDependencyRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
+            final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
+            final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(elementDefinitionRecord.pkg()).toList();
 
-        final var missingRequired = elementRequiredAttributes
-                .stream()
-                .map(ElementRequiredAttributeRecord::name)
-                .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
-                .collect(toList());
+            // Priority (last wins):
+            //   SYSTEM_ATTRIBUTES (all scan defaults + operator-set)
+            //   < element @ElementDefaultAttribute
+            //   < GLOBAL_ELEMENT_ATTRIBUTES (operator-set explicit, inside `attributes`)
+            //   < per-element path attributes (inside `attributes`)
+            // SYSTEM_ATTRIBUTES is the floor: elements read any server default they need, and can
+            // re-declare individual keys via @ElementDefaultAttribute to change the default for that
+            // element. Operator-explicit overrides (GLOBAL_ELEMENT_ATTRIBUTES) then beat element
+            // defaults, and per-element path attributes beat everything.
+            final var elementResolvedAttributes = new SimpleAttributes.Builder()
+                    .from(defaultAttributes)
+                    .from(elementDefaultAttributes)
+                    .from(attributes)
+                    .build()
+                    .immutableCopy();
 
-        if (!missingRequired.isEmpty()) {
-            logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
+            final var missingRequired = elementRequiredAttributes
+                    .stream()
+                    .map(ElementRequiredAttributeRecord::name)
+                    .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
+                    .collect(toList());
+
+            if (!missingRequired.isEmpty()) {
+                logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
+            }
+
+            return new ElementRecord(
+                    ElementType.ISOLATED_CLASSPATH,
+                    elementDefinitionRecord,
+                    elementServices,
+                    elementProducedEvents,
+                    elementConsumedEvents,
+                    elementDependencies,
+                    elementResolvedAttributes,
+                    elementDefaultAttributes,
+                    elementRequiredAttributes,
+                    elementTypeRequests,
+                    elementPackageRequests,
+                    classLoader
+            );
+
         }
-
-        return new ElementRecord(
-                ElementType.ISOLATED_CLASSPATH,
-                elementDefinitionRecord,
-                elementServices,
-                elementProducedEvents,
-                elementConsumedEvents,
-                elementDependencies,
-                elementResolvedAttributes,
-                elementDefaultAttributes,
-                elementRequiredAttributes,
-                elementTypeRequests,
-                elementPackageRequests,
-                classLoader
-        );
 
     }
 
@@ -172,7 +177,9 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     public Stream<ElementServiceRecord> getExposedServices(final Package aPackage) {
         final var localClassLoader = getClass().getClassLoader();
         final var elementDefinitionRecord = ElementDefinitionRecord.fromPackage(aPackage);
-        return scanForElementServices(localClassLoader, elementDefinitionRecord).stream();
+        try (final var result = scanElementPackage(localClassLoader, elementDefinitionRecord)) {
+            return extractElementServices(result, elementDefinitionRecord).stream();
+        }
     }
 
     @Override
@@ -192,124 +199,117 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
         final var localClassLoader = getClass().getClassLoader();
         final var elementDefinitionRecord = ElementDefinitionRecord.fromPackage(aPackage);
-        final var elementServices = scanForElementServices(localClassLoader, elementDefinitionRecord);
-        final var elementProducedEvents = scanForProducedEvents(localClassLoader, elementDefinitionRecord);
-        final var elementConsumedEvents = scanForConsumedEvents(localClassLoader, elementDefinitionRecord, elementServices);
-        final var elementDefaultAttributes = scanForDefaultAttributes(localClassLoader, elementDefinitionRecord);
-        final var elementRequiredAttributes = scanForRequiredAttributes(localClassLoader, elementDefinitionRecord);
-        final var elementDependencies = ElementDependencyRecord.fromPackage(aPackage).toList();
-        final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(aPackage).toList();
-        final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(aPackage).toList();
 
-        // The Module Records and Services
-        final var elementResolvedAttributes = new SimpleAttributes.Builder()
-                .from(elementDefaultAttributes)
-                .from(attributes)
-                .build()
-                .immutableCopy();
+        try (final var result = scanElementPackage(localClassLoader, elementDefinitionRecord)) {
 
-        final var missingRequired = elementRequiredAttributes
+            final var elementServices = extractElementServices(result, elementDefinitionRecord);
+            final var elementProducedEvents = extractProducedEvents(result);
+            final var elementConsumedEvents = extractConsumedEvents(result, elementServices);
+            final var elementDefaultAttributes = extractDefaultAttributes(result);
+            final var elementRequiredAttributes = extractRequiredAttributes(result);
+            final var elementDependencies = ElementDependencyRecord.fromPackage(aPackage).toList();
+            final var elementTypeRequests = ElementTypeRequestRecord.fromPackage(aPackage).toList();
+            final var elementPackageRequests = ElementPackageRequestRecord.fromPackage(aPackage).toList();
+
+            // The Module Records and Services
+            final var elementResolvedAttributes = new SimpleAttributes.Builder()
+                    .from(elementDefaultAttributes)
+                    .from(attributes)
+                    .build()
+                    .immutableCopy();
+
+            final var missingRequired = elementRequiredAttributes
+                    .stream()
+                    .map(ElementRequiredAttributeRecord::name)
+                    .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
+                    .collect(toList());
+
+            if (!missingRequired.isEmpty()) {
+                logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
+            }
+
+            return new ElementRecord(
+                    ElementType.SHARED_CLASSPATH,
+                    elementDefinitionRecord,
+                    elementServices,
+                    elementProducedEvents,
+                    elementConsumedEvents,
+                    elementDependencies,
+                    elementResolvedAttributes,
+                    elementDefaultAttributes,
+                    elementRequiredAttributes,
+                    elementTypeRequests,
+                    elementPackageRequests,
+                    localClassLoader
+            );
+
+        }
+
+    }
+
+    /**
+     * Runs a single {@code enableAllInfo()} scan of an element's package(s), scoped to the element's
+     * classloader and excluding sibling {@code @ElementDefinition} packages. Callers extract whatever
+     * metadata they need (services, events, attributes) from the returned {@link ScanResult} instead of
+     * each running their own scan, since {@code enableAllInfo()} is a superset of every info flag those
+     * extractions previously requested individually.
+     */
+    private ScanResult scanElementPackage(
+            final ClassLoader classLoader,
+            final ElementDefinitionRecord elementDefinitionRecord) {
+
+        final var cg = new ClassGraph()
+                .ignoreParentClassLoaders()
+                .overrideClassLoaders(classLoader)
+                .enableAllInfo();
+
+        elementDefinitionRecord.acceptPackages(
+                cg::acceptPackages,
+                cg::acceptPackagesNonRecursive
+        );
+
+        findOtherElementPackageNames(classLoader, elementDefinitionRecord.pkgName())
+                .forEach(cg::rejectPackages);
+
+        return cg.scan();
+
+    }
+
+    private List<ElementDefaultAttributeRecord> extractDefaultAttributes(final ScanResult result) {
+
+        return result
+                .getClassesWithFieldAnnotation(ElementDefaultAttribute.class)
                 .stream()
-                .map(ElementRequiredAttributeRecord::name)
-                .filter(name -> !elementResolvedAttributes.asMap().containsKey(name))
+                .flatMap(classInfo -> classInfo
+                        .getDeclaredFieldInfo()
+                        .stream()
+                        .filter(fieldInfo ->
+                                fieldInfo.hasAnnotation(ElementDefaultAttribute.class) &&
+                                fieldInfo.isStatic() &&
+                                fieldInfo.isFinal())
+                        .map(FieldInfo::loadClassAndGetField)
+                )
+                .map(ElementDefaultAttributeRecord::from)
                 .collect(toList());
 
-        if (!missingRequired.isEmpty()) {
-            logger.warn("Element '{}' is missing required attributes: {}", elementDefinitionRecord.name(), missingRequired);
-        }
-
-        return new ElementRecord(
-                ElementType.SHARED_CLASSPATH,
-                elementDefinitionRecord,
-                elementServices,
-                elementProducedEvents,
-                elementConsumedEvents,
-                elementDependencies,
-                elementResolvedAttributes,
-                elementDefaultAttributes,
-                elementRequiredAttributes,
-                elementTypeRequests,
-                elementPackageRequests,
-                localClassLoader
-        );
-
     }
 
-    private List<ElementDefaultAttributeRecord> scanForDefaultAttributes(
-            final ClassLoader classLoader,
-            final ElementDefinitionRecord elementDefinitionRecord) {
+    private List<ElementRequiredAttributeRecord> extractRequiredAttributes(final ScanResult result) {
 
-        final var cg = new ClassGraph()
-                .enableClassInfo()
-                .enableFieldInfo()
-                .enableAnnotationInfo()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader);
-
-        elementDefinitionRecord.acceptPackages(
-                cg::acceptPackages,
-                cg::acceptPackagesNonRecursive
-        );
-
-        rejectOtherElementPackages(cg, classLoader, elementDefinitionRecord);
-
-        try (final var result = cg.scan()) {
-
-            return result
-                    .getClassesWithFieldAnnotation(ElementDefaultAttribute.class)
-                    .stream()
-                    .flatMap(classInfo -> classInfo
-                            .getDeclaredFieldInfo()
-                            .stream()
-                            .filter(fieldInfo ->
-                                    fieldInfo.hasAnnotation(ElementDefaultAttribute.class) &&
-                                    fieldInfo.isStatic() &&
-                                    fieldInfo.isFinal())
-                            .map(FieldInfo::loadClassAndGetField)
-                    )
-                    .map(ElementDefaultAttributeRecord::from)
-                    .collect(toList());
-
-        }
-
-    }
-
-    private List<ElementRequiredAttributeRecord> scanForRequiredAttributes(
-            final ClassLoader classLoader,
-            final ElementDefinitionRecord elementDefinitionRecord) {
-
-        final var cg = new ClassGraph()
-                .enableClassInfo()
-                .enableFieldInfo()
-                .enableAnnotationInfo()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader);
-
-        elementDefinitionRecord.acceptPackages(
-                cg::acceptPackages,
-                cg::acceptPackagesNonRecursive
-        );
-
-        rejectOtherElementPackages(cg, classLoader, elementDefinitionRecord);
-
-        try (final var result = cg.scan()) {
-
-            return result
-                    .getClassesWithFieldAnnotation(ElementRequiredAttribute.class)
-                    .stream()
-                    .flatMap(classInfo -> classInfo
-                            .getDeclaredFieldInfo()
-                            .stream()
-                            .filter(fieldInfo ->
-                                    fieldInfo.hasAnnotation(ElementRequiredAttribute.class) &&
-                                    fieldInfo.isStatic() &&
-                                    fieldInfo.isFinal())
-                            .map(FieldInfo::loadClassAndGetField)
-                    )
-                    .map(ElementRequiredAttributeRecord::from)
-                    .collect(toList());
-
-        }
+        return result
+                .getClassesWithFieldAnnotation(ElementRequiredAttribute.class)
+                .stream()
+                .flatMap(classInfo -> classInfo
+                        .getDeclaredFieldInfo()
+                        .stream()
+                        .filter(fieldInfo ->
+                                fieldInfo.hasAnnotation(ElementRequiredAttribute.class) &&
+                                fieldInfo.isStatic() &&
+                                fieldInfo.isFinal())
+                        .map(FieldInfo::loadClassAndGetField)
+                )
+                .map(ElementRequiredAttributeRecord::from)
+                .collect(toList());
 
     }
 
@@ -354,71 +354,34 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
 
     }
 
-    private List<ElementServiceRecord> scanForElementServices(
-            final ClassLoader classLoader,
+    private List<ElementServiceRecord> extractElementServices(
+            final ScanResult result,
             final ElementDefinitionRecord elementDefinitionRecord) {
 
-        final var classGraph = new ClassGraph()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader)
-                .enableClassInfo()
-                .enableAnnotationInfo();
+        final var fromPackage = ElementServiceRecord.fromPackage(elementDefinitionRecord.pkg());
 
-        elementDefinitionRecord.acceptPackages(
-                classGraph::acceptPackages,
-                classGraph::acceptPackagesNonRecursive
-        );
+        final var fromClasses = result.getClassesWithAnnotation(ElementServiceExport.class)
+                .stream()
+                .map(ClassInfo::loadClass)
+                .flatMap(ElementServiceRecord::fromClass);
 
-        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
-
-        try (final var result = classGraph.scan()) {
-
-            final var fromPackage = ElementServiceRecord.fromPackage(elementDefinitionRecord.pkg());
-
-            final var fromClasses = result.getClassesWithAnnotation(ElementServiceExport.class)
-                    .stream()
-                    .map(ClassInfo::loadClass)
-                    .flatMap(ElementServiceRecord::fromClass);
-
-            return Stream.concat(fromPackage, fromClasses).collect(toList());
-
-        }
+        return Stream.concat(fromPackage, fromClasses).collect(toList());
 
     }
 
-    private List<ElementEventProducerRecord> scanForProducedEvents(
-            final ClassLoader classLoader,
-            final ElementDefinitionRecord elementDefinitionRecord) {
+    private List<ElementEventProducerRecord> extractProducedEvents(final ScanResult result) {
 
-        final var classGraph = new ClassGraph()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader)
-                .enableClassInfo()
-                .enableMethodInfo()
-                .enableAnnotationInfo();
-
-        if (elementDefinitionRecord.recursive()) {
-            classGraph.acceptPackages(elementDefinitionRecord.pkgName());
-        } else {
-            classGraph.acceptPackagesNonRecursive(elementDefinitionRecord.pkgName());
-        }
-
-        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
-
-        try (var result = classGraph.scan()) {
-            return result.getClassesWithAnnotation(ElementEventProducer.class)
-                    .stream()
-                    .map(ClassInfo::loadClass)
-                    .flatMap(aClass -> Stream.of(aClass.getAnnotationsByType(ElementEventProducer.class)))
-                    .map(ElementEventProducerRecord::from)
-                    .toList();
-        }
+        return result.getClassesWithAnnotation(ElementEventProducer.class)
+                .stream()
+                .map(ClassInfo::loadClass)
+                .flatMap(aClass -> Stream.of(aClass.getAnnotationsByType(ElementEventProducer.class)))
+                .map(ElementEventProducerRecord::from)
+                .toList();
 
     }
 
-    private List<ElementEventConsumerRecord<?>> scanForConsumedEvents(
-            final ClassLoader classLoader,
-            final ElementDefinitionRecord elementDefinitionRecord,
+    private List<ElementEventConsumerRecord<?>> extractConsumedEvents(
+            final ScanResult result,
             final List<ElementServiceRecord> elementServiceRecords) {
 
         // Build service lookup structures for fast access and validation
@@ -432,50 +395,33 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
         });
         final var validServiceClasses = serviceRecordByClass.keySet();
 
-        // Scan ALL classes in Element package (no restriction to service classes)
-        final var classGraph = new ClassGraph()
-                .ignoreParentClassLoaders()
-                .overrideClassLoaders(classLoader)
-                .enableAllInfo();
+        // Find all methods with @ElementEventConsumer annotation
+        final var methods = result
+                .getClassesWithMethodAnnotation(ElementEventConsumer.class)
+                .stream()
+                .collect(toMap(ClassInfo::loadClass, classInfo -> classInfo
+                        .getMethodInfo()
+                        .filter(methodInfo -> methodInfo.hasAnnotation(ElementEventConsumer.class))
+                        .stream()
+                        .map(MethodInfo::loadClassAndGetMethod)
+                        .toList()
+                ));
 
-        elementDefinitionRecord.acceptPackages(
-                classGraph::acceptPackages,
-                classGraph::acceptPackagesNonRecursive
-        );
+        // Process all found methods and route appropriately
+        return methods.entrySet().stream()
+                .flatMap(entry -> {
+                    final var declaringClass = entry.getKey();
+                    final var classMethods = entry.getValue();
 
-        rejectOtherElementPackages(classGraph, classLoader, elementDefinitionRecord);
-
-        try (var result = classGraph.scan()) {
-
-            // Find all methods with @ElementEventConsumer annotation
-            final var methods = result
-                    .getClassesWithMethodAnnotation(ElementEventConsumer.class)
-                    .stream()
-                    .collect(toMap(ClassInfo::loadClass, classInfo -> classInfo
-                            .getMethodInfo()
-                            .filter(methodInfo -> methodInfo.hasAnnotation(ElementEventConsumer.class))
-                            .stream()
-                            .map(MethodInfo::loadClassAndGetMethod)
-                            .toList()
-                    ));
-
-            // Process all found methods and route appropriately
-            return methods.entrySet().stream()
-                    .flatMap(entry -> {
-                        final var declaringClass = entry.getKey();
-                        final var classMethods = entry.getValue();
-
-                        return classMethods.stream()
-                                .flatMap(method -> processEventConsumer(
-                                        method,
-                                        declaringClass,
-                                        serviceRecordByClass,
-                                        validServiceClasses
-                                ));
-                    })
-                    .collect(toList());
-
-        }
+                    return classMethods.stream()
+                            .flatMap(method -> processEventConsumer(
+                                    method,
+                                    declaringClass,
+                                    serviceRecordByClass,
+                                    validServiceClasses
+                            ));
+                })
+                .collect(toList());
 
     }
 
@@ -615,21 +561,23 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
     }
 
     /**
-     * Scans the classloader for all packages annotated with {@link ElementDefinition} and adds
-     * {@link ClassGraph#rejectPackages} calls for every package that is NOT the current element.
-     * This prevents a recursive element scan from picking up {@link ElementDefaultAttribute} or
-     * {@link ElementRequiredAttribute} declarations that belong to a sibling/child element whose
-     * package happens to be a sub-package of the current element's package.
+     * Scans the classloader for all packages annotated with {@link ElementDefinition} and returns the
+     * names of every one that is NOT the current element, for the caller to pass to
+     * {@link ClassGraph#rejectPackages}. This prevents a recursive element scan from picking up
+     * {@link ElementDefaultAttribute} or {@link ElementRequiredAttribute} declarations that belong to a
+     * sibling/child element whose package happens to be a sub-package of the current element's package.
      *
-     * <p>Ancestor packages of the current element are not rejected even if they carry
+     * <p>Ancestor packages of the current element are not included even if they carry
      * {@code @ElementDefinition}, because ClassGraph's {@code rejectPackages} uses prefix
      * matching: rejecting {@code "com.example"} would also block
      * {@code "com.example.sub"} (the current element's own package).</p>
+     *
+     * <p>Runs a single probe scan per {@link #scanElementPackage} call rather than once per metadata
+     * extraction, since the result is identical regardless of which metadata is being extracted.</p>
      */
-    private void rejectOtherElementPackages(
-            final ClassGraph cg,
+    private List<String> findOtherElementPackageNames(
             final ClassLoader classLoader,
-            final ElementDefinitionRecord current) {
+            final String currentPkg) {
 
         final var probe = new ClassGraph()
                 .ignoreParentClassLoaders()
@@ -637,10 +585,8 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                 .enableClassInfo()
                 .enableAnnotationInfo();
 
-        final var currentPkg = current.pkgName();
-
         try (final var result = probe.scan()) {
-            result.getPackageInfo()
+            return result.getPackageInfo()
                     .stream()
                     .filter(nfo -> nfo.hasAnnotation(ElementDefinition.class))
                     .map(nfo -> nfo.getName())
@@ -648,7 +594,7 @@ public class DefaultElementLoaderFactory implements ElementLoaderFactory {
                     // Don't reject ancestor packages — ClassGraph rejectPackages uses prefix
                     // matching, so rejecting "com.example" would also reject "com.example.sub".
                     .filter(name -> !currentPkg.startsWith(name + "."))
-                    .forEach(cg::rejectPackages);
+                    .toList();
         }
 
     }
