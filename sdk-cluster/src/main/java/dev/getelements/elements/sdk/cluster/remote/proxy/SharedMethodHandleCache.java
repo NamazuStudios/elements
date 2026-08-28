@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 /**
  * Caches {@link MethodHandle} instances
  */
-class SharedMethodHandleCache {
+public class SharedMethodHandleCache {
 
     private SharedMethodHandleCache() {}
 

@@ -8,6 +8,9 @@ import java.util.TreeSet;
 
 import static java.lang.String.format;
 
+/**
+ * An {@link InstanceHostInfo} parsed from a single DNS SRV record, ordered by target, port, priority, and weight.
+ */
 public class JndiInstanceHostInfo implements InstanceHostInfo, Comparable<JndiInstanceHostInfo> {
 
     private final int priority;

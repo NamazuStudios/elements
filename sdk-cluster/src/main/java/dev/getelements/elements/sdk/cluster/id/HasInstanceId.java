@@ -5,6 +5,9 @@ import dev.getelements.elements.sdk.cluster.id.exception.InvalidNodeIdException;
 
 import java.util.Optional;
 
+/**
+ * Specifies a type which can be represented as, or can derive, an {@link InstanceId}.
+ */
 public interface HasInstanceId {
 
     /**

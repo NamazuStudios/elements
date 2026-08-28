@@ -1,21 +1,23 @@
 package dev.getelements.elements.sdk.cluster.remote.routing;
 
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
-import dev.getelements.elements.sdk.cluster.remote.*;
+import dev.getelements.elements.sdk.cluster.remote.AsyncOperation;
+import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer;
+import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
+import dev.getelements.elements.sdk.cluster.remote.RemoteInvokerRegistry;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.inject.Inject;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 /**
- * The default {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
- * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getBestRemoteInvoker(ApplicationId)} and sends the
- * {@link Invocation} there.
+ * The default {@link RoutingStrategy} which simply selects the best {@link RemoteInvoker} from the
+ * {@link RemoteInvokerRegistry}, based on the instance selector derived from the invocation's address, and
+ * dispatches the invocation directly to it.
  */
 public class DefaultRoutingStrategy implements RoutingStrategy {
 
@@ -28,13 +30,17 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
     @Override
     public Future<Object> invokeFuture(
             final RemoteInvokerRegistry remoteInvokerRegistry,
-            final List<Object> address,
-            final Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
+        final var instanceSelector = invocation
+                .address()
+                .service()
+                .element()
+                .instance();
 
-        return remoteInvokerRegistry.getBestRemoteInvoker(getApplicationId()).invokeFuture(
+        return remoteInvokerRegistry.getBestRemoteInvoker(instanceSelector).invokeFuture(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -43,14 +49,18 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
     @Override
     public AsyncOperation invokeAsync(
-            final List<Object> address,
+            final RemoteInvokerRegistry remoteInvokerRegistry,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
+        final var instanceSelector = invocation
+                .address()
+                .service()
+                .element()
+                .instance();
 
-        return getRemoteInvokerRegistry().getBestRemoteInvoker(getApplicationId()).invokeAsync(
+        return remoteInvokerRegistry.getBestRemoteInvoker(instanceSelector).invokeAsync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -58,35 +68,23 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
     }
 
     @Override
-    public Object invokeSync(final List<Object> address,
-                             final Invocation invocation,
-                             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                             final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
+    public Object invokeSync(
+            final RemoteInvokerRegistry remoteInvokerRegistry,
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
+        final var instanceSelector = invocation
+                .address()
+                .service()
+                .element()
+                .instance();
 
-        return getRemoteInvokerRegistry().getBestRemoteInvoker(getApplicationId()).invokeSync(
+        return remoteInvokerRegistry.getBestRemoteInvoker(instanceSelector).invokeSync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
-    }
 
-    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
-        return remoteInvokerRegistry;
-    }
-
-    @Inject
-    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
-        this.remoteInvokerRegistry = remoteInvokerRegistry;
-    }
-
-    public ApplicationId getApplicationId() {
-        return applicationId;
-    }
-
-    @Inject
-    public void setApplicationId(ApplicationId applicationId) {
-        this.applicationId = applicationId;
     }
 
 }

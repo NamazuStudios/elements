@@ -1,5 +1,7 @@
 package dev.getelements.elements.sdk.cluster.remote.routing;
 
+import dev.getelements.elements.sdk.address.ElementMethodAddress;
+import dev.getelements.elements.sdk.cluster.address.RemoteInstanceSelector;
 import dev.getelements.elements.sdk.cluster.remote.*;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
@@ -19,7 +21,6 @@ public interface RoutingStrategy {
      *
      * Corresponds to {@link RemoteInvoker#invokeFuture(Invocation, List, InvocationErrorConsumer)}.
      *
-     * @param address the address
      * @param invocation the {@link Invocation}
      * @param asyncInvocationResultConsumerList the list of {@link Consumer<InvocationResult>} instances
      * @param asyncInvocationErrorConsumer the {@link InvocationErrorConsumer} to receive the error of the invocation
@@ -28,14 +29,12 @@ public interface RoutingStrategy {
      */
     Future<Object> invokeFuture(
             RemoteInvokerRegistry remoteInvokerRegistry,
-            List<Object> address,
             Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Invokes the method asynchronously returning a {@link Void} (ie null) for the value.
      *
-     * @param address the address
      * @param invocation the {@link Invocation}
      * @param asyncInvocationResultConsumerList the list of {@link Consumer<InvocationResult>} instances
      * @param asyncInvocationErrorConsumer the {@link InvocationErrorConsumer} to receive the error of the invocation
@@ -43,14 +42,13 @@ public interface RoutingStrategy {
      * @return null
      */
     default Void invokeAsyncV(
-            RemoteInvokerRegistry remoteInvokerRegistry,
-            List<Object> address,
-            Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-            InvocationErrorConsumer asyncInvocationErrorConsumer) {
+            final RemoteInvokerRegistry remoteInvokerRegistry,
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         invokeAsync(
                 remoteInvokerRegistry,
-                address,
                 invocation,
                 asyncInvocationResultConsumerList,
                 asyncInvocationErrorConsumer
@@ -63,8 +61,6 @@ public interface RoutingStrategy {
     /**
      * Invokes the method returning a {@link AsyncOperation} for the value.
      *
-     *
-     * @param address the address
      * @param invocation the {@link Invocation}
      * @param asyncInvocationResultConsumerList the list of {@link Consumer<InvocationResult>} instances
      * @param asyncInvocationErrorConsumer the {@link InvocationErrorConsumer} to receive the error of the invocation
@@ -73,8 +69,8 @@ public interface RoutingStrategy {
      */
     AsyncOperation invokeAsync(
         RemoteInvokerRegistry remoteInvokerRegistry,
-        List<Object> address,
-        Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+        Invocation invocation,
+        List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
         InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
@@ -82,7 +78,6 @@ public interface RoutingStrategy {
      *
      * Corresponds to {@link RemoteInvoker#invokeFuture(Invocation, List, InvocationErrorConsumer)}.
      *
-     * @param address the address
      * @param invocation the {@link Invocation}
      * @param asyncInvocationResultConsumerList the list of {@link Consumer<InvocationResult>} instances
      * @param asyncInvocationErrorConsumer the {@link InvocationErrorConsumer} to receive the error of the invocation
@@ -91,7 +86,6 @@ public interface RoutingStrategy {
      */
     Object invokeSync(
             RemoteInvokerRegistry remoteInvokerRegistry,
-            List<Object> address,
             Invocation invocation,
             List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception;

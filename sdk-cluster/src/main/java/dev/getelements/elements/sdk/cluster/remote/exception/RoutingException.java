@@ -2,6 +2,10 @@ package dev.getelements.elements.sdk.cluster.remote.exception;
 
 import dev.getelements.elements.sdk.model.exception.InternalException;
 
+/**
+ * Thrown when a {@link dev.getelements.elements.sdk.cluster.remote.routing.RoutingStrategy} fails to route an
+ * invocation to a remote destination.
+ */
 public class RoutingException extends InternalException {
 
     public RoutingException() {}

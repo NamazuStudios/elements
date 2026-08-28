@@ -1,13 +1,13 @@
 package dev.getelements.elements.sdk.transact;
 
-import dev.getelements.elements.rt.*;
-import dev.getelements.elements.rt.exception.InternalException;
-import dev.getelements.elements.rt.exception.NoSuchTaskException;
-import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.path.Path;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.transact.exception.ResourceNotFoundException;
+import dev.getelements.elements.sdk.transact.exception.TaskNotFoundException;
 import dev.getelements.elements.sdk.util.FinallyAction;
 import org.slf4j.Logger;
 
@@ -27,9 +27,7 @@ import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class JournalTransactionalResourceServicePersistenceEnvironment implements
-        PersistenceEnvironment,
-        TransactionalResourceServicePersistence {
+public class JournalTransactionalResourceServicePersistenceEnvironment implements TransactionalResourceServicePersistence {
 
     private static final Logger logger = getLogger(JournalTransactionalResourceServicePersistenceEnvironment.class);
 
@@ -60,16 +58,11 @@ public class JournalTransactionalResourceServicePersistenceEnvironment implement
         // TODO: The read value should come from configuration
         this.maxReads = Integer.MAX_VALUE;
         this.semaphore = new Semaphore(maxReads, true);
-
-    }
-
-    @Override
-    public void start() {
         getJournalTransactionalPersistenceDriver().start();
     }
 
     @Override
-    public void stop() {
+    public void close() {
         try {
             getJournalTransactionalPersistenceDriver().stop();
         } catch (Exception ex) {
@@ -183,7 +176,7 @@ public class JournalTransactionalResourceServicePersistenceEnvironment implement
         }
 
         @Override
-        public Stream<ResourceService.Listing> list(final Path path) {
+        public Stream<ResourceListing> list(final Path path) {
             check(path);
             final var stream = snapshot.list(path);
             onClose = onClose.then(stream::close);
@@ -252,10 +245,10 @@ public class JournalTransactionalResourceServicePersistenceEnvironment implement
 
             final var taskEntry = snapshot
                     .findTaskEntry(taskId.getResourceId())
-                    .orElseThrow(() -> new NoSuchTaskException(taskId));
+                    .orElseThrow(() -> new TaskNotFoundException(taskId));
 
             if (!taskEntry.deleteTask(taskId)) {
-                throw new NoSuchTaskException(taskId);
+                throw new TaskNotFoundException(taskId);
             }
 
         }
@@ -279,7 +272,7 @@ public class JournalTransactionalResourceServicePersistenceEnvironment implement
         }
 
         @Override
-        public Stream<ResourceService.Listing> list(final Path path) {
+        public Stream<ResourceListing> list(final Path path) {
             check(path);
             final var stream = snapshot.list(path);
             onClose = onClose.then(stream::close);
@@ -416,7 +409,7 @@ public class JournalTransactionalResourceServicePersistenceEnvironment implement
         }
 
         @Override
-        public ResourceService.Unlink unlinkPath(final Path path) {
+        public UnlinkResource unlinkPath(final Path path) {
 
             if (path.isWildcard()) {
                 throw new IllegalArgumentException("Path must not be wildcard.");

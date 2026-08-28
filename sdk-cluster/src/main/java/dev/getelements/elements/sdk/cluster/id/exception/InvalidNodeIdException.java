@@ -1,5 +1,8 @@
 package dev.getelements.elements.sdk.cluster.id.exception;
 
+/**
+ * Thrown when a {@link dev.getelements.elements.sdk.cluster.id.NodeId} cannot be parsed or constructed.
+ */
 public class InvalidNodeIdException extends InvalidIdException {
 
     public InvalidNodeIdException() {}

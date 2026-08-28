@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.Resource;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.transact.ResourceEntry.OperationalStrategy;
 
@@ -10,7 +9,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * Allows for fetching and opening of the {@link Resource} data.
+ * Allows for fetching and opening of the resource data.
  */
 public interface ResourceIndex {
 

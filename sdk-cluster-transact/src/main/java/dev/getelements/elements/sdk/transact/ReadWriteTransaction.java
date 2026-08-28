@@ -1,10 +1,10 @@
 package dev.getelements.elements.sdk.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.Resource;
-import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.transact.exception.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 public interface ReadWriteTransaction extends ReadOnlyTransaction {
 
     /**
-     * Opens a {@link WritableByteChannel} to a newly defined {@link Resource} with the following {@link Path} and
+     * Opens a {@link WritableByteChannel} to a newly defined resource with the following {@link Path} and
      * {@link ResourceId}.
      *
      * If a {@link Path} is already occupied, or the {@link ResourceId} has already been added, then this throws an
@@ -32,7 +32,7 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
     WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId) throws IOException;
 
     /***
-     * Opens a {@link WritableByteChannel} to a newly defined {@link Resource} with the {@link ResourceId}
+     * Opens a {@link WritableByteChannel} to a newly defined resource with the {@link ResourceId}
      *
      * If the {@link ResourceId} is not found, then this must throw an instance of {@link ResourceNotFoundException}
      * to indicate that the operation is not possible.
@@ -53,7 +53,7 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      * Creates a link betweeen a {@link Path} and {@link ResourceId}, provided that neither already exist. If either
      * exist, then this will throw an instance of {@link DuplicateException}.
      *
-     * @param resourceId the {@link ResourceId} of the newly added {@link Resource}
+     * @param resourceId the {@link ResourceId} of the newly added resource
      * @param path       the {@link Path} to link to the {@link ResourceId}
      */
     void linkNewResource(ResourceId resourceId, Path path);
@@ -76,12 +76,12 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      * The supplied {@link Path} must not be a wildcard.
      *
      * @param path the {@link Path} to unlink
-     * @return an instance of {@link Unlink} indicating the result of the operation.
+     * @return an instance of {@link UnlinkResource} indicating the result of the operation.
      */
-    Unlink unlinkPath(Path path);
+    UnlinkResource unlinkPath(Path path);
 
     /**
-     * Removes the {@link Resource} with the supplied {@link ResourceId} and automatically removes any {@link Path}
+     * Removes the resource with the supplied {@link ResourceId} and automatically removes any {@link Path}
      * instances that point to that {@link ResourceId}. If no such {@link ResourceId} exists, then this method must
      * throw an instance of {@link ResourceNotFoundException}.
      *
@@ -105,7 +105,7 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      * result if no {@link Path}s match.
      *
      * @param path the {@link Path} to unlink
-     * @return an instance of {@link Unlink} indicating the result of the operation.
+     * @return an instance of {@link UnlinkResource} indicating the result of the operation.
      */
     List<ResourceId> removeResources(Path path, int max);
 

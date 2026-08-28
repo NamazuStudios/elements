@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.cluster.remote.service;
 
 import dev.getelements.elements.sdk.Subscription;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.util.AsyncPublisher;
 import dev.getelements.elements.sdk.util.ConcurrentLockedPublisher;
 import org.slf4j.Logger;
@@ -27,6 +28,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 
+/**
+ * An {@link InstanceDiscoveryService} which discovers remote instances by periodically polling DNS SRV records via
+ * JNDI, publishing discovery and undiscovery events as the resolved host set changes.
+ */
 public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService {
 
     private static final Logger logger = LoggerFactory.getLogger(JndiSrvInstanceDiscoveryService.class);
@@ -37,16 +42,20 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
 
     public static final String SRV_AUTHORITATIVE = "dev.getelements.elements.rt.srv.authoritative";
 
-    private String srvQuery;
-
-    private String srvServers;
-
     private boolean authoritative;
 
     private final Lock lock = new ReentrantLock();
 
+    private final String srvQuery;
+
+    private final String srvServers;
+
     private volatile JndiSrvInstanceDiscoveryService.SrvDiscoveryContext context;
 
+    public JndiSrvInstanceDiscoveryService(final String srvQuery, final String srvServers) {
+        this.srvQuery = srvQuery;
+        this.srvServers = srvServers;
+    }
 
     @Override
     public Subscription subscribeToDiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
@@ -75,27 +84,12 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
         return srvQuery;
     }
 
-    @Inject
-    public void setSrvQuery(@Named(Constants.SRV_QUERY) String srvQuery) {
-        this.srvQuery = srvQuery;
-    }
-
     public String getSrvServers() {
         return srvServers;
     }
 
-    @Inject
-    public void setSrvServers(@Named(Constants.SRV_SERVERS) String srvServers) {
-        this.srvServers = srvServers;
-    }
-
     public boolean isAuthoritative() {
         return authoritative;
-    }
-
-    @Inject
-    public void setAuthoritative(@Named(SRV_AUTHORITATIVE) boolean authoritative) {
-        this.authoritative = authoritative;
     }
 
     private class SrvDiscoveryContext {
@@ -173,7 +167,7 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
             }
         }
 
-        private SortedSet<JndiInstanceHostInfo> query() {
+        private SortedSet<InstanceHostInfo> query() {
             return dirContexts
                 .stream()
                 .flatMap(dirContext -> {
@@ -194,7 +188,7 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
                 }).collect(toCollection(TreeSet::new));
         }
 
-        private void update(final SortedSet<JndiInstanceHostInfo> update) {
+        private void update(final SortedSet<InstanceHostInfo> update) {
 
             if (lookupResultSet.equals(update)) {
                 logger.debug("No change between {} -> {}. Ignoring.", lookupResultSet, update);
@@ -250,6 +244,9 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
 
     }
 
+    /**
+     * A small builder-style accumulator of host names/addresses, parsed from one or more delimited strings.
+     */
     public static class HostList {
 
         private final List<String> hosts = new ArrayList<>();

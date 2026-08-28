@@ -25,12 +25,21 @@ public @interface RemotelyInvokable {
     Routing routing() default @Routing;
 
     /**
+     * Specifies the addressing options using the {@link Addressing} annotation.
+     * @return the addressing annotation
+     */
+    Addressing addressing() default @Addressing;
+
+    /**
      * Indicates the deprecation status of the method.
      *
      * @return the deprecation status
      */
     DeprecationDefinition deprecated() default @DeprecationDefinition(deprecated = false);
 
+    /**
+     * Static helper methods for locating methods annotated with {@link RemotelyInvokable} on a {@link Class}.
+     */
     final class Util {
 
 

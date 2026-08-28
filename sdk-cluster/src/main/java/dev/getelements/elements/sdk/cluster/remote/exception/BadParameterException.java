@@ -2,6 +2,10 @@ package dev.getelements.elements.sdk.cluster.remote.exception;
 
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 
+/**
+ * Thrown when a parameter supplied to a remotely-invoked method is invalid, such as when it cannot be resolved or
+ * fails validation.
+ */
 public class BadParameterException extends InvalidDataException {
 
     public BadParameterException() {}

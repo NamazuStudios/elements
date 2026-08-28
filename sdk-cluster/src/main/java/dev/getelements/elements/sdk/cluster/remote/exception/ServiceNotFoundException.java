@@ -2,6 +2,9 @@ package dev.getelements.elements.sdk.cluster.remote.exception;
 
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 
+/**
+ * Thrown when a remote service referenced by name or type cannot be located.
+ */
 public class ServiceNotFoundException extends NotFoundException {
 
     public ServiceNotFoundException() {

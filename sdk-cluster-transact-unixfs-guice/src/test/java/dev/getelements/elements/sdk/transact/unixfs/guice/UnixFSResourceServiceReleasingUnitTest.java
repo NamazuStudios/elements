@@ -7,7 +7,6 @@ import dev.getelements.elements.rt.guice.AbstractResourceServiceReleasingUnitTes
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.transact.JournalTransactionalResourceServicePersistenceModule;
-import dev.getelements.elements.sdk.transact.TransactionalResourceService;
 import dev.getelements.elements.sdk.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;

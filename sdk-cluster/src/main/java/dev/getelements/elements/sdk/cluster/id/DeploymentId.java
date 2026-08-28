@@ -1,6 +1,6 @@
 package dev.getelements.elements.sdk.cluster.id;
 
-import dev.getelements.elements.sdk.cluster.id.exception.InvalidApplicationIdException;
+import dev.getelements.elements.sdk.cluster.id.exception.InvalidDeploymentIdException;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -10,9 +10,19 @@ import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.TASK;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
+/**
+ * Identifies a specific deployment of the cluster fabric. {@link #NULL_DEPLOYMENT_ID} is used as a sentinel to
+ * indicate the root element registry (ie no specific deployment) when routing to a remote instance.
+ */
 public class DeploymentId implements
         Serializable,
         HasCompoundId<V1CompoundId> {
+
+    public static final DeploymentId NULL_DEPLOYMENT_ID = new DeploymentId(
+            new V1CompoundId.Builder()
+                    .with(DEPLOYMENT, new UUID(0,0))
+                    .build()
+    );
 
     final V1CompoundId v1CompoundId;
 
@@ -32,12 +42,12 @@ public class DeploymentId implements
                     .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
-            throw new InvalidApplicationIdException(ex);
+            throw new InvalidDeploymentIdException(ex);
         }
     }
 
     /**
-     * Creates a new unique {@link TaskId}.
+     * Creates a new {@link DeploymentId} wrapping the given {@link UUID}.
      */
     public DeploymentId(final UUID applicationUuid) {
         try {
@@ -46,12 +56,12 @@ public class DeploymentId implements
                     .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
-            throw new InvalidApplicationIdException(ex);
+            throw new InvalidDeploymentIdException(ex);
         }
     }
 
     /**
-     * Creates the {@link TaskId} from the provided string representation, as obtained from {@link #asString()}.
+     * Creates the {@link DeploymentId} from the provided string representation, as obtained from {@link #asString()}.
      *
      * @param stringRepresentation the string representation
      */
@@ -62,12 +72,12 @@ public class DeploymentId implements
                     .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
-            throw new InvalidApplicationIdException(ex);
+            throw new InvalidDeploymentIdException(ex);
         }
     }
 
     /**
-     * Creates the {@link TaskId} from the provided string representation, as obtained from {@link #asBytes()}.
+     * Creates the {@link DeploymentId} from the provided byte representation, as obtained from {@link #asBytes()}.
      *
      * @param byteRepresentation the string representation
      */
@@ -78,7 +88,7 @@ public class DeploymentId implements
                     .only(DEPLOYMENT)
                     .build();
         } catch (IllegalArgumentException ex) {
-            throw new InvalidApplicationIdException(ex);
+            throw new InvalidDeploymentIdException(ex);
         }
     }
 
@@ -86,10 +96,10 @@ public class DeploymentId implements
      * The Java standard valueOf method.
      *
      * @param value the value
-     * @return the {@link ApplicationId}
+     * @return the {@link DeploymentId}
      */
-    public static ApplicationId valueOf(final String value) {
-        return new ApplicationId(value);
+    public static DeploymentId valueOf(final String value) {
+        return new DeploymentId(value);
     }
 
     @Override
@@ -98,16 +108,16 @@ public class DeploymentId implements
     }
 
     /**
-     * Gets the {@link UUID} associated with this ApplicationId
+     * Returns the {@link UUID} associated with this {@link DeploymentId}.
      *
-     * @return the {@link UUID} for the application
+     * @return the {@link UUID} for the deployment
      */
-    public UUID getApplicationUUID() {
+    public UUID getDeploymentUUID() {
         return v1CompoundId.getComponent(DEPLOYMENT).getValue();
     }
 
     /**
-     * Returns the {@link byte[]} representation of this {@link TaskId}
+     * Returns the {@code byte[]} representation of this {@link DeploymentId}
      * @return the value as bytes
      */
     public byte[] asBytes() {
@@ -115,7 +125,7 @@ public class DeploymentId implements
     }
 
     /**
-     * Returns the string representation of this {@link TaskId}
+     * Returns the string representation of this {@link DeploymentId}
      *
      * @return the string representation
      */
@@ -124,45 +134,33 @@ public class DeploymentId implements
     }
 
     /**
-     * Generates a randomly assigned {@link ApplicationId}
+     * Generates a randomly assigned {@link DeploymentId}
      *
-     * @return a randomly assigned globally unique {@link ApplicationId}
+     * @return a randomly assigned globally unique {@link DeploymentId}
      */
-    public static ApplicationId randomDeploymentId() {
-        return new ApplicationId(randomUUID());
+    public static DeploymentId randomDeploymentId() {
+        return new DeploymentId(randomUUID());
     }
 
     /**
-     * Generates a randomly assigned {@link ApplicationId}. Exists to provide backwards compatibility with existing
-     * code.
+     * Creates a new {@link DeploymentId} from the given unique deployment name. The unique deployment name may be
+     * any string uniquely representing the deployment (such as a database primary key) or similar.
      *
-     * @return a randomly assigned globally unique {@link ApplicationId}
-     * @deprecated use {@link #randomDeploymentId()} instead
+     * @param uniqueDeploymentName the unique deployment name
+     * @return the newly created {@link DeploymentId}
      */
-    @Deprecated
-    public static ApplicationId randomApplicationId() {
-        return new ApplicationId(randomUUID());
-    }
-
-    /**
-     * Creates a new {@link ApplicationId} from the given unique application name.  The unique application name may be
-     * any string uniquely representing the application (such as database primary key) or similar.
-     *
-     * @param uniqueApplicationName the unique application name
-     * @return the newly created {@link ApplicationId}
-     */
-    public static ApplicationId forUniqueName(final String uniqueApplicationName) {
-        final var bytes = uniqueApplicationName.getBytes(V1CompoundId.CHARSET);
-        final var applicationUuid = nameUUIDFromBytes(bytes);
-        return new ApplicationId(applicationUuid);
+    public static DeploymentId forUniqueName(final String uniqueDeploymentName) {
+        final var bytes = uniqueDeploymentName.getBytes(V1CompoundId.CHARSET);
+        final var deploymentUuid = nameUUIDFromBytes(bytes);
+        return new DeploymentId(deploymentUuid);
     }
 
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
-        if (!ApplicationId.class.equals(o.getClass())) return false;
-        final ApplicationId applicationId = (ApplicationId) o;
-        return v1CompoundId.equals(applicationId.v1CompoundId, DEPLOYMENT);
+        if (o == null || !DeploymentId.class.equals(o.getClass())) return false;
+        final DeploymentId deploymentId = (DeploymentId) o;
+        return v1CompoundId.equals(deploymentId.v1CompoundId, DEPLOYMENT);
     }
 
     @Override

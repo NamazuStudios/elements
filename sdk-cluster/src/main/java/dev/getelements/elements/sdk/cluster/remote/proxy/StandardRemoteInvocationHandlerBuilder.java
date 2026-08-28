@@ -1,10 +1,20 @@
-package dev.getelements.elements.sdk.cluster.remote;
+package dev.getelements.elements.sdk.cluster.remote.proxy;
 
+import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.address.ElementMethodAddress;
+import dev.getelements.elements.sdk.annotation.Disabled;
+import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
+import dev.getelements.elements.sdk.cluster.address.RemoteElementMethodAddress;
+import dev.getelements.elements.sdk.cluster.remote.AsyncOperation;
+import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer;
+import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
 import dev.getelements.elements.sdk.cluster.remote.annotation.*;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
-import dev.getelements.elements.sdk.cluster.remote.routing.RoutingStrategy;
+import dev.getelements.elements.sdk.cluster.remote.routing.AddressingStrategy;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.record.ElementServiceKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,58 +29,40 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.cluster.util.Reflection.*;
 import static java.util.Arrays.stream;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 /**
  * Builds an instance of {@link InvocationHandler} based on the underlying {@link Method} and {@link RemoteInvoker}.
  */
-public class RemoteInvocationHandlerBuilder {
+public class StandardRemoteInvocationHandlerBuilder<ProxyInterfaceT> {
 
-    private static final Logger logger = LoggerFactory.getLogger(RemoteInvocationHandlerBuilder.class);
-
-    private String name;
-
-    private final Class<?> type;
+    private static final Logger logger = LoggerFactory.getLogger(StandardRemoteInvocationHandlerBuilder.class);
 
     private final Method method;
 
     private final Routing routing;
 
+    private final Addressing addressing;
+
     private final Dispatch.Type dispatchType;
 
-    private final Supplier<ReturnValueTransformer> returnValueTransformerSupplier;
+    private final ServiceLocator serviceLocator;
 
-    private final Supplier<Function<Object[], List<Object>>> addressAssemblerSupplier;
+    private final RemoteInvoker remoteInvoker;
 
-    public RemoteInvocationHandlerBuilder(final RemoteInvoker remoteInvoker,
-                                          final Class<?> type,
-                                          final Method method) {
+    private final ElementServiceKey<ProxyInterfaceT> serviceKey;
 
-        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
+    private final RemoteElementAddress remoteElementAddress;
 
-        if (remotelyInvokable == null) {
-            throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
-        }
-
-        this.type = type;
-        this.method = method;
-        this.dispatchType = Dispatch.Type.determine(method);
-        this.routing = remotelyInvokable.routing();
-
-        this.addressAssemblerSupplier = () -> o -> emptyList();
-        this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvoker);
-
-    }
-
-    public RemoteInvocationHandlerBuilder(final RemoteInvocationDispatcher remoteInvocationDispatcher,
-                                          final Class<?> type,
-                                          final Method method) {
-
+    public StandardRemoteInvocationHandlerBuilder(
+            final ServiceLocator serviceLocator,
+            final RemoteInvoker remoteInvoker,
+            final RemoteElementAddress remoteElementAddress,
+            final ElementServiceKey<ProxyInterfaceT> serviceKey,
+            final Method method) {
 
         final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
 
@@ -78,41 +70,23 @@ public class RemoteInvocationHandlerBuilder {
             throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
         }
 
-        this.type = type;
+        this.serviceLocator = serviceLocator;
+        this.serviceKey = serviceKey;
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
         this.routing = remotelyInvokable.routing();
-
-        this.addressAssemblerSupplier = this::getAddressAssembler;
-        this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvocationDispatcher);
+        this.addressing = remotelyInvokable.addressing();
+        this.remoteInvoker = remoteInvoker;
+        this.remoteElementAddress = remoteElementAddress;
 
     }
 
-    /**
-     * Gets the type of the remote object to invoke.  Specifies {@link Invocation#getType()}.
-     *
-     * @return the type
-     */
-    public Class<?> getType() {
-        return type;
-    }
-
-    /**
-     * Gets the name of the remote object to invoke.  Specifies {@link Invocation#getName()}.
-     *
-     * @return the type
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Gets {@link Method}.  Specifies {@link Invocation#getName()}.
-     *
-     * @return the type
-     */
     public Method getMethod() {
         return method;
+    }
+
+    public ElementServiceKey<ProxyInterfaceT> getServiceKey() {
+        return serviceKey;
     }
 
     /**
@@ -122,17 +96,6 @@ public class RemoteInvocationHandlerBuilder {
      */
     public Dispatch.Type getDispatchType() {
         return dispatchType;
-    }
-
-    /**
-     * Sets the name of the remote object to invoke.  {@link Invocation#getName()}.
-     *
-     * @param name may be null if no name is used.
-     * @return this instance
-     */
-    public RemoteInvocationHandlerBuilder withName(final String name) {
-        this.name = name;
-        return this;
     }
 
     /**
@@ -147,37 +110,27 @@ public class RemoteInvocationHandlerBuilder {
 
         logger.info("Building invocation handler for {} with dispatch type {}", format(method), getDispatchType());
 
-        final ReturnValueTransformer returnValueTransformer;
-        returnValueTransformer = returnValueTransformerSupplier.get();
+        final var parameterAssembler = getParameterAssembler();
+        final var returnValueTransformer = getReturnValueTransformer();
+        final var invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
+        final var invocationResultConsumerAssembler = getInvocationResultConsumerListAssembler();
 
-        final Function<Object[], List<Object>> parameterAssembler;
-        parameterAssembler = getParameterAssembler();
+        final var parameters = stream(method.getParameterTypes())
+                .map(Class::getName)
+                .collect(toList());
 
-        final Function<Object[], List<Object>> addressAssembler = addressAssemblerSupplier.get();
+        final var remoteElementMethodAddress = remoteElementAddress
+                .withService(serviceKey.type().getName(), serviceKey.name())
+                .withMethod(method.getName(), parameters);
 
-        final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
-        invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
+        final var addressAssembler = getAddressAssembler(remoteElementMethodAddress);
 
-        final BiFunction<Object[], InvocationErrorConsumer, List<Consumer<InvocationResult>>> invocationResultConsumerAssembler;
-        invocationResultConsumerAssembler = getInvocationResultConsumerListAssembler();
+        return (proxy, _m, args) -> {
 
-        final List<String> parameters;
-        parameters = stream(method.getParameterTypes()).map(c -> c.getName()).collect(toList());
-
-        final Class<? extends RoutingStrategy> routingStrategyType = routing.value();
-        final String routingStrategyName = routing.name().isEmpty() ? null : routing.name();
-
-        return (proxy, method1, args) -> {
-
-            final Route route = new Route();
-            route.setAddress(addressAssembler.apply(args));
-            route.setRoutingStrategyType(routingStrategyType);
-            route.setRoutingStrategyName(routingStrategyName);
+            final var resolved = addressAssembler.apply(args);
 
             final Invocation invocation = new Invocation(
-                getType().getName(),
-                getName(),
-                getMethod().getName(),
+                resolved,
                 parameters,
                 parameterAssembler.apply(args),
                 getDispatchType());
@@ -188,44 +141,22 @@ public class RemoteInvocationHandlerBuilder {
             final List<Consumer<InvocationResult>> invocationResultConsumerList;
             invocationResultConsumerList = invocationResultConsumerAssembler.apply(args, invocationErrorConsumer);
 
-            return returnValueTransformer.transform(route, invocation, invocationResultConsumerList, invocationErrorConsumer);
+            return returnValueTransformer.transform(invocation, invocationResultConsumerList, invocationErrorConsumer);
 
         };
 
     }
-    private ReturnValueTransformer getReturnValueTransformer(final RemoteInvoker remoteInvoker) {
+    private ReturnValueTransformer getReturnValueTransformer() {
 
         final Dispatch.Type type = getDispatchType();
 
-        switch (type) {
-            case SYNCHRONOUS:
-                return (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
-            case ASYNCHRONOUS:
-                return isAsyncMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
-                                         (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae);
-            case FUTURE:
-                return (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
-            default:
-                throw new IllegalArgumentException("Unknown dispatch type: " + type);
-        }
-
-    }
-
-    private ReturnValueTransformer getReturnValueTransformer(final RemoteInvocationDispatcher remoteInvocationDispatcher) {
-
-        final Dispatch.Type type = getDispatchType();
-
-        switch (type) {
-            case SYNCHRONOUS:
-                return remoteInvocationDispatcher::invokeSync;
-            case ASYNCHRONOUS:
-                return isAsyncMethod() ? remoteInvocationDispatcher::invokeAsync :
-                                         remoteInvocationDispatcher::invokeAsyncV;
-            case FUTURE:
-                return remoteInvocationDispatcher::invokeFuture;
-            default:
-                throw new IllegalArgumentException("Unknown dispatch type: " + type);
-        }
+        return switch (type) {
+            case SYNCHRONOUS -> (i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
+            case ASYNCHRONOUS -> isAsyncMethod() ? (i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                    (i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae);
+            case FUTURE -> (i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
+            default -> throw new IllegalArgumentException("Unknown dispatch type: " + type);
+        };
 
     }
 
@@ -246,13 +177,35 @@ public class RemoteInvocationHandlerBuilder {
     private Function<Object[], List<Object>> getParameterAssembler() {
         final Method method = getMethod();
         final int[] indices = indices(method, Serialize.class);
-        return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
+        return objects -> stream(indices)
+                .mapToObj(index -> objects[index])
+                .collect(toList());
     }
 
-    private Function<Object[], List<Object>> getAddressAssembler() {
-        final Method method = getMethod();
-        final int[] indices = indices(method, ProvidesAddress.class);
-        return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
+    private Function<Object[], RemoteElementMethodAddress>  getAddressAssembler(final RemoteElementMethodAddress remoteElementMethodAddress) {
+        final var method = getMethod();
+        final var indices = indices(method, RoutingAddressSource.class);
+        final var addressingStrategy = getAddressingStrategy();
+        return objects -> addressingStrategy.resolve(remoteElementMethodAddress, stream(indices)
+                .mapToObj(index -> objects[index])
+                .toArray());
+    }
+
+    private AddressingStrategy getAddressingStrategy() {
+
+        final var reference = addressing.service();
+
+        if (Disabled.class.equals(reference.value())) {
+            try {
+                return addressing.value().getDeclaredConstructor().newInstance();
+            } catch (ReflectiveOperationException ex) {
+                throw new InternalException(ex);
+            }
+        }
+
+        final var addressingStrategyServiceKey = ElementServiceKey.from(reference);
+        return (AddressingStrategy) serviceLocator.getInstance(addressingStrategyServiceKey);
+
     }
 
     private Function<Object[], InvocationErrorConsumer> getInvocationErrorConsumerAssembler() {
@@ -352,8 +305,7 @@ public class RemoteInvocationHandlerBuilder {
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */
-        Object transform(Route route,
-                         Invocation invocation,
+        Object transform(Invocation invocation,
                          List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                          InvocationErrorConsumer asyncInvocationErrorConsumer) throws Throwable;
 

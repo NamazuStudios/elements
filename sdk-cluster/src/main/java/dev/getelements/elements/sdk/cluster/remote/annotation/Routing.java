@@ -10,6 +10,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import static dev.getelements.elements.sdk.cluster.remote.annotation.InstantiationStrategy.DEFAULT_CONSTRUCTOR;
+
 /**
  * Specifies the routing information for the method call.
  */
@@ -18,20 +20,20 @@ import java.lang.annotation.Target;
 public @interface Routing {
 
     /**
-     * Specifies the {@link RoutingStrategy} used to distribute the remote invocations.  This will be the type resolved
-     * against the IoC container from the {@link ServiceLocator}. Note the requested strategy must be available on the
-     * element's classloader.
+     * Specifies the {@link RoutingStrategy} class used to route the remote invocation. The specified strategy must
+     * have a default constructor.
      *
      * @return the {@link RoutingStrategy} class
      */
     Class<? extends RoutingStrategy> value() default DefaultRoutingStrategy.class;
 
     /**
-     * Optionally specifies the name of the {@link RoutingStrategy} to use.  If non-empty, this will be used in
-     * conjunction with the {@link ServiceLocator} to fetch the {@link RoutingStrategy} from the container.
+     * Specifies the {@link RoutingStrategy} used to distribute the remote invocations.  This will be the type resolved
+     * against the IoC container from the {@link ServiceLocator}. Note the requested strategy must be available on the
+     * element's classloader.
      *
-     * @return the name
+     * @return the {@link RoutingStrategy} class
      */
-    String name() default "";
+    ElementServiceReference service() default @ElementServiceReference(DefaultRoutingStrategy.class);
 
 }

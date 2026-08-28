@@ -10,13 +10,6 @@ public class TransactionalResourceServiceModule extends PrivateModule {
     protected void configure() {
 
         bind(TransactionalResourceService.class).asEagerSingleton();
-        bind(TransactionPersistenceStrategy.class).asEagerSingleton();
-
-        bind(ResourceService.class).to(TransactionalResourceService.class);
-        bind(PersistenceStrategy.class).to(TransactionPersistenceStrategy.class);
-
-        expose(ResourceService.class);
-        expose(PersistenceStrategy.class);
 
         exposeTransactionalResourceServiceAction.run();
 

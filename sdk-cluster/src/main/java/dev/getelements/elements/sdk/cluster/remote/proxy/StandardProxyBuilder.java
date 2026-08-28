@@ -1,13 +1,13 @@
 package dev.getelements.elements.sdk.cluster.remote.proxy;
 
+import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
 import dev.getelements.elements.sdk.cluster.remote.MethodAssignment;
-import dev.getelements.elements.sdk.cluster.remote.RemoteInvocationDispatcher;
-import dev.getelements.elements.sdk.cluster.remote.RemoteInvocationHandlerBuilder;
 import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
 import dev.getelements.elements.sdk.cluster.remote.annotation.RemotelyInvokable;
-import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.util.Reflection;
 import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.record.ElementServiceKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -27,6 +28,12 @@ import java.util.stream.Stream;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
+/**
+ * Default {@link ProxyBuilder} implementation, backed by {@link java.lang.reflect.Proxy}, which maps assigned
+ * {@link InvocationHandler}s to individual {@link Method}s of the proxied interface.
+ *
+ * @param <ProxyT> the interface type being proxied
+ */
 public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardProxyBuilder.class);
@@ -40,31 +47,28 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         throw new NoSuchMethodError("No invocation handler for method: " + method);
     };
 
-    private final String name;
+    private ServiceLocator serviceLocator;
 
-    private final Class<ProxyT> interfaceClassT;
+    private final ElementServiceKey<ProxyT> serviceKey;
 
     private final Map<Method, InvocationHandler> handlerMap = new HashMap<>();
 
-    /**
-     * Creates a {@link StandardProxyBuilder<ProxyT>} for the supplied interface type.
-     *
-     * @param interfaceClassT
-     */
-    public StandardProxyBuilder(final Class<ProxyT> interfaceClassT) {
-        this(interfaceClassT, null);
-    }
+    private final RemoteElementAddress remoteElementAddress;
 
     /**
-     * Creates a {@link StandardProxyBuilder<ProxyT>} for the supplied interface type.
-     *
-     * @param interfaceClassT
-     * @param name Relates to {@link Invocation#getName()} and maps to the naming.
+     * Creates a {@link StandardProxyBuilder<ProxyT>} for the supplied interface service key.
      */
-    public StandardProxyBuilder(final Class<ProxyT> interfaceClassT, final String name) {
-        this.name = name;
-        this.interfaceClassT = interfaceClassT;
-        classLoader = interfaceClassT.getClassLoader();
+    public StandardProxyBuilder(            final RemoteElementAddress remoteElementAddress,
+            final ElementServiceKey<ProxyT> serviceKey) {
+        this.serviceKey = serviceKey;
+        this.classLoader = serviceKey.type().getClassLoader();
+        this.remoteElementAddress = remoteElementAddress;
+        this.serviceLocator = new ServiceLocator() {
+            @Override
+            public <T> Optional<Supplier<T>> findInstance(ElementServiceKey<T> key) {
+                return Optional.empty();
+            }
+        };
     }
 
     /**
@@ -77,7 +81,7 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
 
         final InvocationHandler handler = (p, method, args) -> {
 
-            final MethodHandleKey methodHandleKey = new MethodHandleKey(interfaceClassT, p, method);
+            final MethodHandleKey methodHandleKey = new MethodHandleKey(serviceKey.type(), p, method);
 
             final Supplier<MethodHandle> methodHandleSupplier = () -> {
                 try {
@@ -104,7 +108,7 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
     }
 
     /**
-     * Uses the {@link SharedMethodHandleCache#getSharedMethodHandleCache()} to cache method handles.
+     * Uses the {@link SharedMethodHandleCache} to cache method handles.
      *
      * @return this instance
      */
@@ -157,17 +161,17 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
     }
 
     /**
-     * Specifies the a default {@link #toString()} method, which simply returns the value "Proxy for the.class.Name"
+     * Specifies the default {@link #toString()} method, which simply returns the value "Proxy for the.class.Name"
      *
      * @return this instance
      */
     @Override
     public ProxyBuilder<ProxyT> withToString() {
-        return withToString("Proxy for " + interfaceClassT.getName());
+        return withToString("Proxy for " + serviceKey.type().getName());
     }
 
     /**
-     * Specifies the a default {@link #toString()} method, which simply returns the hardcoded value.
+     * Specifies the default {@link #toString()} method, which simply returns the hardcoded value.
      *
      * @param toString the value to return when {@link #toString()} is invoked on the proxy.
      * @return this instance
@@ -199,25 +203,16 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
      */
     @Override
     public ProxyBuilder<ProxyT> withHandlersForRemoteInvoker(final RemoteInvoker remoteInvoker) {
-        Reflection.methods(interfaceClassT)
-            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
-            .forEach(b -> handler(b.build()).forMethod(b.getMethod()));
-        return this;
-    }
-
-    /**
-     * Generates an {@link InvocationHandler} for each method int he class marked {@link RemotelyInvokable} using the
-     * specifed {@link RemoteInvocationDispatcher}.
-     *
-     * @param remoteInvocationDispatcher the {@link RemoteInvocationDispatcher}
-     * @return this instance
-     */
-    @Override
-    public ProxyBuilder<ProxyT> withHandlersForRemoteDispatcher(final RemoteInvocationDispatcher remoteInvocationDispatcher) {
-        Reflection.methods(interfaceClassT)
-            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvocationDispatcher, interfaceClassT, m).withName(name))
+        Reflection.methods(serviceKey.type())
+            .filter(method -> method.getAnnotation(RemotelyInvokable.class) != null)
+            .map(method -> new StandardRemoteInvocationHandlerBuilder<>(
+                    serviceLocator,
+                    remoteInvoker,
+                    remoteElementAddress,
+                    serviceKey,
+                    method
+                )
+            )
             .forEach(b -> handler(b.build()).forMethod(b.getMethod()));
         return this;
     }
@@ -234,18 +229,18 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         final InvocationHandler defaultInvocationHandler = this.defaultInvocationHandler;
 
         final Object proxy = handlerMap.isEmpty() ?
-            newProxyInstance(classLoader, new Class<?>[]{interfaceClassT}, defaultInvocationHandler) :
-            newProxyInstance(classLoader, new Class<?>[]{interfaceClassT}, (p, method, args) -> {
+            newProxyInstance(classLoader, new Class<?>[]{serviceKey.type()}, defaultInvocationHandler) :
+            newProxyInstance(classLoader, new Class<?>[]{serviceKey.type()}, (p, method, args) -> {
                 final InvocationHandler invocationHandler =  handlerMap.getOrDefault(method, defaultInvocationHandler);
                 return invocationHandler.invoke(p, method, args);
             });
 
-        return interfaceClassT.cast(proxy);
+        return serviceKey.type().cast(proxy);
 
     }
 
     private Stream<Method> methods() {
-        return Reflection.methods(interfaceClassT);
+        return Reflection.methods(serviceKey.type());
     }
 
     private class InvocationHandlerMethodAssignment implements MethodAssignment<ProxyBuilder<ProxyT>> {
@@ -295,11 +290,11 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         }
 
         private IllegalArgumentException noSuchMethod(final String name) {
-            return Reflection.noSuchMethod(interfaceClassT, name);
+            return Reflection.noSuchMethod(serviceKey.type(), name);
         }
 
         private IllegalArgumentException noSuchMethod(final String name, final Class<?>[] args) {
-            return Reflection.noSuchMethod(interfaceClassT, name, args);
+            return Reflection.noSuchMethod(serviceKey.type(), name, args);
         }
 
     }

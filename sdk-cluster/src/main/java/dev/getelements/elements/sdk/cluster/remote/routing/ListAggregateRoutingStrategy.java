@@ -21,25 +21,6 @@ import static java.util.stream.Collectors.toList;
 public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrategy {
 
     @Override
-    protected List<RemoteInvoker> getRemoteInvokers(List<Object> address) {
-
-        // If no address is specified, fall back to the default behavior, which is fan out to all nodes
-        if (address.isEmpty()) return super.getRemoteInvokers(address);
-
-        final Set<NodeId> nodeIdSet = reduceAddressToNodeIds(address);
-
-        // Ensures that if anywhere a NodeId is left blank (wildcard) it will route to all remote invokers
-        if (nodeIdSet.contains(null)) return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
-
-        // Collects the NodeIds to a list of RemoteInvoker
-        return nodeIdSet
-            .stream()
-            .map(nid -> getRemoteInvokerRegistry().getRemoteInvoker(nid))
-            .collect(toList());
-
-    }
-
-    @Override
     protected Object newInitialResult() {
         return new ArrayList<>();
     }

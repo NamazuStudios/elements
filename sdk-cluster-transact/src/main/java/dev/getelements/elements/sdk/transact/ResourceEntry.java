@@ -1,8 +1,9 @@
 package dev.getelements.elements.sdk.transact;
 
-import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 import dev.getelements.elements.sdk.cluster.path.Path;
+import dev.getelements.elements.sdk.transact.exception.NullResourceException;
+import dev.getelements.elements.sdk.transact.exception.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;

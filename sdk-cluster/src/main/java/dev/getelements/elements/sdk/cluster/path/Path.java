@@ -5,8 +5,11 @@ import dev.getelements.elements.sdk.cluster.id.HasNodeId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.path.exception.InvalidPathException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -76,12 +79,35 @@ public final class Path implements Serializable, HasNodeId {
      *
      * @deprecated use {@link Path#WILDCARD}
      */
+    @Deprecated
     public static final String WILDCARD_CONTEXT_REPRESENTATION = WILDCARD;
 
     /**
-     * A {@link Pattern} to match valid path components.
+     * A {@link Pattern} to match valid path components. Excludes {@link #QUERY_SEPARATOR} and
+     * {@link #FRAGMENT_SEPARATOR}, which are reserved delimiters at the {@link Path} string-grammar level.
      */
-    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("\\p{Print}+");
+    public static final Pattern VALID_PATH_COMPONENT = Pattern.compile("[\\p{Print}&&[^?#]]+");
+
+    /**
+     * The separator introducing the query string.  Literal value "?", e.g. "myContext://foo/bar?baz=qux".
+     */
+    public static final String QUERY_SEPARATOR = "?";
+
+    /**
+     * The separator between individual query parameters.  Literal value "&amp;".
+     */
+    public static final String QUERY_PARAMETER_SEPARATOR = "&";
+
+    /**
+     * The separator between a query parameter's key and its value.  Literal value "=".
+     */
+    public static final String QUERY_KEY_VALUE_SEPARATOR = "=";
+
+    /**
+     * Reserved for a future fragment component.  Literal value "#".  Not currently parsed, but forbidden within
+     * path components and query keys/values since it is a structurally reserved delimiter.
+     */
+    public static final String FRAGMENT_SEPARATOR = "#";
 
     /**
      * The context split pattern.
@@ -124,7 +150,7 @@ public final class Path implements Serializable, HasNodeId {
     }
 
     public Path() {
-        this(new ContextAndComponents(null, emptyList()));
+        this(new ContextAndComponents(null, emptyList(), Map.of()));
     }
 
     /**
@@ -144,7 +170,8 @@ public final class Path implements Serializable, HasNodeId {
      *
      */
     public Path(final Path parent, final Path path) {
-        this(parent.getContext(), components(parent, path));
+        this(parent.getContext(), components(parent, path),
+                path.getParameters().isEmpty() ? parent.getParameters() : path.getParameters());
     }
 
     private static List<String> components(final Path parent, final Path path) {
@@ -175,7 +202,15 @@ public final class Path implements Serializable, HasNodeId {
      * @param components the path components
      */
     public Path(final String context, final List<String> components) {
-        this (new ContextAndComponents(context, components));
+        this (new ContextAndComponents(context, components, Map.of()));
+    }
+
+    /**
+     * Creates a path with components, context, and query parameters, threading the parameters through without
+     * exposing a new public constructor overload.
+     */
+    private Path(final String context, final List<String> components, final Map<String, List<String>> parameters) {
+        this(new ContextAndComponents(context, components, parameters));
     }
 
     /**
@@ -240,7 +275,7 @@ public final class Path implements Serializable, HasNodeId {
     public Path appendComponents(final String first) {
         final var components = new ArrayList<>(getComponents());
         components.add(first);
-        return new Path(getContext(), components);
+        return new Path(getContext(), components, getParameters());
     }
 
     /**
@@ -254,7 +289,7 @@ public final class Path implements Serializable, HasNodeId {
         final var components = new ArrayList<>(getComponents());
         components.add(first);
         addAll(components, subsequent);
-        return new Path(getContext(), components);
+        return new Path(getContext(), components, getParameters());
     }
 
     /**
@@ -313,7 +348,9 @@ public final class Path implements Serializable, HasNodeId {
             components.add(last + pathSeparator + extension);
         }
 
-        return new Path(components);
+        // NOTE: this pre-existing constructor call drops context (uses the 1-arg, context-less constructor),
+        // which is unrelated to query-parameter support and left as-is; only parameter threading is added here.
+        return new Path(null, components, getParameters());
 
     }
 
@@ -326,7 +363,9 @@ public final class Path implements Serializable, HasNodeId {
     public Path parent() {
         final var context = getContext();
         final var components = getComponents();
-        return components.isEmpty() ? this : new Path(context, components.subList(0, components.size() - 1));
+        return components.isEmpty()
+                ? this
+                : new Path(context, components.subList(0, components.size() - 1), getParameters());
     }
 
     /**
@@ -356,7 +395,7 @@ public final class Path implements Serializable, HasNodeId {
      * @return the root path
      */
     public Path contextRootPath() {
-        return new Path(new ContextAndComponents(getContext(), emptyList()));
+        return new Path(new ContextAndComponents(getContext(), emptyList(), Map.of()));
     }
 
     /**
@@ -412,6 +451,51 @@ public final class Path implements Serializable, HasNodeId {
      */
     public ContextAndComponents getContextAndComponents() {
         return contextAndComponents;
+    }
+
+    /**
+     * Gets the decoded values for the named query parameter, in the order they appeared.
+     *
+     * @param name the parameter name
+     * @return the list of decoded values, never null, empty if the parameter is absent
+     */
+    public List<String> getParameter(final String name) {
+        return getContextAndComponents().getParameter(name);
+    }
+
+    /**
+     * Gets the first decoded value for the named query parameter.
+     *
+     * @param name the parameter name
+     * @return the first decoded value, or null if the parameter is absent
+     */
+    public String getFirstParameter(final String name) {
+        final var values = getParameter(name);
+        return values.isEmpty() ? null : values.get(0);
+    }
+
+    /**
+     * Gets all query parameters as an unmodifiable, insertion-ordered map of decoded values.
+     *
+     * @return the query parameters, never null, empty if this path has no query
+     */
+    public Map<String, List<String>> getParameters() {
+        return getContextAndComponents().getParameters();
+    }
+
+    /**
+     * @return true if this path has any query parameters
+     */
+    public boolean hasQuery() {
+        return !getParameters().isEmpty();
+    }
+
+    /**
+     * @param name the parameter name
+     * @return true if the named query parameter is present, regardless of value
+     */
+    public boolean hasParameter(final String name) {
+        return getParameters().containsKey(name);
     }
 
     /**
@@ -477,7 +561,7 @@ public final class Path implements Serializable, HasNodeId {
                 ];
 
         final var components = getComponents().subList(0, componentIndex);
-        return new Path(getContext(), components);
+        return new Path(getContext(), components, getParameters());
 
     }
 
@@ -491,7 +575,7 @@ public final class Path implements Serializable, HasNodeId {
         final var context = getContext();
         final var components = getComponents();
         return wildcardRecursive
-                ? new Path(context, components.subList(0, components.size() - 1))
+                ? new Path(context, components.subList(0, components.size() - 1), getParameters())
                 : this;
     }
 
@@ -587,9 +671,11 @@ public final class Path implements Serializable, HasNodeId {
     public String toNormalizedPathString(final String pathSeparator, final boolean shouldIncludeContext) {
         final var context = getContext();
         final var components = getComponents();
-        return context != null && shouldIncludeContext
+        final var base = context != null && shouldIncludeContext
                 ? format("%s://%s", context, join(pathSeparator, components))
                 : format("/%s", join(pathSeparator, components));
+        final var query = encodeQueryString(getParameters());
+        return query.isEmpty() ? base : base + QUERY_SEPARATOR + query;
     }
 
     /**
@@ -602,7 +688,7 @@ public final class Path implements Serializable, HasNodeId {
     public Path toPathWithContext(final String newContext) {
         return Objects.equals(getContext(), newContext)
                 ? this
-                : new Path(newContext, getComponents());
+                : new Path(newContext, getComponents(), getParameters());
     }
 
     /**
@@ -615,7 +701,7 @@ public final class Path implements Serializable, HasNodeId {
     public Path toPathWithContextIfAbsent(final HasNodeId hasNodeId) {
         return hasContext()
                 ? this
-                : new Path(hasNodeId.getNodeId().toString(), getComponents());
+                : new Path(hasNodeId.getNodeId().toString(), getComponents(), getParameters());
     }
 
     /**
@@ -628,7 +714,7 @@ public final class Path implements Serializable, HasNodeId {
     public Path toPathWithContextIfAbsent(final String newContext) {
         return hasContext()
                 ? this
-                : new Path(newContext, getComponents());
+                : new Path(newContext, getComponents(), getParameters());
     }
 
     /**
@@ -639,7 +725,7 @@ public final class Path implements Serializable, HasNodeId {
     public Path toPathWithoutContext() {
         final var context = getContext();
         final var components = getComponents();
-        return context == null ? this : new Path(null, components);
+        return context == null ? this : new Path(null, components, getParameters());
     }
 
     /***
@@ -684,6 +770,41 @@ public final class Path implements Serializable, HasNodeId {
      */
     public ByteBuffer toByteBuffer() {
         return ByteBuffer.wrap(toByteArray()).clear();
+    }
+
+    /**
+     * Converts this {@link Path} to a {@link URI}.  Since {@link Path} has no authority/host concept (unlike a
+     * full RFC 3986 URI), the context maps to the URI scheme and every component maps to a path segment -
+     * constructed as {@code scheme:/c1/c2?query} (a single slash, not {@code scheme://c1/c2}, since the latter
+     * would cause {@link URI} to parse the first component as an authority/host).  Each component and the query
+     * string are percent-encoded per {@link #percentEncode(String)}.
+     *
+     * @return the equivalent {@link URI}
+     * @throws InvalidPathException if the resulting string is not a legal {@link URI}
+     */
+    public URI toURI() {
+
+        final var context = getContext();
+
+        final var encodedComponents = getComponents()
+                .stream()
+                .map(Path::percentEncode)
+                .collect(toList());
+
+        final var pathPart = "/" + join(PATH_SEPARATOR, encodedComponents);
+        final var query = encodeQueryString(getParameters());
+        final var queryPart = query.isEmpty() ? "" : QUERY_SEPARATOR + query;
+
+        final var uriString = context == null
+                ? pathPart + queryPart
+                : context + ":" + pathPart + queryPart;
+
+        try {
+            return new URI(uriString);
+        } catch (URISyntaxException e) {
+            throw new InvalidPathException("Unable to convert Path to URI: " + this, e);
+        }
+
     }
 
     @Override
@@ -780,8 +901,51 @@ public final class Path implements Serializable, HasNodeId {
      * @return the fully formed {@link Path}
      */
     public static Path fromPathString(final String pathString, final String pathSeparator) {
-        final ContextAndComponents contextAndComponents = contextAndComponentsFromPath(pathString, pathSeparator);
-        return new Path(contextAndComponents.getContext(), contextAndComponents.getComponents());
+        return new Path(contextAndComponentsFromPath(pathString, pathSeparator));
+    }
+
+    /**
+     * Converts the supplied {@link URI} to a {@link Path}.  The URI's scheme maps to the context (null for a
+     * context-less/relative URI), and its path segments and query map to this {@link Path}'s components and
+     * query parameters, respectively.  A {@link URI} with a non-null authority (e.g. a real network URI like
+     * {@code http://example.com/foo}) has no {@link Path} equivalent and is rejected.
+     *
+     * @param uri the {@link URI} to convert
+     * @return the equivalent {@link Path}
+     * @throws InvalidPathException if the {@link URI} has a non-null authority
+     */
+    public static Path fromURI(final URI uri) {
+
+        if (uri.getAuthority() != null) {
+            throw new InvalidPathException("URI has an authority, incompatible with Path: " + uri);
+        }
+
+        final var context = uri.getScheme();
+        final var rawPath = uri.getRawPath() == null ? "" : uri.getRawPath();
+
+        final List<String> components = Stream.of(rawPath.split(PATH_SEPARATOR))
+                .map(Path::percentDecode)
+                .filter(c -> !c.isEmpty())
+                .collect(toList());
+
+        final var rawQuery = uri.getRawQuery();
+
+        final Map<String, List<String>> parameters = rawQuery == null
+                ? Map.of()
+                : parseQueryString(rawQuery);
+
+        return new Path(new ContextAndComponents(context, components, parameters));
+
+    }
+
+    /**
+     * Implements the conventional valueOf method by invoking {@link #fromURI(URI)}.
+     *
+     * @param uri the {@link URI} to convert
+     * @return the equivalent {@link Path}
+     */
+    public static Path valueOf(final URI uri) {
+        return fromURI(uri);
     }
 
     /**
@@ -829,20 +993,32 @@ public final class Path implements Serializable, HasNodeId {
             final String path,
             final String pathSeparator) {
 
+        final var queryIndex = path.indexOf(QUERY_SEPARATOR);
+        final var pathPortion = queryIndex < 0 ? path : path.substring(0, queryIndex);
+        final var queryPortion = queryIndex < 0 ? null : path.substring(queryIndex + 1);
+
+        if (queryPortion != null && queryPortion.contains(QUERY_SEPARATOR)) {
+            throw new InvalidPathException("Path contains multiple '?' separators: " + path);
+        }
+
+        final Map<String, List<String>> parameters = queryPortion == null
+                ? Map.of()
+                : parseQueryString(queryPortion);
+
         final var componentSplitPattern = quote(pathSeparator);
 
-        if (!path.contains(CONTEXT_SEPARATOR)) {
+        if (!pathPortion.contains(CONTEXT_SEPARATOR)) {
 
-            final List<String> components = Stream.of(path.split(componentSplitPattern))
+            final List<String> components = Stream.of(pathPortion.split(componentSplitPattern))
                     .map(String::trim)
                     .filter(c -> !c.isEmpty())
                     .collect(toList());
 
-            return new ContextAndComponents(null, components);
+            return new ContextAndComponents(null, components, parameters);
 
         }
 
-        final var contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
+        final var contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(pathPortion))
                 .map(String::trim)
                 .filter(c -> !c.isEmpty())
                 .collect(toList());
@@ -859,32 +1035,169 @@ public final class Path implements Serializable, HasNodeId {
                 .filter(c -> ! c.isEmpty())
                 .collect(toList());
 
-        return new ContextAndComponents(context, components);
+        return new ContextAndComponents(context, components, parameters);
 
+    }
+
+    /**
+     * Parses a raw (already percent-encoded) query string into decoded parameters, grouped by key in the order
+     * they were first seen, preserving per-key value order.  A bare key with no {@link #QUERY_KEY_VALUE_SEPARATOR}
+     * decodes to an empty-string value.
+     *
+     * @param rawQuery the raw, percent-encoded query string (without the leading {@link #QUERY_SEPARATOR})
+     * @return the decoded parameters, never null
+     * @throws InvalidPathException if the query string contains malformed percent-encoding or illegal characters
+     */
+    public static Map<String, List<String>> parseQueryString(final String rawQuery) {
+
+        if (rawQuery == null || rawQuery.isEmpty()) {
+            return Map.of();
+        }
+
+        final var result = new LinkedHashMap<String, List<String>>();
+
+        for (final var pair : rawQuery.split(QUERY_PARAMETER_SEPARATOR, -1)) {
+
+            if (pair.isEmpty()) {
+                continue;
+            }
+
+            final var eq = pair.indexOf(QUERY_KEY_VALUE_SEPARATOR);
+            final var rawKey = eq < 0 ? pair : pair.substring(0, eq);
+            final var rawValue = eq < 0 ? "" : pair.substring(eq + 1);
+
+            validateRawQueryComponent(rawKey, pair);
+            validateRawQueryComponent(rawValue, pair);
+
+            result.computeIfAbsent(percentDecode(rawKey), k -> new ArrayList<>()).add(percentDecode(rawValue));
+
+        }
+
+        final var immutable = new LinkedHashMap<String, List<String>>();
+        result.forEach((k, v) -> immutable.put(k, List.copyOf(v)));
+        return Collections.unmodifiableMap(immutable);
+
+    }
+
+    /**
+     * A pragmatic (not byte-perfect RFC 3986 ABNF) character class for a raw, still-percent-encoded query key or
+     * value: unreserved characters, sub-delims, and the characters our own {@link #percentEncode(String)} never
+     * escapes, plus '%' itself (validated separately below for well-formedness).
+     */
+    private static final Pattern VALID_QUERY_CHAR = Pattern.compile("[A-Za-z0-9\\-._~!$'()*+,;:@/%]+");
+
+    private static void validateRawQueryComponent(final String raw, final String originalPair) {
+
+        if (!raw.isEmpty() && !VALID_QUERY_CHAR.matcher(raw).matches()) {
+            throw new InvalidPathException("Invalid character(s) in query component: " + originalPair);
+        }
+
+        for (int i = 0; i < raw.length(); i++) {
+            if (raw.charAt(i) == '%') {
+                if (i + 2 >= raw.length()
+                        || Character.digit(raw.charAt(i + 1), 16) < 0
+                        || Character.digit(raw.charAt(i + 2), 16) < 0) {
+                    throw new InvalidPathException("Malformed percent-encoding in query component: " + originalPair);
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Encodes decoded query parameters into a canonical, percent-encoded query string (without the leading
+     * {@link #QUERY_SEPARATOR}).
+     *
+     * @param parameters the decoded parameters
+     * @return the encoded query string, empty if there are no parameters
+     */
+    public static String encodeQueryString(final Map<String, List<String>> parameters) {
+
+        if (parameters == null || parameters.isEmpty()) {
+            return "";
+        }
+
+        final var joiner = new StringJoiner(QUERY_PARAMETER_SEPARATOR);
+
+        for (final var entry : parameters.entrySet()) {
+            final var encodedKey = percentEncode(entry.getKey());
+            for (final var value : entry.getValue()) {
+                joiner.add(encodedKey + QUERY_KEY_VALUE_SEPARATOR + percentEncode(value));
+            }
+        }
+
+        return joiner.toString();
+
+    }
+
+    private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
+    /**
+     * Percent-encodes a single (decoded) string per strict RFC 3986 &sect;2.3: the unreserved set
+     * ({@code A-Za-z0-9-._~}) passes through literally; everything else, including space, is percent-encoded as
+     * uppercase-hex UTF-8 bytes.  Space is never encoded as '+'.
+     */
+    private static String percentEncode(final String raw) {
+        final var bytes = raw.getBytes(ENCODING);
+        final var sb = new StringBuilder(bytes.length);
+        for (final byte b : bytes) {
+            final int c = b & 0xFF;
+            if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                    || c == '-' || c == '.' || c == '_' || c == '~') {
+                sb.append((char) c);
+            } else {
+                sb.append('%').append(HEX[(c >> 4) & 0xF]).append(HEX[c & 0xF]);
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Percent-decodes a single raw string.  Only safe to call on input already validated by
+     * {@link #validateRawQueryComponent(String, String)} (or produced by {@link java.net.URI}), since literal
+     * (non-percent) characters are written as single bytes rather than re-encoded as UTF-8.
+     */
+    private static String percentDecode(final String raw) {
+        final var bytes = new ByteArrayOutputStream(raw.length());
+        for (int i = 0; i < raw.length(); i++) {
+            final char c = raw.charAt(i);
+            if (c == '%') {
+                final int hi = Character.digit(raw.charAt(i + 1), 16);
+                final int lo = Character.digit(raw.charAt(i + 2), 16);
+                bytes.write((hi << 4) | lo);
+                i += 2;
+            } else {
+                bytes.write(c);
+            }
+        }
+        return new String(bytes.toByteArray(), ENCODING);
     }
 
     /**
      * The raw data structure which backs the {@link Path} type.
      */
-    public static final class ContextAndComponents implements Serializable {
+    public record ContextAndComponents(
+            String context,
+            List<String> components,
+            Map<String, List<String>> parameters) implements Serializable {
 
-        private final String context;
-        private final List<String> components;
+        public ContextAndComponents {
 
-        private ContextAndComponents() {
-            context = null;
-            components = emptyList();
-        }
-
-        public ContextAndComponents(final String context, final List<String> components) {
-
-            this.context = context == null
+            context = context == null
                     ? null
                     : context.isBlank()
                     ? null
                     : context.strip();
 
-            this.components = copyOf(components);
+            components = copyOf(components);
+
+            final var normalized = new LinkedHashMap<String, List<String>>();
+
+            if (parameters != null) {
+                parameters.forEach((k, v) -> normalized.put(k, List.copyOf(v)));
+            }
+
+            parameters = Collections.unmodifiableMap(normalized);
 
         }
 
@@ -896,24 +1209,19 @@ public final class Path implements Serializable, HasNodeId {
             return components;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ContextAndComponents that = (ContextAndComponents) o;
-            return Objects.equals(getContext(), that.getContext()) && Objects.equals(getComponents(), that.getComponents());
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(getContext(), getComponents());
-        }
-
         public String getComponent(final int index) {
             return components.get(index < 0
                     ? components.size() + index
                     : index
             );
+        }
+
+        public Map<String, List<String>> getParameters() {
+            return parameters;
+        }
+
+        public List<String> getParameter(final String name) {
+            return parameters.getOrDefault(name, List.of());
         }
 
     }

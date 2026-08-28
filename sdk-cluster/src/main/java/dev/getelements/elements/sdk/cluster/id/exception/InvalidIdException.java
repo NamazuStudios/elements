@@ -1,5 +1,9 @@
 package dev.getelements.elements.sdk.cluster.id.exception;
 
+/**
+ * Thrown when an identifier in the {@code dev.getelements.elements.sdk.cluster.id} package cannot be parsed or
+ * constructed. Serves as the common base type for the more specific {@code InvalidXxxIdException} classes.
+ */
 public class InvalidIdException extends IllegalArgumentException {
 
     public InvalidIdException() {

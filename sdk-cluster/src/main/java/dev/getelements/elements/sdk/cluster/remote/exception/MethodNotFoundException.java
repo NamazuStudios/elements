@@ -3,7 +3,7 @@ package dev.getelements.elements.sdk.cluster.remote.exception;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 
 /**
- * Created by patricktwohig on 8/14/17.
+ * Thrown when a remotely-invoked method cannot be located on the target service.
  */
 public class MethodNotFoundException extends NotFoundException {
 

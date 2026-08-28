@@ -5,7 +5,6 @@ import dev.getelements.elements.rt.PersistenceEnvironment;
 import dev.getelements.elements.rt.guice.AbstractResourceServiceAcquiringUnitTest;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.transact.JournalTransactionalResourceServicePersistenceModule;
-import dev.getelements.elements.sdk.transact.TransactionalResourceService;
 import dev.getelements.elements.sdk.transact.TransactionalResourceServiceModule;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;

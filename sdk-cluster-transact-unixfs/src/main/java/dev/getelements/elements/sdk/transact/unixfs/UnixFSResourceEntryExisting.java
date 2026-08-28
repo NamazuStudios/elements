@@ -2,7 +2,6 @@ package dev.getelements.elements.sdk.transact.unixfs;
 
 import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
-import dev.getelements.elements.sdk.transact.NullResourceException;
 import dev.getelements.elements.sdk.transact.ResourceContents;
 import dev.getelements.elements.sdk.util.FinallyAction;
 import dev.getelements.elements.sdk.util.LazyValue;

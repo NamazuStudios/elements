@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk.dao;
 
-import com.google.common.base.Strings;
 import dev.getelements.elements.sdk.annotation.ElementEventProducer;
 import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -102,7 +101,7 @@ public interface UserDao {
      */
     default User getUserByNameOrEmail(final String userNameOrEmail) {
         return findUserByNameOrEmail(userNameOrEmail).orElseThrow(() -> {
-            final String trimmedUserNameOrEmail = Strings.nullToEmpty(userNameOrEmail).trim();
+            final String trimmedUserNameOrEmail = userNameOrEmail == null ? "" : userNameOrEmail.trim();
             return new UserNotFoundException("User \"" + trimmedUserNameOrEmail + "\" not found.");
         });
     }

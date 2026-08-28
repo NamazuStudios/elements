@@ -58,10 +58,8 @@ public class MockServiceTestModule extends AbstractModule {
 
         bind(Validator.class).toInstance(mock(Validator.class));
         bind(Attributes.class).toInstance(mock(Attributes.class));
-        bind(ControlClient.class).toInstance(mock(ControlClient.class));
         bind(LargeObjectBucket.class).toInstance(mock(LargeObjectBucket.class));
         bind(InstanceDiscoveryService.class).toInstance(mock(InstanceDiscoveryService.class));
-        bind(RemoteInvokerRegistry.class).toInstance(mock(RemoteInvokerRegistry.class));
         bind(PasswordGenerator.class).toInstance(mock(PasswordGenerator.class));
         bind(VaultCryptoUtilities.class).toInstance(mock(VaultCryptoUtilities.class));
         bind(WalletCryptoUtilities.class).toInstance(mock(WalletCryptoUtilities.class));

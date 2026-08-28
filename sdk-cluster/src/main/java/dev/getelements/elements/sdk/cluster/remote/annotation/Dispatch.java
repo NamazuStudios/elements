@@ -81,7 +81,7 @@ public @interface Dispatch {
          * Inspects the supplied {@link Method} and determines the type of dispatch used.  If not specified, then this
          * method infers the type automatically.
          *
-         * @param method
+         * @param method the {@link Method} to inspect
          * @return the {@link Type}
          */
         public static Type determine(final Method method) {

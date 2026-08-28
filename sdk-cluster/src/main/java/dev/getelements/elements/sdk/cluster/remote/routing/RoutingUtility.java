@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 
+/**
+ * Static helper methods for reducing an address (a {@link List} of address components) down to the {@link NodeId}s
+ * it implies, verifying consistency in the process.
+ */
 public interface RoutingUtility {
 
     /**

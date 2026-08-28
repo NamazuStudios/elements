@@ -7,6 +7,12 @@ import java.util.function.Supplier;
 
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 
+/**
+ * A {@link Future} that combines the results of multiple {@link CompletionStage}s into a single aggregate result,
+ * chaining them together with the supplied {@link BinaryOperator}, starting from the supplied initial value.
+ *
+ * @param <AggregateT> the type of the aggregated result
+ */
 public class AggregateFuture<AggregateT> implements Future<AggregateT> {
 
     private final CompletableFuture<AggregateT> delegate;

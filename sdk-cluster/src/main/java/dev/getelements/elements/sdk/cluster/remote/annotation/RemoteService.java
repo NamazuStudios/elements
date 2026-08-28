@@ -33,6 +33,9 @@ public @interface RemoteService {
      */
     RemoteScope[] scopes() default @RemoteScope(WILDCARD_SCOPE);
 
+    /**
+     * Static helper methods for reading {@link RemoteService} metadata off of a {@link Class}.
+     */
     final class Util {
 
         /**

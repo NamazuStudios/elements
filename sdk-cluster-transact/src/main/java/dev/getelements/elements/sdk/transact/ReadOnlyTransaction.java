@@ -1,12 +1,11 @@
 package dev.getelements.elements.sdk.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.Resource;
-import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.HasNodeId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
+import dev.getelements.elements.sdk.transact.exception.ResourceNotFoundException;
 
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
@@ -36,13 +35,13 @@ public interface ReadOnlyTransaction extends AutoCloseable {
     boolean exists(ResourceId resourceId);
 
     /**
-     * Returns a {@link Stream<Listing>} of all instances reading the current stream.  If nothing,
+     * Returns a {@link Stream} of all instances reading the current stream.  If nothing,
      * matches an empty stream is returned.
      *
      * @param path the path to check, may be direct or wildcard
-     * @return a {@link Stream<Listing>}
+     * @return a {@link Stream}
      */
-    Stream<ResourceService.Listing> list(Path path);
+    Stream<ResourceListing> list(Path path);
 
     /**
      * Gets the {@link ResourceId} associated with the given {@link Path}.
@@ -54,7 +53,7 @@ public interface ReadOnlyTransaction extends AutoCloseable {
     ResourceId getResourceId(Path path);
 
     /**
-     * Loads the contents of the {@link Resource} given the supplied {@link ResourceId}.  The supplied
+     * Loads the contents of the {@link ResourceId} given the supplied {@link ResourceId}.  The supplied
      * {@link ReadableByteChannel} is only guaranteed to be valid for the life of this transaction. However, the caller
      * must not assume the transaction will automatically clean up open byte channels.
      *
@@ -67,7 +66,7 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      * is not defined.
      *
      * @param resourceId the {@link ResourceId}
-     * @return a {@link ReadableByteChannel} with the contents of the {@link Resource}
+     * @return a {@link ReadableByteChannel} with the contents of the {@link ResourceId}
      */
     ReadableByteChannel loadResourceContents(ResourceId resourceId) throws IOException;
 

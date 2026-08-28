@@ -1,8 +1,9 @@
 package dev.getelements.elements.sdk.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.exception.InternalException;
+
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 
 import static java.lang.String.format;
 

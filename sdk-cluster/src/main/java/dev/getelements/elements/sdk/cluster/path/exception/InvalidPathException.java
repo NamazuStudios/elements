@@ -1,5 +1,10 @@
 package dev.getelements.elements.sdk.cluster.path.exception;
 
+/**
+ * Thrown when a {@link dev.getelements.elements.sdk.cluster.path.Path} cannot be parsed or constructed, or when
+ * an operation is attempted on a {@link dev.getelements.elements.sdk.cluster.path.Path} that violates its
+ * invariants.
+ */
 public class InvalidPathException extends IllegalArgumentException {
 
     public InvalidPathException() {}

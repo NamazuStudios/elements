@@ -7,6 +7,10 @@ import java.util.stream.Collectors;
 import static dev.getelements.elements.sdk.cluster.path.Path.WILDCARD;
 import static dev.getelements.elements.sdk.cluster.path.Path.WILDCARD_RECURSIVE;
 
+/**
+ * Static utility methods and {@link Comparator} implementations for working with {@link Path} instances, including
+ * wildcard-aware ordering, hierarchy iteration, and random {@link Path} generation for testing.
+ */
 public class Paths {
 
     private Paths() {}

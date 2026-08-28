@@ -1,11 +1,10 @@
 package dev.getelements.elements.sdk.cluster.remote.routing;
 
-import dev.getelements.elements.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This routing stragegy will broadcast to all nodes.  It performs no aggregation and only works with methods returning
+ * This routing strategy will broadcast to all nodes.  It performs no aggregation and only works with methods returning
  * void or accepting a Void response.  More specifically, the return must always be null for all consumers.
  */
 public class BroadcastRoutingStrategy extends AbstractAggregateRoutingStrategy {

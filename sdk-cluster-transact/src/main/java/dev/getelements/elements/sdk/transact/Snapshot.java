@@ -1,10 +1,12 @@
 package dev.getelements.elements.sdk.transact;
 
-import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.exception.ResourceNotFoundException;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
+import dev.getelements.elements.sdk.cluster.path.Path;
+import dev.getelements.elements.sdk.model.exception.DuplicateException;
+import dev.getelements.elements.sdk.transact.exception.ResourceNotFoundException;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -24,9 +26,9 @@ public interface Snapshot extends AutoCloseable {
      * Closing this {@link Snapshot} will close the stream associatd with it.
      *
      * @param path the path
-     * @return the {@link Stream<  ResourceEntry  >}
+     * @return the {@link Stream}
      */
-    Stream<ResourceService.Listing> list(Path path);
+    Stream<ResourceListing> list(Path path);
 
     /**
      * Finds the {@link TaskEntry} associated with the supplied {@link ResourceId}.

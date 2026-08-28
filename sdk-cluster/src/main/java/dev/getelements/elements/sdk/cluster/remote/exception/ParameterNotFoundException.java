@@ -2,6 +2,9 @@ package dev.getelements.elements.sdk.cluster.remote.exception;
 
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 
+/**
+ * Thrown when a required parameter for a remotely-invoked method cannot be found.
+ */
 public class ParameterNotFoundException extends NotFoundException {
 
     public ParameterNotFoundException() {

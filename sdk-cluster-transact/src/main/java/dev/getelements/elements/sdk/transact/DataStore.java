@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.transact;
 
 import dev.getelements.elements.sdk.cluster.path.Path;
-import dev.getelements.elements.rt.Resource;
 import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.sdk.cluster.id.ResourceId;
 
@@ -32,7 +31,7 @@ public interface DataStore {
     ResourceIndex getResourceIndex();
 
     /**
-     * Removes all {@link Resource} instances from the datastore. This operation will essentially clear the entire data
+     * Removes all resources from the datastore. This operation will essentially clear the entire data
      * store, all revisions etc.
      */
     void removeAllResources(NodeId nodeId);

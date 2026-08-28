@@ -7,7 +7,6 @@ import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
 import dev.getelements.elements.sdk.cluster.remote.RemoteInvokerRegistry;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
-import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +19,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 
 /**
- * A compex type of {@link RoutingStrategy} where each invocation goes to all known {@link RemoteInvoker} instances
+ * A complex type of {@link RoutingStrategy} where each invocation goes to all known {@link RemoteInvoker} instances
  * and then combines the results together into a single result.  In the event of a single error, the whole call is
  * canceled rather than trying to partially report some result.
  *
@@ -36,13 +35,12 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     @Override
     public Future<Object> invokeFuture(
             final RemoteInvokerRegistry remoteInvokerRegistry,
-            final List<Object> address,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
-        final int count = invokers.size();
+        final var invokers = getRemoteInvokers(remoteInvokerRegistry, invocation);
+        final var count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
@@ -64,13 +62,12 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     @Override
     public AsyncOperation invokeAsync(
             final RemoteInvokerRegistry remoteInvokerRegistry,
-            final List<Object> address,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final var invokers = getRemoteInvokers(address);
-        final int count = invokers.size();
+        final var invokers = getRemoteInvokers(remoteInvokerRegistry, invocation);
+        final var count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
@@ -91,13 +88,12 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     @Override
     public Object invokeSync(
             final RemoteInvokerRegistry remoteInvokerRegistry,
-            final List<Object> address,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
 
-        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
-        final int count = invokers.size();
+        final var invokers = getRemoteInvokers(remoteInvokerRegistry, invocation);
+        final var count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
@@ -128,12 +124,22 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      * Gets the {@link List<RemoteInvoker>} for the supplied address.  By default this just gets all instances for a
      * particular application UUID.
      *
-     * @param address the address
+     * @param remoteInvokerRegistry the remote invocation registry
+     * @param invocation the invocation itself
      * @return a {@link List<RemoteInvoker>} to use.
      */
-    protected List<RemoteInvoker> getRemoteInvokers(final List<Object> address) {
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-        return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
+    protected List<RemoteInvoker> getRemoteInvokers(
+            final RemoteInvokerRegistry remoteInvokerRegistry,
+            final Invocation invocation) {
+
+        final var remoteInstanceSelector = invocation
+                .address()
+                .service()
+                .element()
+                .instance();
+
+        return remoteInvokerRegistry.getAllRemoteInvokers(remoteInstanceSelector);
+
     }
 
     /**
@@ -177,15 +183,6 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
         final Object a = ra.result();
         final Object b = rb.result();
         return new InvocationResult(combine(a, b));
-    }
-
-    public ApplicationId getApplicationId() {
-        return applicationId;
-    }
-
-    @Inject
-    public void setApplicationId(ApplicationId applicationId) {
-        this.applicationId = applicationId;
     }
 
 }

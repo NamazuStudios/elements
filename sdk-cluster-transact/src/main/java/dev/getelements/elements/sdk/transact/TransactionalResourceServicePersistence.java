@@ -9,7 +9,10 @@ import static java.lang.String.format;
  * unerlying data storage.
  *
  */
-public interface TransactionalResourceServicePersistence {
+public interface TransactionalResourceServicePersistence extends AutoCloseable {
+
+    @Override
+    default void close() {}
 
     /**
      * Starts building an instance of {@link ReadOnlyTransaction} against the underlying data store.

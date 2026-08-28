@@ -1,7 +1,7 @@
 package dev.getelements.elements.sdk.transact;
 
-import dev.getelements.elements.rt.exception.NoSuchTaskException;
 import dev.getelements.elements.sdk.cluster.id.TaskId;
+import dev.getelements.elements.sdk.transact.exception.TaskNotFoundException;
 
 import java.util.*;
 
@@ -35,7 +35,7 @@ public interface TaskEntry<ScopeT> extends AutoCloseable {
      * @return the scope
      */
     default ScopeT getScope() {
-        return findScope().orElseThrow(NoSuchTaskException::new);
+        return findScope().orElseThrow(TaskNotFoundException::new);
     }
 
     /**
@@ -43,7 +43,7 @@ public interface TaskEntry<ScopeT> extends AutoCloseable {
      * @return the scope
      */
     default ScopeT getOriginalScope() {
-        return findOriginalScope().orElseThrow(NoSuchTaskException::new);
+        return findOriginalScope().orElseThrow(TaskNotFoundException::new);
     }
 
     /**

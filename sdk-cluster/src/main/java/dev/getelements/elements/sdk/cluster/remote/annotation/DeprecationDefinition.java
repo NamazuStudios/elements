@@ -6,7 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Indicates that the
+ * Describes the deprecation status of an annotated type or {@link RemoteService}/{@link RemotelyInvokable} member,
+ * including an optional human-readable reason surfaced to callers of the deprecated element.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
