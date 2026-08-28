@@ -1,0 +1,46 @@
+/*
+ * Namazu Elements brand overrides for the standard javadoc stylesheet.
+ * Brand colors: hot pink #FF0099, navy #0D1335
+ */
+
+:root {
+    --namazu-hot-pink: #FF0099;
+    --namazu-navy: #0D1335;
+}
+
+.top-nav, .sub-nav, .bottom-nav {
+    background-color: var(--namazu-navy);
+    color: #fff;
+}
+
+.top-nav a:link, .top-nav a:visited,
+.sub-nav a:link, .sub-nav a:visited,
+.bottom-nav a:link, .bottom-nav a:visited {
+    color: var(--namazu-hot-pink);
+}
+
+.title, .sub-title {
+    color: var(--namazu-navy);
+}
+
+a:link, a:visited {
+    color: var(--namazu-hot-pink);
+}
+
+a:hover, a:focus {
+    color: var(--namazu-navy);
+}
+
+.package-hierarchy-label, caption a:link, caption a:visited {
+    background-color: var(--namazu-navy);
+}
+
+.table-tabs > button.active-table-tab {
+    background-color: var(--namazu-navy);
+    color: #fff;
+}
+
+.table-tabs > button.table-tab, .caption a[href]:hover {
+    background-color: var(--namazu-hot-pink);
+    color: #000;
+}
