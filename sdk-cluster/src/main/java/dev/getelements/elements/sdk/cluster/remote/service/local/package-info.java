@@ -3,6 +3,6 @@
  * cluster.
  */
 @ElementPublic
-package dev.getelements.elements.sdk.cluster.remote.service;
+package dev.getelements.elements.sdk.cluster.remote.service.local;
 
 import dev.getelements.elements.sdk.annotation.ElementPublic;

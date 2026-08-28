@@ -128,7 +128,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      * @param invocation the invocation itself
      * @return a {@link List<RemoteInvoker>} to use.
      */
-    protected List<RemoteInvoker> getRemoteInvokers(
+    protected List<? extends RemoteInvoker> getRemoteInvokers(
             final RemoteInvokerRegistry remoteInvokerRegistry,
             final Invocation invocation) {
 

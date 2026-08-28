@@ -1,7 +1,7 @@
 package dev.getelements.elements.service.health;
 
-import dev.getelements.elements.sdk.cluster.remote.service.InstanceDiscoveryService;
-import dev.getelements.elements.sdk.cluster.remote.service.InstanceHostInfo;
+import dev.getelements.elements.sdk.cluster.remote.service.local.InstanceDiscoveryService;
+import dev.getelements.elements.sdk.cluster.remote.service.local.InstanceHostInfo;
 import dev.getelements.elements.sdk.dao.DatabaseHealthStatusDao;
 import dev.getelements.elements.sdk.model.health.DiscoveryHealthStatus;
 import dev.getelements.elements.sdk.model.health.HealthStatus;

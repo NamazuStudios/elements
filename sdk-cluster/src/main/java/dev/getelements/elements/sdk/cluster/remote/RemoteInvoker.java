@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
+import dev.getelements.elements.sdk.cluster.remote.dto.InstanceMetadata;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult;
@@ -68,10 +69,10 @@ public interface RemoteInvoker extends AutoCloseable {
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
      * {@link Consumer} will relay all encountered errors.
      *
-     * Typically this is used with the {@link Type#ASYNCHRONOUS}.
+     * Typically, this is used with the {@link Type#ASYNCHRONOUS}.
      *
      * This returns the generic Void type to clarify the intention of the method that the underlying {@link Future}
-     * is discarded, but since is is intended to be used with reflections code, this allows for the method to be easily
+     * is discarded, but since this is intended to be used with reflections code, this allows for the method to be easily
      * adapted as such.
      *
      * @param invocation the outgoing {@link Invocation}
@@ -87,7 +88,7 @@ public interface RemoteInvoker extends AutoCloseable {
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
      * {@link Consumer} will relay all encountered errors.
      *
-     * Typically this is used with the {@link Type#FUTURE}
+     * Typically, this is used with the {@link Type#FUTURE}
      *
      * @param invocation the outgoing {@link Invocation}
      * @param asyncInvocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all async results
@@ -123,7 +124,7 @@ public interface RemoteInvoker extends AutoCloseable {
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
      * {@link Consumer} will relay all encountered errors.
      *
-     * Typically this is used with the {@link Type#SYNCHRONOUS}
+     * Typically, this is used with the {@link Type#SYNCHRONOUS}
      *
      * The default implementation of this method simply uses the {@link Future<Object>} returned by the method defined
      * by {@link #invokeFuture(Invocation, List, InvocationErrorConsumer)} and blocks on {@link Future#get()}.  However,

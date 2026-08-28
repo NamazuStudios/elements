@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.remote.service;
+package dev.getelements.elements.sdk.cluster.remote.service.local;
 
 import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -43,8 +43,6 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
     public static final String SRV_AUTHORITATIVE = "dev.getelements.elements.rt.srv.authoritative";
 
     private boolean authoritative;
-
-    private final Lock lock = new ReentrantLock();
 
     private final String srvQuery;
 

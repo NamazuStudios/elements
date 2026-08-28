@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.remote.service;
+package dev.getelements.elements.sdk.cluster.remote.service.local;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attribute;

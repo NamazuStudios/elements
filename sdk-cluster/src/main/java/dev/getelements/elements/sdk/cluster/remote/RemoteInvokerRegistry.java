@@ -1,6 +1,8 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
+import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
 import dev.getelements.elements.sdk.cluster.address.RemoteInstanceSelector;
+import dev.getelements.elements.sdk.cluster.remote.dto.InstanceMetadata;
 import dev.getelements.elements.sdk.cluster.remote.routing.RoutingStrategy;
 
 import java.util.List;
@@ -12,12 +14,11 @@ import java.util.List;
 public interface RemoteInvokerRegistry {
 
     /**
-     * Gets all {@link RemoteInvoker} instances matching the supplied {@link RemoteInstanceSelector}.
+     * Gets all {@link InstanceMetadata}.
      *
-     * @param remoteInstanceSelector the {@link RemoteInstanceSelector} used to select the {@link RemoteInvoker}s
-     * @return the list of matching {@link RemoteInvoker} instances, never null
+     * @return all instance metadata
      */
-    List<RemoteInvoker> getAllRemoteInvokers(RemoteInstanceSelector remoteInstanceSelector);
+    List<InstanceMetadata> getAllInstanceMetadata();
 
     /**
      * Gets the best available {@link RemoteInvoker} matching the supplied {@link RemoteInstanceSelector}.
@@ -25,6 +26,14 @@ public interface RemoteInvokerRegistry {
      * @param remoteInstanceSelector the {@link RemoteInstanceSelector} used to select the {@link RemoteInvoker}
      * @return the best matching {@link RemoteInvoker}
      */
-    RemoteInvoker getBestRemoteInvoker(RemoteInstanceSelector remoteInstanceSelector);
+    InstanceRemoteInvoker getBestRemoteInvoker(RemoteInstanceSelector remoteInstanceSelector);
+
+    /**
+     * Gets all {@link RemoteInvoker} instances matching the supplied {@link RemoteInstanceSelector}.
+     *
+     * @param remoteInstanceSelector the {@link RemoteInstanceSelector} used to select the {@link RemoteInvoker}s
+     * @return the list of matching {@link RemoteInvoker} instances, never null
+     */
+    List<InstanceRemoteInvoker> getAllRemoteInvokers(RemoteInstanceSelector remoteInstanceSelector);
 
 }

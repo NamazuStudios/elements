@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.remote.service;
+package dev.getelements.elements.sdk.cluster.remote.service.local;
 
 /**
  * Represents the url connection to an instance host.

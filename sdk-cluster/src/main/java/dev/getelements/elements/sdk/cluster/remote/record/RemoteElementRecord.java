@@ -29,7 +29,8 @@ public record RemoteElementRecord(RemoteElementAddress address, List<RemoteServi
      * @param elementRecord the {@link ElementRecord} describing the element
      * @return the {@link RemoteElementRecord}
      */
-    public static RemoteElementRecord from(final RemoteElementAddress address, final ElementRecord elementRecord) {
+    public static RemoteElementRecord from(final RemoteElementAddress address,
+                                           final ElementRecord elementRecord) {
 
         final var services = elementRecord
                 .services()

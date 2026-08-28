@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote.proxy;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.sdk.address.ElementMethodAddress;
 import dev.getelements.elements.sdk.annotation.Disabled;
 import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
 import dev.getelements.elements.sdk.cluster.address.RemoteElementMethodAddress;

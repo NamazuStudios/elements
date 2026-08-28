@@ -28,7 +28,8 @@ public record RemoteServiceRecord(RemoteElementServiceAddress address, List<Remo
      * @param serviceType the service type to reflect over
      * @return the {@link RemoteServiceRecord}
      */
-    public static RemoteServiceRecord from(final RemoteElementServiceAddress address, final Class<?> serviceType) {
+    public static RemoteServiceRecord from(final RemoteElementServiceAddress address,
+                                           final Class<?> serviceType) {
 
         final var methods = RemotelyInvokable.Util
                 .getMethodStream(serviceType)
