@@ -80,12 +80,12 @@ public class RootElementRegistry implements MutableElementRegistry {
 
             check();
 
-            final var iterator = loaded.iterator();
-
-            while (iterator.hasNext()) {
-                final var loadedElement = iterator.next().element();
-                if (element.equals(element)) {
-                    iterator.remove();
+            // CopyOnWriteArrayList's iterator is a point-in-time snapshot and does not support
+            // Iterator#remove (throws UnsupportedOperationException); remove by value instead.
+            for (final var loadedElement : loaded) {
+                if (loadedElement.element().equals(element)) {
+                    loadedElement.subscriptions().unsubscribe();
+                    loaded.remove(loadedElement);
                     return true;
                 }
             }
