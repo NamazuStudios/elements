@@ -38,6 +38,8 @@
         </developer>
     </developers>
     <modules>
+        <module>cluster-server</module>
+        <module>cluster-client</module>
         <module>common-util</module>
         <module>common-servlet</module>
         <module>rest-api</module>
@@ -101,7 +103,7 @@
         <module>common-mapstruct</module>
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
-        <module>sdk-cluster-jakarta-ws</module>
+        <module>cluster-common</module>
     </modules>
     <properties>
         <revision>3.9.0-SNAPSHOT</revision>
@@ -517,6 +519,21 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>sdk-jakarta-rs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-client</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Third-party Dependencies -->

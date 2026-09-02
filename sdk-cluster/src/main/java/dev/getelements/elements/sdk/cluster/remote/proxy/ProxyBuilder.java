@@ -1,7 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote.proxy;
 
 import dev.getelements.elements.sdk.ServiceLocator;
-import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
 import dev.getelements.elements.sdk.cluster.address.RemoteInstanceSelector;
 import dev.getelements.elements.sdk.cluster.remote.MethodAssignment;
 import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
@@ -42,6 +41,15 @@ public interface ProxyBuilder<ProxyT> {
      * @return this instance
      */
     ProxyBuilder<ProxyT> withServiceLocator(ServiceLocator serviceLocator);
+
+    /**
+     * Allows for a caller to specify a remote instance selector to apply to the methods in the underlying service
+     * instance.
+     *
+     * @param remoteInstanceSelector the instance selector
+     * @return this instance
+     */
+    ProxyBuilder<ProxyT> withInstanceSelector(RemoteInstanceSelector remoteInstanceSelector);
 
     /**
      * Specifies a custom cache function used to look up, or compute and store, {@link MethodHandle} instances keyed

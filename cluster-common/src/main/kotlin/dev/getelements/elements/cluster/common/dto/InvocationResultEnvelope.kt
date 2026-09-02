@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.jakarta.ws.dto
+package dev.getelements.elements.cluster.common.dto
 
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 
@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
  * @property payload the payload object
  */
 data class InvocationResultEnvelope(
+    val id: String,
     val mode: Mode,
     val param: Int,
     override val payload: InvocationResult

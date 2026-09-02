@@ -94,4 +94,16 @@ public record RemoteElementAddress(
         return new RemoteElementServiceAddress(this, address.withService(type, name));
     }
 
+    /**
+     * Returns a new {@link RemoteElementAddress} with the supplied {@link RemoteInstanceAddress}
+     * @param remoteInstanceSelector the remote instance selector
+     * @return the remote instance selector
+     */
+    public RemoteElementAddress withInstanceSelector(final RemoteInstanceSelector remoteInstanceSelector) {
+        return new RemoteElementAddress(
+                remoteInstanceSelector == null ? RemoteInstanceSelector.DEFAULT : remoteInstanceSelector,
+                address()
+        );
+    }
+
 }

@@ -23,6 +23,12 @@ public class InstanceId implements
         HasInstanceId,
         HasCompoundId<V1CompoundId>  {
 
+    public static final InstanceId NULL_INSTANCE_ID = new InstanceId(
+            new V1CompoundId.Builder()
+                    .with(INSTANCE, new UUID(0,0))
+                    .build()
+    );
+
     final V1CompoundId v1CompoundId;
 
     private transient volatile int hash;

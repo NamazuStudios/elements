@@ -23,4 +23,4 @@ public record Invocation(
         RemoteElementMethodAddress address,
         List<String> parameters,
         List<Object> arguments,
-        Dispatch.Type dispatchType) implements Serializable { }
+        Dispatch.Type dispatchType) implements Serializable {}

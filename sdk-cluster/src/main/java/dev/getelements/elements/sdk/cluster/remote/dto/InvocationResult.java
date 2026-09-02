@@ -9,5 +9,4 @@ import java.lang.reflect.Method;
  * @param result the result of the remote {@link Method}, or null if the method failed to invoke.  Null may also
  *               indicate that the remote method returned null.
  */
-public record InvocationResult(Object result) implements Serializable {
-}
+public record InvocationResult(Object result) implements Serializable {}

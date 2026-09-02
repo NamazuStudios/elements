@@ -21,6 +21,8 @@ public record RemoteInstanceSelector(
         InstanceId instanceId,
         DeploymentId deploymentId) implements AsPath, HasInstanceId {
 
+    public static final RemoteInstanceSelector DEFAULT = new RemoteInstanceSelector();
+
     public RemoteInstanceSelector() {
         this(null, null);
     }

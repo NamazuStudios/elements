@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.cluster.remote.proxy;
 
 import dev.getelements.elements.sdk.ServiceLocator;
 import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
+import dev.getelements.elements.sdk.cluster.address.RemoteInstanceSelector;
 import dev.getelements.elements.sdk.cluster.remote.MethodAssignment;
 import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
 import dev.getelements.elements.sdk.cluster.remote.annotation.RemotelyInvokable;
@@ -49,16 +50,14 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
 
     private ServiceLocator serviceLocator;
 
+    private RemoteElementAddress remoteElementAddress;
+
     private final ElementServiceKey<ProxyT> serviceKey;
 
     private final Map<Method, InvocationHandler> handlerMap = new HashMap<>();
 
-    private final RemoteElementAddress remoteElementAddress;
-
-    /**
-     * Creates a {@link StandardProxyBuilder<ProxyT>} for the supplied interface service key.
-     */
-    public StandardProxyBuilder(            final RemoteElementAddress remoteElementAddress,
+    public StandardProxyBuilder(
+            final RemoteElementAddress remoteElementAddress,
             final ElementServiceKey<ProxyT> serviceKey) {
         this.serviceKey = serviceKey;
         this.classLoader = serviceKey.type().getClassLoader();
@@ -71,11 +70,6 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         };
     }
 
-    /**
-     * Given any interface methods that are declared as "default" this will ensure that they are not proxied.
-     *
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> dontProxyDefaultMethods() {
 
@@ -107,22 +101,32 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
 
     }
 
-    /**
-     * Uses the {@link SharedMethodHandleCache} to cache method handles.
-     *
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withSharedMethodHandleCache() {
         return withMethodHandleCache(SharedMethodHandleCache::computeIfAbsent);
     }
 
-    /**
-     * Allows for hte specification of a cache-getter function.  If the underlying cache
-     *
-     * @param methodHandleCache a {@link Function} used to retrieve cached instances
-     * @return
-     */
+    @Override
+    public ProxyBuilder<ProxyT> withServiceLocator(final ServiceLocator serviceLocator) {
+
+        this.serviceLocator = serviceLocator != null
+                ? serviceLocator
+                : new ServiceLocator() {
+                    @Override
+                    public <T> Optional<Supplier<T>> findInstance(ElementServiceKey<T> key) {
+                        return Optional.empty();
+                    }
+                };
+
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withInstanceSelector(final RemoteInstanceSelector remoteInstanceSelector) {
+        remoteElementAddress = remoteElementAddress.withInstanceSelector(remoteInstanceSelector);
+        return this;
+    }
+
     @Override
     public ProxyBuilder<ProxyT> withMethodHandleCache(final BiFunction<MethodHandleKey, Supplier<MethodHandle>, MethodHandle> methodHandleCache) {
 
@@ -135,59 +139,28 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
 
     }
 
-    /**
-     * Specifies an instance of {@link InvocationHandler}, which can be used to handle invocations against a
-     * {@link Method} through a {@link MethodAssignment}.
-     *
-     * @param invocationHandler the {@link InvocationHandler}
-     * @return a {@link MethodAssignment} used to assign this {@link InvocationHandler} to a specific {@link Method}
-     */
     @Override
     public MethodAssignment<ProxyBuilder<ProxyT>> handler(final InvocationHandler invocationHandler) {
         return new InvocationHandlerMethodAssignment(invocationHandler);
     }
 
-    /**
-     * Specifies the default {@link InvocationHandler}, which gets called when no other {@link InvocationHandler} is
-     * able to handle the invocation.
-     *
-     * @param defaultInvocationHandler the default {@link InvocationHandler}
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withDefaultHandler(final InvocationHandler defaultInvocationHandler) {
         this.defaultInvocationHandler = defaultInvocationHandler;
         return this;
     }
 
-    /**
-     * Specifies the default {@link #toString()} method, which simply returns the value "Proxy for the.class.Name"
-     *
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withToString() {
         return withToString("Proxy for " + serviceKey.type().getName());
     }
 
-    /**
-     * Specifies the default {@link #toString()} method, which simply returns the hardcoded value.
-     *
-     * @param toString the value to return when {@link #toString()} is invoked on the proxy.
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withToString(final String toString) {
         handler((proxy, method, args) -> toString).forMethod("toString");
         return this;
     }
 
-    /**
-     * Specifies the {@link #hashCode()} and {@link #equals(Object)} method.  {@link #hashCode()} will be implemented
-     * {@link System#identityHashCode(Object)} and equals will be implemented as "=="
-     *
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withDefaultHashCodeAndEquals() {
         handler((proxy, method, args) -> identityHashCode(proxy)).forMethod("hashCode");
@@ -195,12 +168,6 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         return this;
     }
 
-    /**
-     * Generates an {@link InvocationHandler} for each method in the class marked {@link RemotelyInvokable} using the
-     * specified {@link RemoteInvoker}.
-     *
-     * @return this instance
-     */
     @Override
     public ProxyBuilder<ProxyT> withHandlersForRemoteInvoker(final RemoteInvoker remoteInvoker) {
         Reflection.methods(serviceKey.type())
@@ -217,11 +184,6 @@ public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
         return this;
     }
 
-    /**
-     * Returns new instance of {@link ProxyT} using the built-in {@link java.lang.reflect.Proxy} functionality.
-     *
-     * @return the {@link ProxyT} instance.
-     */
     @Override
     public ProxyT build() {
 

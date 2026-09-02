@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.jakarta.ws.dto
+package dev.getelements.elements.cluster.common.dto
 
 sealed interface Envelope<PayloadT> {
 
@@ -9,7 +9,8 @@ sealed interface Envelope<PayloadT> {
     enum class Type {
         INVOCATION,
         INVOCATION_RESULT,
-        INVOCATION_ERROR
+        INVOCATION_ERROR,
+        INSTANCE_METADATA
     }
 
 }

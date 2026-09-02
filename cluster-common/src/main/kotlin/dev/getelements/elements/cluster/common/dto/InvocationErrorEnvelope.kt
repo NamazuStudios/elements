@@ -1,4 +1,4 @@
-package dev.getelements.elements.sdk.cluster.jakarta.ws.dto
+package dev.getelements.elements.cluster.common.dto
 
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError
 
@@ -7,7 +7,7 @@ import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError
  *
  * @property payload the invocation error
  */
-data class InvocationErrorEnvelope(override val payload: InvocationError) : Envelope<InvocationError> {
+data class InvocationErrorEnvelope(val id: String, override val payload: InvocationError) : Envelope<InvocationError> {
 
     override val type: Envelope.Type = Envelope.Type.INVOCATION_ERROR
 

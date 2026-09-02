@@ -1,16 +1,13 @@
-package dev.getelements.elements.sdk.cluster.jakarta.ws
+package dev.getelements.elements.cluster.client
 
-import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.Envelope
-import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.Envelope.Type
-import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationErrorEnvelope
-import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope
-import dev.getelements.elements.sdk.cluster.jakarta.ws.dto.InvocationResultEnvelope.Mode
-import dev.getelements.elements.sdk.cluster.remote.dto.Invocation
+import dev.getelements.elements.cluster.common.dto.InvocationErrorEnvelope
+import dev.getelements.elements.cluster.common.dto.InvocationResultEnvelope
+import dev.getelements.elements.cluster.common.dto.InvocationResultEnvelope.Mode
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
+import dev.getelements.elements.sdk.cluster.remote.dto.Invocation
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 import dev.getelements.elements.sdk.model.exception.InternalException
 import jakarta.websocket.ClientEndpoint
-import jakarta.websocket.OnMessage
 import jakarta.websocket.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,13 +20,16 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.function.Consumer
 
 @ClientEndpoint
 class JakartaWebsocketRemoteInvocation(
+    val id : String,
+    private val session : Session,
     private val invocation: Invocation,
-    private val asyncInvocationResultConsumerList: List<java.util.function.Consumer<InvocationResult>>,
+    private val asyncInvocationResultConsumerList: List<Consumer<InvocationResult>>,
     private val asyncInvocationErrorConsumer: InvocationErrorConsumer
-) {
+) : RemoteInvocationState {
 
     companion object {
         val logger: Logger = LoggerFactory.getLogger(JakartaWebsocketRemoteInvocation::class.java)
@@ -38,8 +38,6 @@ class JakartaWebsocketRemoteInvocation(
     private val mutex: Mutex = Mutex()
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-    private var session: Session? = null
 
     private var error: Throwable? = null
 
@@ -53,21 +51,7 @@ class JakartaWebsocketRemoteInvocation(
 
     fun send() : CompletableFuture<Any> = scope.future {
 
-        logger.trace("Waiting for connection to send invocation.")
-
-        mutex.withLock {
-            while (session == null && error == null) {
-                yield()
-            }
-        }
-
-        if (error != null) {
-            throw error!!
-        } else if (session != null) {
-            throw IllegalStateException("Failed to get Session and no error was raised.")
-        }
-
-        logger.trace("Connected. Sending invocation.")
+        logger.trace("Sending invocation.")
         session?.asyncRemote?.sendObject(invocation)
 
         logger.trace("Waiting for all asynchronous responses to return.")
@@ -102,65 +86,44 @@ class JakartaWebsocketRemoteInvocation(
 
     }
 
-    @OnMessage
-    suspend fun onConnection(session: Session) {
-        mutex.withLock {
-            this@JakartaWebsocketRemoteInvocation.session = session
-        }
-    }
-
-    @OnMessage
-    suspend fun onError(session: Session, throwable: Throwable) {
+    override suspend fun onError(throwable: Throwable) {
         mutex.withLock {
             this@JakartaWebsocketRemoteInvocation.error = throwable
         }
     }
 
-    @OnMessage
-    suspend fun onMessage(session: Session, envelope: Envelope<Any>) {
-        when(envelope.type) {
-            Type.INVOCATION_ERROR -> onInvocationError(envelope as InvocationErrorEnvelope)
-            Type.INVOCATION_RESULT -> onInvocationResult(envelope as InvocationResultEnvelope)
-            else -> fail(envelope)
-        }
+    override suspend fun onInvocationError(error: InvocationErrorEnvelope) {
+        asyncInvocationErrorConsumer.accept(error.payload)
     }
 
-    fun onInvocationError(envelope: InvocationErrorEnvelope) {
-        asyncInvocationErrorConsumer.accept(envelope.payload)
-    }
-
-    suspend fun onInvocationResult(envelope: InvocationResultEnvelope) {
+    override suspend fun onInvocationResult(result: InvocationResultEnvelope) {
 
         mutex.withLock {
-            when(envelope.mode) {
-                Mode.SYNC -> syncResult = envelope
+            when(result.mode) {
+                Mode.SYNC -> syncResult = result
                 Mode.ASYNC -> {
 
-                    if (asyncCompleted.get(envelope.param)) {
-                        error = InternalException("Duplicate result in async response param:${envelope.param}")
+                    if (asyncCompleted.get(result.param)) {
+                        error = InternalException("Duplicate result in async response param:${result.param}")
                         throw error as Throwable
                     }
 
                     val params = asyncInvocationResultConsumerList.size
 
-                    if (envelope.param >= params) {
-                        error = InternalException("Parameter out of bounds: ${envelope.param} >= $params")
+                    if (result.param >= params) {
+                        error = InternalException("Parameter out of bounds: ${result.param} >= $params")
                         throw error as Throwable
                     }
 
-                    asyncCompleted.set(envelope.param)
+                    asyncCompleted.set(result.param)
 
                 }
             }
 
         }
 
-        asyncInvocationResultConsumerList.get(envelope.param).accept(envelope.payload)
+        asyncInvocationResultConsumerList.get(result.param).accept(result.payload)
 
-    }
-
-    private fun fail(message: Envelope<Any>) {
-        error = InternalException("Received unexpected message type:${message.type}}")
     }
 
 }

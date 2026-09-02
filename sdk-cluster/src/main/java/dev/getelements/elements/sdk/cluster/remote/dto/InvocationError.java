@@ -9,5 +9,4 @@ import java.lang.reflect.Method;
  * @param throwable the {@link Throwable} thrown by the remote {@link Method}, or null if the method executed
  *                  successfully.
  */
-public record InvocationError(Throwable throwable) implements Serializable {
-}
+public record InvocationError(Throwable throwable) implements Serializable {}
