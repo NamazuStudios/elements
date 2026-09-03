@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Used to indicate a {@link TaskEntry<?>} which is null. This instance will always behave as if the {@link TaskEntry}
+ * Used to indicate a {@link TaskEntry} which is null. This instance will always behave as if the {@link TaskEntry}
  * is not present.
  *
  * @param <ScopeT>
