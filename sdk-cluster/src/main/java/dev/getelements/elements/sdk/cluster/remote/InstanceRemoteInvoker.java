@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.cluster.remote;
 import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.sdk.cluster.remote.dto.InstanceMetadata;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -24,5 +25,13 @@ public interface InstanceRemoteInvoker extends RemoteInvoker {
      * @return a subscription
      */
     Subscription onMetadataUpdate(Consumer<InstanceMetadata> onMetadata);
+
+    /**
+     * Called when the {@link InstanceRemoteInvoker} receives an update from the remote.
+     *
+     * @param onMetadata called when new metadata is availble
+     * @return a subscription
+     */
+    Subscription onMetadataUpdate(BiConsumer<Subscription, InstanceMetadata> onMetadata);
 
 }

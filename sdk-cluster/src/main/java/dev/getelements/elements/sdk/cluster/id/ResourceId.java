@@ -49,6 +49,8 @@ public class ResourceId implements
 
     private transient volatile InstanceId instanceId;
 
+    private transient volatile DeploymentId deploymentId;
+
     private transient volatile Optional<NodeId> nodeId;
 
     private ResourceId() { v1CompoundId = null; }
@@ -135,6 +137,15 @@ public class ResourceId implements
         return (instanceId == null) ? (instanceId = new InstanceId(v1CompoundId)) : instanceId;
     }
 
+    /**
+     * Returns the {@link DeploymentId}.
+     *
+     * @return the {@link DeploymentId} associated with this {@link ResourceId}
+     */
+    public DeploymentId getDeploymentId() {
+        return (deploymentId == null) ? (deploymentId = new DeploymentId(v1CompoundId)) : deploymentId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
@@ -181,6 +192,27 @@ public class ResourceId implements
         try {
             return new ResourceId(new V1CompoundId.Builder()
                     .with(NodeId.randomNodeId().v1CompoundId)
+                    .with(RESOURCE, UUID.randomUUID())
+                    .only(INSTANCE, DEPLOYMENT, RESOURCE)
+                    .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
+    }
+
+    /**
+     * Creates a new unique {@link ResourceId} composed of the given {@link InstanceId} and
+     * {@link DeploymentId}, with a fresh random resource {@link UUID}.
+     *
+     * @param instanceId the {@link InstanceId}
+     * @param deploymentId the {@link DeploymentId}
+     */
+    public static ResourceId randomResourceId(final InstanceId instanceId, final DeploymentId deploymentId) {
+        try {
+            return new ResourceId(new V1CompoundId.Builder()
+                    .with(instanceId.v1CompoundId)
+                    .with(deploymentId.v1CompoundId.getComponent(DEPLOYMENT))
                     .with(RESOURCE, UUID.randomUUID())
                     .only(INSTANCE, DEPLOYMENT, RESOURCE)
                     .build()

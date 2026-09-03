@@ -10,7 +10,6 @@ import java.io.ObjectOutputStream;
 
 import static dev.getelements.elements.sdk.cluster.id.DeploymentId.randomDeploymentId;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
-import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndApplication;
 import static dev.getelements.elements.sdk.cluster.id.ResourceId.*;
 
 public class ResourceIdTest {
@@ -18,18 +17,17 @@ public class ResourceIdTest {
     @Test
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomDeploymentId());
-        final ResourceId resourceId = randomResourceIdForNode(nodeId);
-        Assert.assertNotNull(resourceId.getNodeId());
-        Assert.assertNotNull(resourceId.getNodeId().getInstanceId());
-        Assert.assertNotNull(resourceId.getNodeId().getApplicationId());
+        final DeploymentId deploymentId = randomDeploymentId();
+        final ResourceId resourceId = randomResourceId(instanceId, deploymentId);
+        Assert.assertNotNull(resourceId.getInstanceId());
+        Assert.assertNotNull(resourceId.getDeploymentId());
     }
 
     @Test
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomDeploymentId());
-        final ResourceId resourceId =randomResourceIdForNode(nodeId);
+        final DeploymentId deploymentId = randomDeploymentId();
+        final ResourceId resourceId = randomResourceId(instanceId, deploymentId);
         final ResourceId duplicateResourceId = resourceIdFromBytes(resourceId.asBytes());
         Assert.assertEquals(duplicateResourceId, resourceId);
         Assert.assertEquals(duplicateResourceId.hashCode(), resourceId.hashCode());
@@ -38,8 +36,8 @@ public class ResourceIdTest {
     @Test
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
-        final ResourceId resourceId = randomResourceIdForNode(nodeId);
+        final DeploymentId deploymentId = randomDeploymentId();
+        final ResourceId resourceId = randomResourceId(instanceId, deploymentId);
         final ResourceId duplicateResourceId = resourceIdFromString(resourceId.asString());
         Assert.assertEquals(duplicateResourceId, resourceId);
         Assert.assertEquals(duplicateResourceId.hashCode(), resourceId.hashCode());
@@ -49,8 +47,8 @@ public class ResourceIdTest {
     public void testSerialization() throws Exception {
 
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
-        final ResourceId resourceId = randomResourceIdForNode(nodeId);
+        final DeploymentId deploymentId = randomDeploymentId();
+        final ResourceId resourceId = randomResourceId(instanceId, deploymentId);
 
         final byte[] bytes;
 

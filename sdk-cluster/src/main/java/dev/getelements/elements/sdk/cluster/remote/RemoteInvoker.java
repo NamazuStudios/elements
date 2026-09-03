@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.cluster.remote;
 
+import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.sdk.cluster.remote.dto.InstanceMetadata;
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation;
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationError;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static dev.getelements.elements.sdk.cluster.remote.annotation.Dispatch.Type;
@@ -24,6 +26,24 @@ public interface RemoteInvoker extends AutoCloseable {
      * threads. The default implementation of this method does nothing in case no shutdown is necessary.
      */
     default void close() {}
+
+    /**
+     * Called when this {@link RemoteInvoker} closes, whether due to an explicit call to {@link #close()} or because
+     * the underlying connection to the remote service was lost.
+     *
+     * @param remoteInvokerConsumer called with this {@link RemoteInvoker} when it closes
+     * @return a subscription
+     */
+    Subscription onClose(Consumer<RemoteInvoker> remoteInvokerConsumer);
+
+    /**
+     * Called when this {@link RemoteInvoker} closes, whether due to an explicit call to {@link #close()} or because
+     * the underlying connection to the remote service was lost.
+     *
+     * @param remoteInvokerBiConsumer called with the {@link Subscription} and this {@link RemoteInvoker} when it closes
+     * @return a subscription
+     */
+    Subscription onClose(BiConsumer<Subscription, RemoteInvoker> remoteInvokerBiConsumer);
 
     /**
      *

@@ -142,6 +142,15 @@ public class TaskId implements
     }
 
     /**
+     * Returns the {@link DeploymentId} attached to this {@link TaskId}.
+     *
+     * @return the {@link DeploymentId} attached to this {@link TaskId}
+     */
+    public DeploymentId getDeploymentId() {
+        return getResourceId().getDeploymentId();
+    }
+
+    /**
      * Returns the {@link byte[]} representation of this {@link TaskId}
      * @return
      */

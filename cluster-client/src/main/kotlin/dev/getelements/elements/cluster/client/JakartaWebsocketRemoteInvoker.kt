@@ -1,6 +1,9 @@
 package dev.getelements.elements.cluster.client
 
 import dev.getelements.elements.cluster.common.dto.Envelope
+import dev.getelements.elements.cluster.common.dto.Envelope.Type.INSTANCE_METADATA
+import dev.getelements.elements.cluster.common.dto.Envelope.Type.INVOCATION_ERROR
+import dev.getelements.elements.cluster.common.dto.Envelope.Type.INVOCATION_RESULT
 import dev.getelements.elements.cluster.common.dto.InstanceMetadataEnvelope
 import dev.getelements.elements.cluster.common.dto.InvocationErrorEnvelope
 import dev.getelements.elements.cluster.common.dto.InvocationResultEnvelope
@@ -8,6 +11,7 @@ import dev.getelements.elements.sdk.Subscription
 import dev.getelements.elements.sdk.cluster.remote.AsyncOperation
 import dev.getelements.elements.sdk.cluster.remote.InstanceRemoteInvoker
 import dev.getelements.elements.sdk.cluster.remote.InvocationErrorConsumer
+import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker
 import dev.getelements.elements.sdk.cluster.remote.dto.InstanceMetadata
 import dev.getelements.elements.sdk.cluster.remote.dto.Invocation
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
@@ -19,6 +23,7 @@ import java.util.*
 import java.util.concurrent.CompletionStage
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.BiConsumer
 import java.util.function.Consumer
 
 @ClientEndpoint
@@ -37,6 +42,8 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
     private val instanceMetadata = AtomicReference(InstanceMetadata.DEFAULT)
 
     private val instanceMetadataPublisher = ConcurrentDequePublisher<InstanceMetadata>(JakartaWebsocketRemoteInvoker::class.java);
+
+    private val closePublisher = ConcurrentDequePublisher<RemoteInvoker>(JakartaWebsocketRemoteInvoker::class.java)
 
     override fun invokeAsync(
         invocation: Invocation,
@@ -94,12 +101,17 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
         operations.values.forEach { it.onError(throwable) }
     }
 
+    @OnClose
+    suspend fun onClose(session: Session) {
+        closePublisher.publish(this)
+    }
+
     @OnMessage
     suspend fun onMessage(session: Session, envelope: Envelope<Any>) {
-        when (envelope) {
-            is InvocationErrorEnvelope -> onInvocationError(envelope)
-            is InvocationResultEnvelope -> onInvocationResult(envelope)
-            is InstanceMetadataEnvelope -> onInstanceMetadata(envelope)
+        when (envelope.type) {
+            INVOCATION_ERROR  -> onInvocationError(envelope as InvocationErrorEnvelope)
+            INVOCATION_RESULT -> onInvocationResult(envelope as InvocationResultEnvelope)
+            INSTANCE_METADATA -> onInstanceMetadata(envelope as InstanceMetadataEnvelope)
             else -> throw IllegalArgumentException("Envelope type ${envelope.type} is not supported")
         }
     }
@@ -125,8 +137,19 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
         return operations[id] ?: throw IllegalStateException("Session is null.")
     }
 
-    override fun getInstanceMetadata(): InstanceMetadata? = instanceMetadata.get()
+    override fun getInstanceMetadata(): InstanceMetadata? =
+        instanceMetadata.get()
 
-    override fun onMetadataUpdate(onMetadata: Consumer<InstanceMetadata?>?): Subscription? = instanceMetadataPublisher.subscribe(onMetadata)
+    override fun onMetadataUpdate(onMetadata: Consumer<InstanceMetadata?>?): Subscription? =
+        instanceMetadataPublisher.subscribe(onMetadata)
+
+    override fun onMetadataUpdate(onMetadata: BiConsumer<Subscription?, InstanceMetadata?>?): Subscription? =
+        instanceMetadataPublisher.subscribe(onMetadata)
+
+    override fun onClose(remoteInvokerConsumer: Consumer<RemoteInvoker>): Subscription =
+        closePublisher.subscribe(remoteInvokerConsumer)
+
+    override fun onClose(remoteInvokerBiConsumer: BiConsumer<Subscription, RemoteInvoker>): Subscription =
+        closePublisher.subscribe(remoteInvokerBiConsumer)
 
 }
