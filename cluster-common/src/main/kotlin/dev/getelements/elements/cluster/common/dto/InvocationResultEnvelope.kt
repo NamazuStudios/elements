@@ -3,8 +3,11 @@ package dev.getelements.elements.cluster.common.dto
 import dev.getelements.elements.sdk.cluster.remote.dto.InvocationResult
 
 /**
- * The invocation result envelope. Stores the response payload as well as wire info
+ * Wraps the successful result of a remote [dev.getelements.elements.sdk.cluster.remote.dto.Invocation],
+ * returned to the caller identified by [id]. Depending on [mode], this either carries the invocation's
+ * synchronous return value, or one of its asynchronous callback parameters (identified by [param]).
  *
+ * @property id the unique identifier correlating this result with its originating [InvocationEnvelope]
  * @property mode the mode of the response to indicate how it should be handled
  * @property param the param the parameter number, used only for [Mode.ASYNC]
  * @property payload the payload object
@@ -19,7 +22,7 @@ data class InvocationResultEnvelope(
     override val type: Envelope.Type = Envelope.Type.INVOCATION_RESULT
 
     /**
-     * The mode of the response.
+     * Indicates how the consumer of an [InvocationResultEnvelope] should interpret [payload].
      */
     enum class Mode {
 

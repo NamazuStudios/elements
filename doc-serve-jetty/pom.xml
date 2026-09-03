@@ -134,11 +134,6 @@
             </dependency>
         <dependency>
             <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-cluster-kryo-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
             <artifactId>common-jersey-guice</artifactId>
             <version>${project.version}</version>
         </dependency>

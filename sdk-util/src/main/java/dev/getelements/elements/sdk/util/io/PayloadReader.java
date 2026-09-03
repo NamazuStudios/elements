@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Handles the actual details of writing to the {@link OutputStream}.
@@ -44,4 +45,21 @@ public interface PayloadReader {
             return read(payloadType, bis);
         }
     }
+
+    /**
+     * Reads a payload from the supplied {@link ByteBuffer}.  The default implementation of this method delegates
+     * to {@link #read(Class, byte[])} using the buffer's backing array.
+     *
+     * @param payloadType the type of the payload
+     * @param bytes the {@link ByteBuffer} to read
+     * @param <T> the type of the payload
+     * @return the deserialized payload
+     * @throws IOException if there is a problem reading the bytes
+     */
+    default <T> T read(final Class<T> payloadType, final ByteBuffer bytes) throws IOException {
+        final var array = new byte[bytes.remaining()];
+        bytes.get(array);
+        return read(payloadType, array);
+    }
+
 }

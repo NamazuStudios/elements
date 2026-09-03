@@ -52,8 +52,6 @@
         <module>sdk-cluster-transact-unixfs</module>
         <module>sdk-cluster-transact-unixfs-guice</module>
         <module>sdk-cluster-transact-guice</module>
-        <module>sdk-cluster-kryo</module>
-        <module>sdk-cluster-kryo-guice</module>
         <module>common-jersey</module>
         <module>common-jersey-guice</module>
         <module>docker-config</module>
@@ -104,6 +102,7 @@
         <module>cdn-serve-guice</module>
         <module>code-serve-guice</module>
         <module>cluster-common</module>
+        <module>cluster-common-kryo</module>
     </modules>
     <properties>
         <revision>3.9.0-SNAPSHOT</revision>
@@ -332,16 +331,6 @@
             </dependency>
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-cluster-kryo</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
-                <artifactId>sdk-cluster-kryo-guice</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>dev.getelements.elements</groupId>
                 <artifactId>deployment-jetty</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -524,6 +513,11 @@
             <dependency>
                 <groupId>dev.getelements.elements</groupId>
                 <artifactId>cluster-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.getelements.elements</groupId>
+                <artifactId>cluster-common-kryo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

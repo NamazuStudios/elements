@@ -8,19 +8,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static dev.getelements.elements.sdk.cluster.id.ApplicationId.randomApplicationId;
+import static dev.getelements.elements.sdk.cluster.id.DeploymentId.randomDeploymentId;
 import static dev.getelements.elements.sdk.cluster.id.InstanceId.randomInstanceId;
 import static dev.getelements.elements.sdk.cluster.id.NodeId.forInstanceAndApplication;
 import static dev.getelements.elements.sdk.cluster.id.ResourceId.*;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
 
 public class ResourceIdTest {
 
     @Test
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomDeploymentId());
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         Assert.assertNotNull(resourceId.getNodeId());
         Assert.assertNotNull(resourceId.getNodeId().getInstanceId());
@@ -30,7 +28,7 @@ public class ResourceIdTest {
     @Test
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomDeploymentId());
         final ResourceId resourceId =randomResourceIdForNode(nodeId);
         final ResourceId duplicateResourceId = resourceIdFromBytes(resourceId.asBytes());
         Assert.assertEquals(duplicateResourceId, resourceId);

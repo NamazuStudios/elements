@@ -17,7 +17,7 @@ import static dev.getelements.elements.sdk.cluster.id.V1CompoundId.Field.*;
  * across two ec2 instances represented by UUIDs I1, I2, then we will have six workers in the deployment addressable
  * with the pairs (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
  *
- * @deprecated Requests are no longer routed by {@link NodeId}
+ * @deprecated Requests are no longer routed by {@link NodeId} and no suitable replacement exists
  */
 @Deprecated
 public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId> {

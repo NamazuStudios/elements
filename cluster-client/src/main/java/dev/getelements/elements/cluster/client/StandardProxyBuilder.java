@@ -1,0 +1,265 @@
+package dev.getelements.elements.cluster.client;
+
+import dev.getelements.elements.sdk.ServiceLocator;
+import dev.getelements.elements.sdk.cluster.address.RemoteElementAddress;
+import dev.getelements.elements.sdk.cluster.address.RemoteInstanceSelector;
+import dev.getelements.elements.sdk.cluster.remote.MethodAssignment;
+import dev.getelements.elements.sdk.cluster.remote.RemoteInvoker;
+import dev.getelements.elements.sdk.cluster.remote.annotation.RemotelyInvokable;
+import dev.getelements.elements.sdk.cluster.remote.proxy.MethodHandleKey;
+import dev.getelements.elements.sdk.cluster.remote.proxy.ProxyBuilder;
+import dev.getelements.elements.sdk.cluster.util.Reflection;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.record.ElementServiceKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.lang.System.identityHashCode;
+import static java.lang.reflect.Proxy.newProxyInstance;
+
+/**
+ * Default {@link ProxyBuilder} implementation, backed by {@link java.lang.reflect.Proxy}, which maps assigned
+ * {@link InvocationHandler}s to individual {@link Method}s of the proxied interface.
+ *
+ * @param <ProxyT> the interface type being proxied
+ */
+public class StandardProxyBuilder<ProxyT> implements ProxyBuilder<ProxyT> {
+
+    private static final Logger logger = LoggerFactory.getLogger(StandardProxyBuilder.class);
+
+    private ClassLoader classLoader;
+
+    private BiFunction<MethodHandleKey, Supplier<MethodHandle>, MethodHandle> methodHandleCache =
+        (methodHandleKey, methodHandleSupplier) -> methodHandleSupplier.get();
+
+    private InvocationHandler defaultInvocationHandler = (p, method, args) -> {
+        throw new NoSuchMethodError("No invocation handler for method: " + method);
+    };
+
+    private ServiceLocator serviceLocator;
+
+    private RemoteElementAddress remoteElementAddress;
+
+    private final ElementServiceKey<ProxyT> serviceKey;
+
+    private final Map<Method, InvocationHandler> handlerMap = new HashMap<>();
+
+    public StandardProxyBuilder(
+            final RemoteElementAddress remoteElementAddress,
+            final ElementServiceKey<ProxyT> serviceKey) {
+        this.serviceKey = serviceKey;
+        this.classLoader = serviceKey.type().getClassLoader();
+        this.remoteElementAddress = remoteElementAddress;
+        this.serviceLocator = new ServiceLocator() {
+            @Override
+            public <T> Optional<Supplier<T>> findInstance(ElementServiceKey<T> key) {
+                return Optional.empty();
+            }
+        };
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> dontProxyDefaultMethods() {
+
+        final InvocationHandler handler = (p, method, args) -> {
+
+            final MethodHandleKey methodHandleKey = new MethodHandleKey(serviceKey.type(), p, method);
+
+            final Supplier<MethodHandle> methodHandleSupplier = () -> {
+                try {
+
+                    final Class<?> clazz = methodHandleKey.interfaceClassT();
+                    final MethodType methodType = methodHandleKey.getMethodType();
+
+                    return MethodHandles.lookup()
+                        .findSpecial(clazz, method.getName(), methodType, clazz)
+                        .bindTo(methodHandleKey.proxy());
+
+                } catch (NoSuchMethodException | IllegalAccessException e) {
+                    throw new InternalException(e);
+                }
+            };
+
+            return methodHandleCache.apply(methodHandleKey, methodHandleSupplier).invokeWithArguments(args);
+
+        };
+
+        methods().filter(m -> m.isDefault()).forEach(m -> handler(handler).forMethod(m));
+        return this;
+
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withSharedMethodHandleCache() {
+        return withMethodHandleCache(SharedMethodHandleCache::computeIfAbsent);
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withServiceLocator(final ServiceLocator serviceLocator) {
+
+        this.serviceLocator = serviceLocator != null
+                ? serviceLocator
+                : new ServiceLocator() {
+                    @Override
+                    public <T> Optional<Supplier<T>> findInstance(ElementServiceKey<T> key) {
+                        return Optional.empty();
+                    }
+                };
+
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withInstanceSelector(final RemoteInstanceSelector remoteInstanceSelector) {
+        remoteElementAddress = remoteElementAddress.withInstanceSelector(remoteInstanceSelector);
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withMethodHandleCache(final BiFunction<MethodHandleKey, Supplier<MethodHandle>, MethodHandle> methodHandleCache) {
+
+        if (methodHandleCache == null) {
+            throw new IllegalArgumentException("Must specify method handle cache.");
+        }
+
+        this.methodHandleCache = methodHandleCache;
+        return this;
+
+    }
+
+    @Override
+    public MethodAssignment<ProxyBuilder<ProxyT>> handler(final InvocationHandler invocationHandler) {
+        return new InvocationHandlerMethodAssignment(invocationHandler);
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withDefaultHandler(final InvocationHandler defaultInvocationHandler) {
+        this.defaultInvocationHandler = defaultInvocationHandler;
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withToString() {
+        return withToString("Proxy for " + serviceKey.type().getName());
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withToString(final String toString) {
+        handler((proxy, method, args) -> toString).forMethod("toString");
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withDefaultHashCodeAndEquals() {
+        handler((proxy, method, args) -> identityHashCode(proxy)).forMethod("hashCode");
+        handler((proxy, method, args) -> proxy == args[0]).forMethod("equals", Object.class);
+        return this;
+    }
+
+    @Override
+    public ProxyBuilder<ProxyT> withHandlersForRemoteInvoker(final RemoteInvoker remoteInvoker) {
+        Reflection.methods(serviceKey.type())
+            .filter(method -> method.getAnnotation(RemotelyInvokable.class) != null)
+            .map(method -> new StandardRemoteInvocationHandlerBuilder<>(
+                    serviceLocator,
+                    remoteInvoker,
+                    remoteElementAddress,
+                    serviceKey,
+                    method
+                )
+            )
+            .forEach(b -> handler(b.build()).forMethod(b.getMethod()));
+        return this;
+    }
+
+    @Override
+    public ProxyT build() {
+
+        final Map<Method, InvocationHandler> handlerMap = new HashMap<>(this.handlerMap);
+        final InvocationHandler defaultInvocationHandler = this.defaultInvocationHandler;
+
+        final Object proxy = handlerMap.isEmpty() ?
+            newProxyInstance(classLoader, new Class<?>[]{serviceKey.type()}, defaultInvocationHandler) :
+            newProxyInstance(classLoader, new Class<?>[]{serviceKey.type()}, (p, method, args) -> {
+                final InvocationHandler invocationHandler =  handlerMap.getOrDefault(method, defaultInvocationHandler);
+                return invocationHandler.invoke(p, method, args);
+            });
+
+        return serviceKey.type().cast(proxy);
+
+    }
+
+    private Stream<Method> methods() {
+        return Reflection.methods(serviceKey.type());
+    }
+
+    private class InvocationHandlerMethodAssignment implements MethodAssignment<ProxyBuilder<ProxyT>> {
+
+        private final InvocationHandler invocationHandler;
+
+        public InvocationHandlerMethodAssignment(InvocationHandler invocationHandler) {
+            this.invocationHandler = invocationHandler;
+        }
+
+        @Override
+        public ProxyBuilder<ProxyT> forMethod(final String name) {
+
+            final Method method = methods()
+                .filter(m -> m.getName().equals(name) && m.getParameterCount() == 0)
+                .findFirst()
+                .orElseThrow(() -> noSuchMethod(name));
+
+            forMethod(method);
+
+            return StandardProxyBuilder.this;
+
+        }
+
+        @Override
+        public ProxyBuilder<ProxyT> forMethod(final String name, final Class<?>... args) {
+
+            final Method method = methods()
+                .filter(m -> m.getName().equals(name) && Arrays.equals(m.getParameterTypes(), args))
+                .findFirst()
+                .orElseThrow(() -> noSuchMethod(name, args));
+
+            forMethod(method);
+
+            return StandardProxyBuilder.this;
+        }
+
+        @Override
+        public ProxyBuilder<ProxyT> forMethod(final Method method) {
+
+            if (handlerMap.put(method, invocationHandler) != null) {
+                logger.warn("Replacing InvocationHandler for method {}", method);
+            }
+
+            return StandardProxyBuilder.this;
+
+        }
+
+        private IllegalArgumentException noSuchMethod(final String name) {
+            return Reflection.noSuchMethod(serviceKey.type(), name);
+        }
+
+        private IllegalArgumentException noSuchMethod(final String name, final Class<?>[] args) {
+            return Reflection.noSuchMethod(serviceKey.type(), name, args);
+        }
+
+    }
+
+}

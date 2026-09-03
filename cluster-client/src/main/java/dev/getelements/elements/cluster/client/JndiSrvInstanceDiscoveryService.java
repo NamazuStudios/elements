@@ -1,0 +1,277 @@
+package dev.getelements.elements.cluster.client;
+
+import dev.getelements.elements.sdk.Subscription;
+import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
+import dev.getelements.elements.sdk.cluster.remote.service.local.InstanceDiscoveryService;
+import dev.getelements.elements.sdk.cluster.remote.service.local.InstanceHostInfo;
+import dev.getelements.elements.sdk.model.exception.InternalException;
+import dev.getelements.elements.sdk.util.AsyncPublisher;
+import dev.getelements.elements.sdk.util.ConcurrentLockedPublisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.naming.Context;
+import javax.naming.NameNotFoundException;
+import javax.naming.NamingException;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.Objects.requireNonNull;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+
+/**
+ * An {@link InstanceDiscoveryService} which discovers remote instances by periodically polling DNS SRV records via
+ * JNDI, publishing discovery and undiscovery events as the resolved host set changes.
+ */
+public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService {
+
+    private static final Logger logger = LoggerFactory.getLogger(JndiSrvInstanceDiscoveryService.class);
+
+    @ElementDefaultAttribute("1")
+    private static final long DNS_LOOKUP_POLLING_RATE = 1;
+
+    @ElementDefaultAttribute("SECONDS")
+    private static final TimeUnit DNS_LOOKUP_POLLING_RATE_UNITS = SECONDS;
+
+    @ElementDefaultAttribute("true")
+    public static final String SRV_AUTHORITATIVE = "dev.getelements.elements.rt.srv.authoritative";
+
+    private boolean authoritative;
+
+    private final String srvQuery;
+
+    private final String srvServers;
+
+    private volatile JndiSrvInstanceDiscoveryService.SrvDiscoveryContext context;
+
+    public JndiSrvInstanceDiscoveryService(final String srvQuery, final String srvServers) {
+        this.srvQuery = srvQuery;
+        this.srvServers = srvServers;
+    }
+
+    @Override
+    public Subscription subscribeToDiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
+        final SrvDiscoveryContext context = getContext();
+        return context.onDisovery.subscribe(instanceHostInfoConsumer);
+    }
+
+    @Override
+    public Subscription subscribeToUndiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
+        final SrvDiscoveryContext context = getContext();
+        return context.onUndiscovery.subscribe(instanceHostInfoConsumer);
+    }
+
+    @Override
+    public Collection<InstanceHostInfo> getKnownHosts() {
+        final SrvDiscoveryContext context = getContext();
+        return context.getRemoteConnections();
+    }
+
+    private SrvDiscoveryContext getContext() {
+        if (context == null) throw new IllegalStateException("Not running.");
+        return context;
+    }
+
+    public String getSrvQuery() {
+        return srvQuery;
+    }
+
+    public String getSrvServers() {
+        return srvServers;
+    }
+
+    public boolean isAuthoritative() {
+        return authoritative;
+    }
+
+    private class SrvDiscoveryContext {
+
+        private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            final Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setName(JndiSrvInstanceDiscoveryService.class + " refresher.");
+            thread.setUncaughtExceptionHandler((t, e) -> logger.error("Caught exception in {}", t, e));
+            return thread;
+        });
+
+        private List<DirContext> dirContexts;
+
+        private Set<InstanceHostInfo> lookupResultSet = new HashSet<>();
+
+        private final Lock lock = new ReentrantLock();
+
+        private final AsyncPublisher<InstanceHostInfo> onDisovery = new ConcurrentLockedPublisher<>(lock, scheduler::submit);
+
+        private final AsyncPublisher<InstanceHostInfo> onUndiscovery = new ConcurrentLockedPublisher<>(lock, scheduler::submit);
+
+        public void start() {
+
+            logger.info("Using SRV FQDN {} querying servers {}", getSrvQuery(), getSrvServers());
+
+            dirContexts = new HostList()
+                .with(getSrvServers())
+                .get()
+                .map(hosts -> hosts.stream().map(host -> {
+
+                    final var env = new Hashtable<>();
+                    env.put("networkaddress.cache.ttl", "-1");
+                    env.put(Context.AUTHORITATIVE, Boolean.toString(isAuthoritative()));
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+                    env.put(Context.PROVIDER_URL, host);
+
+                    try {
+                        return (DirContext) new InitialDirContext(env);
+                    } catch (NamingException ex) {
+                        throw new InternalException(ex);
+                    }
+
+                })
+                .collect(toList()))
+                .orElseGet(() -> {
+
+                    final var env = new Hashtable<>();
+                    env.put(Context.AUTHORITATIVE, Boolean.toString(isAuthoritative()));
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+
+                    try {
+                        return List.of((DirContext) new InitialDirContext(env));
+                    } catch (NamingException ex) {
+                        throw new InternalException(ex);
+                    }
+
+                });
+
+            scheduler.scheduleAtFixedRate(
+                this::refresh,
+                0,
+                DNS_LOOKUP_POLLING_RATE,
+                DNS_LOOKUP_POLLING_RATE_UNITS);
+
+        }
+
+        private void refresh() {
+            try {
+                lock.lock();
+                final var nfos = query();
+                update(nfos);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        private SortedSet<InstanceHostInfo> query() {
+            return dirContexts
+                .stream()
+                .flatMap(dirContext -> {
+
+                    Stream<JndiInstanceHostInfo> s = Stream.empty();
+
+                    try {
+                        final var attributes = dirContext.getAttributes(getSrvQuery(), new String[]{"SRV"});
+                        s = JndiInstanceHostInfo.parse("tcp", attributes.get("srv")).stream();
+                    }  catch (NameNotFoundException ex) {
+                        logger.info("No hosts found for record {}", getSrvQuery());
+                    } catch (Exception ex) {
+                        logger.error("Error querying SRV records.", ex);
+                    }
+
+                    return s;
+
+                }).collect(toCollection(TreeSet::new));
+        }
+
+        private void update(final SortedSet<InstanceHostInfo> update) {
+
+            if (lookupResultSet.equals(update)) {
+                logger.debug("No change between {} -> {}. Ignoring.", lookupResultSet, update);
+                return;
+            }
+
+            final var toAdd = new TreeSet<>(update);
+            toAdd.removeAll(lookupResultSet);
+
+            final var toRemove = new TreeSet<>(lookupResultSet);
+            toRemove.removeAll(update);
+
+            toAdd.forEach(onDisovery::publishAsync);
+            toRemove.forEach(onUndiscovery::publishAsync);
+
+            logger.info("Discovery Update:\n  Update: {} -> {}\n  Added: {}  \nRemoved: {}\n",
+                    lookupResultSet, update,
+                    toAdd, toRemove);
+
+            lookupResultSet = update;
+
+        }
+
+        public void stop() {
+
+            try {
+
+                scheduler.shutdown();
+
+                if (scheduler.awaitTermination(5, TimeUnit.MINUTES)) {
+                    logger.info("Terminated successfully.");
+                } else {
+                    logger.warn("Termination timed out.");
+                }
+
+            } catch (InterruptedException ex) {
+                logger.error("Interrupted while shutting down.", ex);
+            }
+
+            dirContexts.forEach(dirContext -> {
+                try {
+                    dirContext.close();
+                } catch (NamingException e) {
+                    logger.error("Could not stop JDNI context.", e);
+                }
+            });
+
+        }
+
+        public Collection<InstanceHostInfo> getRemoteConnections() {
+            return unmodifiableSet(lookupResultSet);
+        }
+
+    }
+
+    /**
+     * A small builder-style accumulator of host names/addresses, parsed from one or more delimited strings.
+     */
+    public static class HostList {
+
+        private final List<String> hosts = new ArrayList<>();
+
+        public HostList with(final String hosts) {
+
+            requireNonNull(hosts, "hosts");
+
+            Stream.of(hosts.trim().split("[\\s,;]+"))
+                  .map(String::trim)
+                  .filter(host -> !host.isBlank())
+                  .forEach(this.hosts::add);
+
+            return this;
+
+        }
+
+        public Optional<List<String>> get() {
+            final var hosts = unmodifiableList(this.hosts);
+            return hosts.isEmpty() ? Optional.empty() : Optional.of(hosts);
+        }
+
+    }
+}

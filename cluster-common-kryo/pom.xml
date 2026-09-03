@@ -11,9 +11,9 @@
         <version>${revision}</version>
     </parent>
 
-    <artifactId>cluster-common</artifactId>
+    <artifactId>cluster-common-kryo</artifactId>
     <version>${revision}</version>
-    <name>cluster-common</name>
+    <name>cluster-common-kryo</name>
 
     <dependencies>
         <dependency>
@@ -25,6 +25,10 @@
             <artifactId>sdk-util</artifactId>
         </dependency>
         <dependency>
+            <groupId>jakarta.websocket</groupId>
+            <artifactId>jakarta.websocket-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
         </dependency>
@@ -33,26 +37,13 @@
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.websocket</groupId>
-            <artifactId>jakarta.websocket-client-api</artifactId>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.esotericsoftware.kryo</groupId>
+            <artifactId>kryo</artifactId>
         </dependency>
     </dependencies>
-
-    <build>
-        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
-        <plugins>
-            <plugin>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-maven-plugin</artifactId>
-                <version>${kotlin.version}</version>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <goals><goal>compile</goal></goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
 </project>

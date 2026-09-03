@@ -128,11 +128,6 @@
             <artifactId>jackson-databind</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>dev.getelements.elements</groupId>
-            <artifactId>sdk-cluster-kryo-guice</artifactId>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
 </project>
