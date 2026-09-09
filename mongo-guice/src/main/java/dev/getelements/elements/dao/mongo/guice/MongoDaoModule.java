@@ -41,6 +41,7 @@ import dev.getelements.elements.dao.mongo.receipt.MongoGooglePlayIapReceiptDao;
 import dev.getelements.elements.dao.mongo.receipt.MongoReceiptDao;
 import dev.getelements.elements.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import dev.getelements.elements.dao.mongo.schema.MongoMetadataSpecDao;
+import dev.getelements.elements.dao.mongo.schema.email.MongoEmailTemplateDao;
 import dev.getelements.elements.dao.mongo.system.MongoElementDeploymentDao;
 import dev.getelements.elements.dao.mongo.ucode.MongoUniqueCodeDao;
 import dev.getelements.elements.dao.mongo.ucode.OffensiveWordFilterProvider;
@@ -115,6 +116,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
         bind(MetadataDao.class).to(MongoMetadataDao.class);
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
+        bind(EmailTemplateDao.class).to(MongoEmailTemplateDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(OidcAuthSchemeDao.class).to(MongoOidcAuthSchemeDao.class);
@@ -202,6 +204,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(DatabaseHealthStatusDao.class);
         expose(MetadataDao.class);
         expose(MetadataSpecDao.class);
+        expose(EmailTemplateDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(OidcAuthSchemeDao.class);
