@@ -9,6 +9,7 @@ import io.swagger.v3.core.util.Json;
 import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
 import io.swagger.v3.jaxrs2.integration.resources.OpenApiResource;
 import io.swagger.v3.oas.integration.GenericOpenApiContext;
+import io.swagger.v3.oas.integration.OpenApiContextLocator;
 import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.integration.api.OpenAPIConfiguration;
 import io.swagger.v3.oas.integration.api.OpenApiScanner;
@@ -65,6 +66,14 @@ public class JakartaRsLoader implements Loader {
      * {@link Handler#start()} has not yet returned.  Access is guarded by {@link #lock}.
      */
     private final Map<Element, Future<?>> pendingMounts = new HashMap<>();
+
+    /**
+     * Tracks the swagger-core OpenAPI context ID minted for each active deployment, keyed by
+     * element.  Needed so {@link #unload} can evict the corresponding entry from
+     * {@link OpenApiContextLocator}'s static map — see {@link #evictOpenApiContext}.  Access is
+     * guarded by {@link #lock}.
+     */
+    private final Map<Element, String> openApiContextIds = new HashMap<>();
 
     /**
      * Daemon thread pool for running the slow Jersey initialisation off the caller's thread.
@@ -279,12 +288,19 @@ public class JakartaRsLoader implements Loader {
             try (var mon = Monitor.enter(lock)) {
                 stillActive = activeDeployments.stream().anyMatch(d -> d.element().equals(element));
                 pendingMounts.remove(element);
+
+                if (!stillActive) {
+                    // unload() already ran (and skipped eviction, since startup was still pending
+                    // at the time) — this task now owns cleanup, including the OpenAPI context.
+                    openApiContextIds.remove(element);
+                }
             }
 
             // 4. Handle failure / post-startup unload.
             if (!startSucceeded) {
 
                 oaFuture.cancel(true);
+                evictOpenApiContext(openApiCtxId);
 
                 if (stillActive) {
                     logger.error("Failed to start REST handler for element: {}", elementName, startException);
@@ -300,6 +316,7 @@ public class JakartaRsLoader implements Loader {
             if (!stillActive) {
 
                 oaFuture.cancel(true);
+                evictOpenApiContext(openApiCtxId);
 
                 logger.info("REST handler for element {} was unloaded during startup; stopping.", elementName);
 
@@ -431,6 +448,7 @@ public class JakartaRsLoader implements Loader {
     public void unload(final Element element) {
 
         Handler handlerToStop = null;
+        String openApiCtxId = null;
 
         try (var mon = Monitor.enter(lock)) {
 
@@ -453,9 +471,9 @@ public class JakartaRsLoader implements Loader {
                 if (pending != null) {
 
                     // Startup is still running on a background thread.  Interrupt it (best-effort)
-                    // and let runMountTask() handle stop()/removeHandler() once start() returns.
-                    // Calling stop() here while start() is still executing inside a synchronized
-                    // method would block for the entire startup duration.
+                    // and let runMountTask() handle stop()/removeHandler()/OpenAPI context eviction
+                    // once start() returns. Calling stop() here while start() is still executing
+                    // inside a synchronized method would block for the entire startup duration.
                     pending.cancel(true);
 
                     logger.info("Cancelled pending startup for element {}; background task will clean up.",
@@ -464,6 +482,7 @@ public class JakartaRsLoader implements Loader {
                 } else {
                     // Startup is complete — safe to stop synchronously (outside the lock below).
                     handlerToStop = deployment.handler();
+                    openApiCtxId = openApiContextIds.remove(element);
                 }
             }
         }
@@ -478,6 +497,8 @@ public class JakartaRsLoader implements Loader {
             } catch (Exception ex) {
                 logger.error("Failed to cleanly unload REST handler for element: {}",
                         element.getElementRecord().definition().name(), ex);
+            } finally {
+                evictOpenApiContext(openApiCtxId);
             }
         }
     }
@@ -513,6 +534,7 @@ public class JakartaRsLoader implements Loader {
                             // that runMountTask's activeDeployments check correctly reflects the
                             // current state even if the executor starts the task immediately.
                             activeDeployments.add(ctx.record());
+                            openApiContextIds.put(element, ctx.openApiCtxId());
 
                             final var future = mountExecutor.submit(() -> runMountTask(element, ctx));
                             pendingMounts.put(element, future);
@@ -535,6 +557,34 @@ public class JakartaRsLoader implements Loader {
         if (handler instanceof final ServletContextHandler sch) return sch;
         if (handler instanceof final Handler.Wrapper w) return findServletContextHandler(w.getHandler());
         return null;
+    }
+
+    /**
+     * {@link OpenApiContextLocator} is a process-wide singleton backed by a plain map that only
+     * exposes {@code get}/{@code put} — swagger-core never removes entries from it. Every
+     * deployment mints a unique {@code ctxId} (see {@link #deploy}) and registers a
+     * {@link GenericOpenApiContext} there, which holds the element's {@link Application} and,
+     * transitively, its classloader. Left alone, that pins the classloader in memory forever, so
+     * this reflectively removes the entry this loader registered whenever a deployment is
+     * unloaded, whether or not it finished starting.
+     */
+    private static void evictOpenApiContext(final String openApiCtxId) {
+
+        if (openApiCtxId == null) {
+            return;
+        }
+
+        try {
+            final var locator = OpenApiContextLocator.getInstance();
+            final var mapField = OpenApiContextLocator.class.getDeclaredField("map");
+            mapField.setAccessible(true);
+
+            final var map = (Map<?, ?>) mapField.get(locator);
+            map.remove(openApiCtxId);
+        } catch (final Exception ex) {
+            logger.warn("Failed to evict OpenAPI context {} from OpenApiContextLocator; " +
+                    "this may leak the associated element classloader.", openApiCtxId, ex);
+        }
     }
 
     public String getAppOutsideUrl() {
