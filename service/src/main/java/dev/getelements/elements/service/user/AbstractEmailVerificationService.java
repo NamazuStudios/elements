@@ -9,6 +9,7 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.email.EmailService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import dev.getelements.elements.sdk.service.user.EmailVerificationService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -17,6 +18,7 @@ import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
 
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static dev.getelements.elements.sdk.service.user.EmailVerificationService.*;
 
 /**
@@ -30,6 +32,12 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
 
     static final long TOKEN_VALIDITY_MS = TimeUnit.HOURS.toMillis(24);
 
+    private static final String DEFAULT_SUBJECT = "Verify your email";
+
+    private static final String DEFAULT_BODY =
+            "<p>Please verify your email address by clicking the link below:</p>"
+          + "<p><a href=\"{link}\">Verify Email</a></p>";
+
     private UserUidDao userUidDao;
 
     private UidVerificationTokenDao tokenDao;
@@ -38,9 +46,7 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
 
     private ElementRegistry elementRegistry;
 
-    private String emailSubject;
-
-    private String emailTemplate;
+    private EmailTemplateService emailTemplateService;
 
     // -------------------------------------------------------------------------
     // Shared core operations
@@ -61,10 +67,13 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
         final var expiry = new Timestamp(System.currentTimeMillis() + TOKEN_VALIDITY_MS);
         final var token = getTokenDao().createToken(ownerUser, SCHEME_EMAIL, email, expiry);
 
-        final var link = verificationBaseUrl + "?token=" + token;
-        final var body = getEmailTemplate().replace("{link}", link);
+        final var template = getEmailTemplateService().getOrCreateEmailTemplate(
+                VERIFICATION_EMAIL_TEMPLATE, "Email Verification Email", DEFAULT_SUBJECT, DEFAULT_BODY);
 
-        getEmailService().send(null, email, getEmailSubject(), body, true);
+        final var link = verificationBaseUrl + "?token=" + token;
+        final var body = template.getBody().replace("{link}", link);
+
+        getEmailService().send(null, email, template.getSubject(), body, true);
 
         final var updated = getUserUidDao().updateVerificationStatus(email, SCHEME_EMAIL, VerificationStatus.PENDING);
 
@@ -141,39 +150,18 @@ abstract class AbstractEmailVerificationService implements EmailVerificationServ
     }
 
     /**
-     * Returns the subject line for the verification email.
-     *
-     * <p>Override this in a subclass to supply a custom subject without reimplementing
-     * the full verification flow. The default returns the value injected via
-     * {@link EmailVerificationService#VERIFICATION_EMAIL_SUBJECT}.
+     * Returns the {@link EmailTemplateService} used to resolve the subject and body of the
+     * verification email. The template is looked up (and lazily created with defaults if absent)
+     * via {@link EmailTemplateService#getOrCreateEmailTemplate} keyed on
+     * {@link EmailVerificationService#VERIFICATION_EMAIL_TEMPLATE}.
      */
-    protected String getEmailSubject() {
-        return emailSubject;
+    public EmailTemplateService getEmailTemplateService() {
+        return emailTemplateService;
     }
 
     @Inject
-    public void setEmailSubject(@Named(VERIFICATION_EMAIL_SUBJECT) String emailSubject) {
-        this.emailSubject = emailSubject;
-    }
-
-    /**
-     * Returns the HTML body template for the verification email.
-     *
-     * <p>Override this in a subclass to supply a custom template without reimplementing
-     * the full verification flow. The template must contain the literal token {@code {link}},
-     * which is replaced at send-time with the full verification URL. The default returns
-     * the value injected via {@link EmailVerificationService#VERIFICATION_EMAIL_TEMPLATE}.
-     *
-     * <p>To back this with a database (for a live UI editor), inject a DAO here and
-     * read from it, falling back to {@code super.getEmailTemplate()} when no override is stored.
-     */
-    protected String getEmailTemplate() {
-        return emailTemplate;
-    }
-
-    @Inject
-    public void setEmailTemplate(@Named(VERIFICATION_EMAIL_TEMPLATE) String emailTemplate) {
-        this.emailTemplate = emailTemplate;
+    public void setEmailTemplateService(@Named(UNSCOPED) EmailTemplateService emailTemplateService) {
+        this.emailTemplateService = emailTemplateService;
     }
 
 }

@@ -44,6 +44,7 @@ const iconMap: Record<string, any> = {
   FileJson: Icons.FileJson,
   Key: Icons.Key,
   HardDrive: Icons.HardDrive,
+  Mail: Icons.Mail,
   ScrollText: Icons.ScrollText,
   Plug: Icons.Plug,
   Puzzle: Icons.Puzzle,

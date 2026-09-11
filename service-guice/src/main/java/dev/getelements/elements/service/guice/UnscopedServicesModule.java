@@ -54,6 +54,7 @@ import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
@@ -88,6 +89,7 @@ import dev.getelements.elements.service.progress.SuperUserProgressService;
 import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
+import dev.getelements.elements.service.schema.email.SuperUserEmailTemplateService;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
 import dev.getelements.elements.service.user.AnonPasswordResetService;
@@ -247,6 +249,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(MetadataSpecService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserMetadataSpecService.class);
+
+        bind(EmailTemplateService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserEmailTemplateService.class);
 
         bind(AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))

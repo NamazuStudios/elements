@@ -63,25 +63,16 @@ public interface EmailVerificationService {
     String VERIFICATION_BASE_URL = "dev.getelements.elements.verification.base_url";
 
     /**
-     * Element attribute: subject line for the verification email.
-     * Defaults to {@code "Verify your email"}.
+     * Key identifying the {@code EmailTemplate} whose subject line is used for the verification email.
+     * This is no longer an element attribute; the template content is managed via {@code EmailTemplateService}.
      */
-    @ElementDefaultAttribute(
-            value = "Verify your email",
-            description = "Subject line for verification emails.")
     String VERIFICATION_EMAIL_SUBJECT = "dev.getelements.elements.verification.email_subject";
 
     /**
-     * Element attribute: HTML body template for the verification email.
+     * Key identifying the {@code EmailTemplate} whose HTML body is used for the verification email.
      * Must contain the literal token {@code {link}}, which is replaced with the full verification URL.
-     *
-     * <p>Defaults to a plain inline link. Override this in your Element to provide a branded template.
+     * This is no longer an element attribute; the template content is managed via {@code EmailTemplateService}.
      */
-    @ElementDefaultAttribute(
-            value = "<p>Please verify your email address by clicking the link below:</p>"
-                  + "<p><a href=\"{link}\">Verify Email</a></p>",
-            description = "HTML email body template for verification emails. "
-                        + "Use {link} as a placeholder for the verification URL.")
     String VERIFICATION_EMAIL_TEMPLATE = "dev.getelements.elements.verification.email_template";
 
     /**

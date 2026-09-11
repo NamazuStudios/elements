@@ -48,23 +48,16 @@ public interface PasswordResetService {
     String RESET_BASE_URL = "dev.getelements.elements.password_reset.base_url";
 
     /**
-     * Element attribute: subject line for the password reset email.
+     * Key identifying the {@code EmailTemplate} whose subject line is used for the password reset email.
+     * This is no longer an element attribute; the template content is managed via {@code EmailTemplateService}.
      */
-    @ElementDefaultAttribute(
-            value = "Reset your password",
-            description = "Subject line for password reset emails.")
     String RESET_EMAIL_SUBJECT = "dev.getelements.elements.password_reset.email_subject";
 
     /**
-     * Element attribute: HTML body template for the password reset email.
+     * Key identifying the {@code EmailTemplate} whose HTML body is used for the password reset email.
      * Must contain the literal token {@code {link}}, which is replaced with the full reset URL.
+     * This is no longer an element attribute; the template content is managed via {@code EmailTemplateService}.
      */
-    @ElementDefaultAttribute(
-            value = "<p>Click the link below to reset your password. "
-                  + "This link expires in 1 hour.</p>"
-                  + "<p><a href=\"{link}\">Reset Password</a></p>",
-            description = "HTML email body template for password reset emails. "
-                        + "Use {link} as a placeholder for the reset URL.")
     String RESET_EMAIL_TEMPLATE = "dev.getelements.elements.password_reset.email_template";
 
     /**

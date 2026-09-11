@@ -7,11 +7,13 @@ import dev.getelements.elements.sdk.dao.UidVerificationTokenDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
+import dev.getelements.elements.sdk.model.schema.email.EmailTemplate;
 import dev.getelements.elements.sdk.model.user.UidVerificationToken;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.email.EmailService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import jakarta.inject.Inject;
 import org.mockito.ArgumentCaptor;
 import org.testng.annotations.BeforeMethod;
@@ -23,6 +25,7 @@ import java.util.Optional;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static dev.getelements.elements.sdk.service.user.EmailVerificationService.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -298,6 +301,14 @@ public class EmailVerificationServiceTest {
             bind(UidVerificationTokenDao.class).toInstance(mock(UidVerificationTokenDao.class));
             bind(EmailService.class).toInstance(mock(EmailService.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
+
+            final var template = new EmailTemplate();
+            template.setSubject(SUBJECT);
+            template.setBody(TEMPLATE);
+
+            final var emailTemplateService = mock(EmailTemplateService.class);
+            when(emailTemplateService.getOrCreateEmailTemplate(any(), any(), any(), any())).thenReturn(template);
+            bind(EmailTemplateService.class).annotatedWith(named(UNSCOPED)).toInstance(emailTemplateService);
 
             bindConstant().annotatedWith(named(VERIFICATION_EMAIL_SUBJECT)).to(SUBJECT);
             bindConstant().annotatedWith(named(VERIFICATION_EMAIL_TEMPLATE)).to(TEMPLATE);

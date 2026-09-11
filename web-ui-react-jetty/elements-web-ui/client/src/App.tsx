@@ -14,6 +14,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import ResourceManager from "@/pages/ResourceManager";
 import LargeObjects from "@/pages/LargeObjects";
+import EmailTemplates from "@/pages/EmailTemplates";
 import MultiMatch from "@/pages/MultiMatch";
 import Vaults from "@/pages/Vaults";
 import ProductBundles from "@/pages/ProductBundles";
@@ -139,6 +140,9 @@ function Routes() {
         </Route>
         <Route path="/resource/large-objects">
           <LargeObjects />
+        </Route>
+        <Route path="/resource/email-templates">
+          <EmailTemplates />
         </Route>
         <Route path="/resource/matchmaking">
           <MultiMatch />
