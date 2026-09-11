@@ -65,6 +65,9 @@ public class OAuth2AuthServiceTest {
     @Inject
     private ProfileDao profileDao;
 
+    @Inject
+    private NameService nameService;
+
     @BeforeMethod
     public void setup() {
 
@@ -175,6 +178,7 @@ public class OAuth2AuthServiceTest {
 
         when(applicationDao.findApplication("app-1")).thenReturn(java.util.Optional.of(application));
         when(profileDao.findPrimaryProfile("user-1", "app-1")).thenReturn(java.util.Optional.empty());
+        when(nameService.generateQualifiedName()).thenReturn("brave-otter");
 
         final var createdProfile = new Profile();
         createdProfile.setId("profile-1");
@@ -186,6 +190,7 @@ public class OAuth2AuthServiceTest {
         verify(profileDao).createSlottedProfile(profileCaptor.capture(), anyMap());
         assertEquals(profileCaptor.getValue().getUser(), user);
         assertEquals(profileCaptor.getValue().getApplication(), application);
+        assertEquals(profileCaptor.getValue().getDisplayName(), "brave-otter");
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
         verify(sessionDao).create(sessionCaptor.capture());

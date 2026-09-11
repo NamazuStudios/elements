@@ -17,6 +17,7 @@ import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.service.name.NameService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.ws.rs.client.Client;
@@ -35,6 +36,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class OAuth2AuthServiceOperations {
 
     private static final Logger logger = LoggerFactory.getLogger(OAuth2AuthServiceOperations.class);
+
+    private NameService nameService;
 
     private ProfileDao profileDao;
 
@@ -116,6 +119,7 @@ public class OAuth2AuthServiceOperations {
 
         final var profile = new Profile();
         profile.setUser(user);
+        profile.setDisplayName(getNameService().generateQualifiedName());
         profile.setApplication(application);
 
         return getProfileDao().createSlottedProfile(profile, Map.of());
@@ -259,6 +263,15 @@ public class OAuth2AuthServiceOperations {
         }
 
         return node;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
     public ProfileDao getProfileDao() {
