@@ -23,6 +23,8 @@ import java.util.Optional;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
+import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_DESCRIPTION;
+import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_REGEX;
 import static dev.getelements.elements.sdk.service.user.PasswordResetService.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -239,6 +241,8 @@ public class PasswordResetServiceTest {
             bind(PasswordResetTokenDao.class).toInstance(mock(PasswordResetTokenDao.class));
             bind(EmailService.class).toInstance(mock(EmailService.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
+            bindConstant().annotatedWith(named(PASSWORD_POLICY_REGEX)).to(".*");
+            bindConstant().annotatedWith(named(PASSWORD_POLICY_DESCRIPTION)).to("");
 
             bindConstant().annotatedWith(named(RESET_EMAIL_SUBJECT)).to(SUBJECT);
             bindConstant().annotatedWith(named(RESET_EMAIL_TEMPLATE)).to(TEMPLATE);

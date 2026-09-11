@@ -102,6 +102,9 @@ public class UserUserService extends AnonUserService implements UserService {
         final var profileId = userUpdatePasswordRequest.getProfileId();
         final var oldPassword = nullToEmpty(userUpdatePasswordRequest.getOldPassword()).trim();
         final var newPassword = nullToEmpty(userUpdatePasswordRequest.getNewPassword()).trim();
+
+        getPasswordPolicyValidator().validate(newPassword);
+
         final var profile = getProfileDao().findActiveProfileForUser(profileId, userId);
 
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();

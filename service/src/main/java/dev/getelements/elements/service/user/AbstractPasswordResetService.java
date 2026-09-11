@@ -49,6 +49,8 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
 
     private String expiryHours;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     // -------------------------------------------------------------------------
     // Shared core operations
     // -------------------------------------------------------------------------
@@ -103,6 +105,7 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
         final var tokenData = getTokenDao().findToken(token)
                 .orElseThrow(() -> new InvalidParameterException("Invalid or expired reset token."));
 
+        getPasswordPolicyValidator().validate(newPassword);
         getUserDao().setPassword(tokenData.getUser().getId(), newPassword);
         getTokenDao().deleteToken(token);
 
@@ -193,6 +196,15 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
         } catch (final NumberFormatException e) {
             return TimeUnit.HOURS.toMillis(DEFAULT_TOKEN_VALIDITY_HOURS);
         }
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }

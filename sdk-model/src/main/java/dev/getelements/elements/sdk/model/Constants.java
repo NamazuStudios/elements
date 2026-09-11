@@ -119,6 +119,21 @@ public interface Constants {
     String GENERATED_PASSWORD_LENGTH = "dev.getelements.elements.mock.generated.password.length";
 
     /**
+     * The system-wide password policy, expressed as a regex a submitted password must fully match.
+     * Enforced everywhere a password is accepted or changed (signup, password reset, admin-set
+     * password, email/username-password linking). Does not apply to server-generated passwords.
+     */
+    String PASSWORD_POLICY_REGEX = "dev.getelements.elements.password.policy.regex";
+
+    /**
+     * A plain-text, human-readable description of {@link #PASSWORD_POLICY_REGEX}, so clients can
+     * display the requirement to end users without parsing the regex themselves. Also included in
+     * the validation error message when a submitted password fails the policy. Operators are
+     * responsible for keeping this in sync with the regex.
+     */
+    String PASSWORD_POLICY_DESCRIPTION = "dev.getelements.elements.password.policy.description";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

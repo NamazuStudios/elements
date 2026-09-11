@@ -18,6 +18,8 @@ public class UserEmailPasswordLinkService implements EmailPasswordLinkService {
 
     private UserUidDao userUidDao;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     @Override
     public User linkEmailPassword(final String email, final String password) {
         final var normalizedEmail = email.trim().toLowerCase();
@@ -32,6 +34,8 @@ public class UserEmailPasswordLinkService implements EmailPasswordLinkService {
                 "Email address must be verified before linking password credentials. " +
                 "Call POST /user/me/email/verify first.");
         }
+
+        getPasswordPolicyValidator().validate(password);
 
         return getUserDao().setPassword(getCurrentUser().getId(), password);
     }
@@ -61,6 +65,15 @@ public class UserEmailPasswordLinkService implements EmailPasswordLinkService {
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }
