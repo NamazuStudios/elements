@@ -22,6 +22,10 @@
             <groupId>dev.getelements.elements</groupId>
             <artifactId>sdk-local</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-guice</artifactId>
+        </dependency>
 
         <!-- Test Dependencies -->
         <!-- These should never be included in the final build -->

@@ -9,6 +9,7 @@ import dev.getelements.elements.jetty.ElementsWebServiceComponentModule;
 import dev.getelements.elements.jetty.JettyServerModule;
 import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.deployment.TransientDeploymentRequest;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.local.ElementsLocal;
 import dev.getelements.elements.sdk.local.ElementsLocalBuilder;
 
@@ -72,6 +73,7 @@ public class MavenElementsLocalBuilder implements ElementsLocalBuilder {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier(attributes.asProperties());
 
         final var injector = Guice.createInjector(
+                GuiceStages.get(),
                 new JettyServerModule(),
                 new JettySdkElementModule(),
                 new ElementsCoreModule(defaultConfigurationSupplier),
