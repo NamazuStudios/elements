@@ -22,10 +22,13 @@ public class SuperUserUsernamePasswordLinkService implements UsernamePasswordLin
 
     private UserUidDao userUidDao;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     @Override
     public User linkUsernamePassword(final String username, final String password) {
         final var normalizedUsername = username.trim();
         final var uid = getUserUidDao().getUserUid(normalizedUsername, SCHEME_NAME);
+        getPasswordPolicyValidator().validate(password);
         return getUserDao().setPassword(uid.getUserId(), password);
     }
 
@@ -45,6 +48,15 @@ public class SuperUserUsernamePasswordLinkService implements UsernamePasswordLin
     @Inject
     public void setUserUidDao(UserUidDao userUidDao) {
         this.userUidDao = userUidDao;
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }

@@ -16,7 +16,10 @@ import org.testng.annotations.Test;
 import java.util.function.Function;
 
 import static com.google.inject.Guice.createInjector;
+import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_NAME;
+import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_DESCRIPTION;
+import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_REGEX;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -135,6 +138,8 @@ public class UsernamePasswordLinkServiceTest {
             bind(User.class).toInstance(currentUser);
             bind(UserDao.class).toInstance(mock(UserDao.class));
             bind(UserUidDao.class).toInstance(mock(UserUidDao.class));
+            bindConstant().annotatedWith(named(PASSWORD_POLICY_REGEX)).to(".*");
+            bindConstant().annotatedWith(named(PASSWORD_POLICY_DESCRIPTION)).to("");
             // Binding Transaction also satisfies Provider<Transaction> injection automatically.
             bind(Transaction.class).toInstance(tx);
         }
