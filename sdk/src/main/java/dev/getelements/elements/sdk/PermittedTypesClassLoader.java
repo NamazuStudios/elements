@@ -1,6 +1,5 @@
 package dev.getelements.elements.sdk;
 
-import dev.getelements.elements.sdk.annotation.ElementDefinition;
 import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
 import org.slf4j.Logger;
@@ -203,26 +202,38 @@ public class PermittedTypesClassLoader extends ClassLoader {
             return aClass;
         }
 
-        logger.trace(
-                "{} or {}'s package ({}) must have @{} annotation, be exposed via @{}, or one of [{}] or [{}]",
-                aClass.getSimpleName(),
-                aClass.getSimpleName(),
+        final var message = (
+                "%s was denied by %s: its package (%s) is not permitted by any registered %s or %s, and " +
+                "neither the type nor its package is annotated with @%s. Registered %s: [%s]. Registered %s: [%s]. " +
+                "To permit this type, register a %s/%s service (see META-INF/services), or annotate the type or " +
+                "its package with @%s."
+        ).formatted(
+                aClass.getName(),
+                PermittedTypesClassLoader.class.getSimpleName(),
                 aClass.getPackage(),
+                PermittedTypes.class.getSimpleName(),
+                PermittedPackages.class.getSimpleName(),
                 ElementPublic.class.getSimpleName(),
-                ElementDefinition.class.getSimpleName(),
+                PermittedTypes.class.getSimpleName(),
                 permittedTypes
                         .stream()
                         .map(Object::getClass)
                         .map(Objects::toString)
                         .collect(Collectors.joining(",")),
+                PermittedPackages.class.getSimpleName(),
                 permittedPackages
                         .stream()
                         .map(Object::getClass)
                         .map(Objects::toString)
-                        .collect(Collectors.joining(","))
+                        .collect(Collectors.joining(",")),
+                PermittedTypes.class.getSimpleName(),
+                PermittedPackages.class.getSimpleName(),
+                ElementPublic.class.getSimpleName()
         );
 
-        throw new ClassNotFoundException(aClass.getName());
+        logger.trace(message);
+
+        throw new ClassNotFoundException(message);
 
     }
 

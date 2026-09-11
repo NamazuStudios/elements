@@ -3,8 +3,10 @@ package dev.getelements.elements.sdk.spi;
 import dev.getelements.elements.sdk.PermittedPackages;
 import dev.getelements.elements.sdk.PermittedTypes;
 import dev.getelements.elements.sdk.annotation.ElementLocal;
+import dev.getelements.elements.sdk.annotation.ElementPackageRequest;
 import dev.getelements.elements.sdk.annotation.ElementPrivate;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
+import dev.getelements.elements.sdk.annotation.ElementTypeRequest;
 import dev.getelements.elements.sdk.exception.SdkException;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
@@ -276,7 +278,24 @@ public class ElementImplementationClassLoader extends ClassLoader {
                 }
 
                 // Step 9: Default Deny
-                throw new ClassNotFoundException(name);
+                final var message = (
+                        "%s was denied by %s: it is not a registered service export, and no %s or %s in this " +
+                        "Element's package-info.java permits type or package %s. To permit this type, add " +
+                        "@%s(\"%s\") or @%s to the Element's package-info.java, or export it as a service."
+                ).formatted(
+                        name,
+                        ElementImplementationClassLoader.class.getSimpleName(),
+                        ElementTypeRequest.class.getSimpleName(),
+                        ElementPackageRequest.class.getSimpleName(),
+                        packageName,
+                        ElementPackageRequest.class.getSimpleName(),
+                        packageName,
+                        ElementTypeRequest.class.getSimpleName()
+                );
+
+                logger.trace(message);
+
+                throw new ClassNotFoundException(message);
 
             }
 
