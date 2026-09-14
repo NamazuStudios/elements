@@ -72,6 +72,9 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         assertEquals(persisted.getClientId(), "client-id");
         assertEquals(persisted.getClientSecret(), "super-secret");
         assertEquals(persisted.getRedirectUri(), "https://api.example.com/oidc/twitch/callback");
+        assertTrue(persisted.isAdminLoginEnabled());
+        assertEquals(persisted.getDisplayName(), "Twitch");
+        assertEquals(persisted.getIconUrl(), "https://example.com/twitch-icon.png");
 
         // The secret was passed to the DAO, but must never be echoed back to the caller.
         assertNull(response.getConfiguration().getClientSecret());
@@ -97,6 +100,9 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         assertEquals(captor.getValue().getId(), "config-1");
         assertEquals(captor.getValue().getName(), "google");
         assertEquals(captor.getValue().getClientSecret(), "super-secret");
+        assertTrue(captor.getValue().isAdminLoginEnabled());
+        assertEquals(captor.getValue().getDisplayName(), "Twitch");
+        assertEquals(captor.getValue().getIconUrl(), "https://example.com/twitch-icon.png");
 
     }
 
@@ -252,6 +258,9 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         copy.setTokenEndpointAuthMethod(source.getTokenEndpointAuthMethod());
         copy.setSuccessRedirectUrl(source.getSuccessRedirectUrl());
         copy.setErrorRedirectUrl(source.getErrorRedirectUrl());
+        copy.setAdminLoginEnabled(source.isAdminLoginEnabled());
+        copy.setDisplayName(source.getDisplayName());
+        copy.setIconUrl(source.getIconUrl());
         return copy;
     }
 
@@ -264,6 +273,9 @@ public class SuperUserOidcProviderConfigurationServiceTest {
         request.setRedirectUri("https://api.example.com/oidc/twitch/callback");
         request.setScopes(List.of("openid"));
         request.setTokenEndpointAuthMethod(TokenEndpointAuthMethod.CLIENT_SECRET_POST);
+        request.setAdminLoginEnabled(true);
+        request.setDisplayName("Twitch");
+        request.setIconUrl("https://example.com/twitch-icon.png");
         return request;
     }
 

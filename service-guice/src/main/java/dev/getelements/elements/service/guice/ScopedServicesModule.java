@@ -355,6 +355,10 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OidcProviderConfigurationServiceProvider.class)
                 .in(scope);
 
+        bind(OidcAdminLoginService.class)
+                .to(DefaultOidcAdminLoginService.class)
+                .in(scope);
+
         bind(OAuth2AuthSchemeService.class)
                 .toProvider(OAuth2AuthSchemeServiceProvider.class)
                 .in(scope);

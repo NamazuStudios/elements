@@ -110,6 +110,9 @@ public class SuperUserOidcProviderConfigurationService implements OidcProviderCo
         config.setTokenEndpointAuthMethod(request.getTokenEndpointAuthMethod());
         config.setSuccessRedirectUrl(request.getSuccessRedirectUrl());
         config.setErrorRedirectUrl(request.getErrorRedirectUrl());
+        config.setAdminLoginEnabled(request.isAdminLoginEnabled());
+        config.setDisplayName(request.getDisplayName());
+        config.setIconUrl(request.getIconUrl());
     }
 
     private String resolveRedirectUri(final String name, final String requestedRedirectUri) {
