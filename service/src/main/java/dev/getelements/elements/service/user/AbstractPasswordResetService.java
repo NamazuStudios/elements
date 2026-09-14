@@ -7,9 +7,12 @@ import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
 import dev.getelements.elements.sdk.service.email.EmailService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import dev.getelements.elements.sdk.service.user.PasswordResetService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 
 import java.sql.Timestamp;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +36,13 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
 
     private static final long EMAIL_COOLDOWN_MS = TimeUnit.SECONDS.toMillis(60);
 
+    private static final String DEFAULT_SUBJECT = "Reset your password";
+
+    private static final String DEFAULT_BODY =
+            "<p>Click the link below to reset your password. "
+          + "This link expires in 1 hour.</p>"
+          + "<p><a href=\"{link}\">Reset Password</a></p>";
+
     private UserUidDao userUidDao;
 
     private PasswordResetTokenDao tokenDao;
@@ -43,9 +53,7 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
 
     private ElementRegistry elementRegistry;
 
-    private String emailSubject;
-
-    private String emailTemplate;
+    private EmailTemplateService emailTemplateService;
 
     private String expiryHours;
 
@@ -83,10 +91,13 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
         final var expiry = new Timestamp(now + getTokenValidityMs());
         final var token = getTokenDao().createToken(user, expiry);
 
-        final var link = resetBaseUrl + "?token=" + token;
-        final var body = getEmailTemplate().replace("{link}", link);
+        final var template = getEmailTemplateService().getOrCreateEmailTemplate(
+                RESET_EMAIL_TEMPLATE, "Password Reset Email", DEFAULT_SUBJECT, DEFAULT_BODY);
 
-        getEmailService().send(null, normalised, getEmailSubject(), body, true);
+        final var link = resetBaseUrl + "?token=" + token;
+        final var body = template.getBody().replace("{link}", link);
+
+        getEmailService().send(null, normalised, template.getSubject(), body, true);
 
         getElementRegistry().publish(Event.builder()
                 .named(PASSWORD_RESET_REQUESTED_EVENT)
@@ -160,22 +171,13 @@ abstract class AbstractPasswordResetService implements PasswordResetService {
         this.elementRegistry = elementRegistry;
     }
 
-    public String getEmailSubject() {
-        return emailSubject;
+    public EmailTemplateService getEmailTemplateService() {
+        return emailTemplateService;
     }
 
     @Inject
-    public void setEmailSubject(@Named(RESET_EMAIL_SUBJECT) String emailSubject) {
-        this.emailSubject = emailSubject;
-    }
-
-    public String getEmailTemplate() {
-        return emailTemplate;
-    }
-
-    @Inject
-    public void setEmailTemplate(@Named(RESET_EMAIL_TEMPLATE) String emailTemplate) {
-        this.emailTemplate = emailTemplate;
+    public void setEmailTemplateService(@Named(UNSCOPED) EmailTemplateService emailTemplateService) {
+        this.emailTemplateService = emailTemplateService;
     }
 
     public String getExpiryHours() {

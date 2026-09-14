@@ -48,6 +48,7 @@ import dev.getelements.elements.sdk.service.receipt.ReceiptService;
 import dev.getelements.elements.sdk.service.rewardissuance.RewardIssuanceService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import dev.getelements.elements.sdk.service.system.ElementInspectorService;
 import dev.getelements.elements.sdk.service.system.ElementStatusService;
 import dev.getelements.elements.sdk.service.system.ElementDeploymentService;
@@ -134,6 +135,8 @@ import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentServic
 import dev.getelements.elements.service.savedata.UserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.MetadataSpecServiceProvider;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
+import dev.getelements.elements.service.schema.email.EmailTemplateServiceProvider;
+import dev.getelements.elements.service.schema.email.SuperUserEmailTemplateService;
 import dev.getelements.elements.service.system.ElementDeploymentServiceProvider;
 import dev.getelements.elements.service.system.ElementInspectorServiceProvider;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
@@ -365,6 +368,10 @@ public class ScopedServicesModule extends AbstractModule {
 
         bind(MetadataSpecService.class)
                 .toProvider(MetadataSpecServiceProvider.class)
+                .in(scope);
+
+        bind(EmailTemplateService.class)
+                .toProvider(EmailTemplateServiceProvider.class)
                 .in(scope);
 
         bind(HealthStatusService.class)
