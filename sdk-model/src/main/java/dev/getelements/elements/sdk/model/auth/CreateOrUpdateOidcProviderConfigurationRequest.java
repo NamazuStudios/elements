@@ -56,6 +56,19 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
             "per login attempt.")
     private String errorRedirectUrl;
 
+    @Schema(description = "When true, this provider is offered as a login option on the admin panel's login " +
+            "page, in addition to normal player login. Defaults to false.")
+    private boolean adminLoginEnabled;
+
+    @Schema(description = "Optional human-readable name for this provider, shown on login buttons. Falls back " +
+            "to name if unset.")
+    private String displayName;
+
+    @Schema(description = "Optional URL of an icon/logo to show on this provider's login button. Must be " +
+            "publicly fetchable with no authentication, since it is rendered on the admin panel's login page " +
+            "before any session exists.")
+    private String iconUrl;
+
     public String getName() {
         return name;
     }
@@ -136,10 +149,35 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
         this.errorRedirectUrl = errorRedirectUrl;
     }
 
+    public boolean isAdminLoginEnabled() {
+        return adminLoginEnabled;
+    }
+
+    public void setAdminLoginEnabled(boolean adminLoginEnabled) {
+        this.adminLoginEnabled = adminLoginEnabled;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof CreateOrUpdateOidcProviderConfigurationRequest that)) return false;
-        return Objects.equals(name, that.name)
+        return adminLoginEnabled == that.adminLoginEnabled
+                && Objects.equals(name, that.name)
                 && Objects.equals(discoveryUrl, that.discoveryUrl)
                 && Objects.equals(clientId, that.clientId)
                 && Objects.equals(clientSecret, that.clientSecret)
@@ -148,13 +186,16 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
                 && Objects.equals(extraAuthorizeParams, that.extraAuthorizeParams)
                 && tokenEndpointAuthMethod == that.tokenEndpointAuthMethod
                 && Objects.equals(successRedirectUrl, that.successRedirectUrl)
-                && Objects.equals(errorRedirectUrl, that.errorRedirectUrl);
+                && Objects.equals(errorRedirectUrl, that.errorRedirectUrl)
+                && Objects.equals(displayName, that.displayName)
+                && Objects.equals(iconUrl, that.iconUrl);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(name, discoveryUrl, clientId, clientSecret, scopes, redirectUri,
-                extraAuthorizeParams, tokenEndpointAuthMethod, successRedirectUrl, errorRedirectUrl);
+                extraAuthorizeParams, tokenEndpointAuthMethod, successRedirectUrl, errorRedirectUrl,
+                adminLoginEnabled, displayName, iconUrl);
     }
 
     @Override
@@ -169,6 +210,9 @@ public class CreateOrUpdateOidcProviderConfigurationRequest {
                 ", tokenEndpointAuthMethod=" + tokenEndpointAuthMethod +
                 ", successRedirectUrl='" + successRedirectUrl + '\'' +
                 ", errorRedirectUrl='" + errorRedirectUrl + '\'' +
+                ", adminLoginEnabled=" + adminLoginEnabled +
+                ", displayName='" + displayName + '\'' +
+                ", iconUrl='" + iconUrl + '\'' +
                 '}';
     }
 

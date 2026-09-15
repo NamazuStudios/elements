@@ -87,6 +87,13 @@ public interface OidcProviderConfigurationDao {
     Optional<OidcProviderConfiguration> findByName(String name);
 
     /**
+     * Lists all provider configurations with admin-panel login enabled.
+     *
+     * @return the list of {@link OidcProviderConfiguration} instances with admin login enabled
+     */
+    List<OidcProviderConfiguration> getAdminLoginEnabledProviderConfigurations();
+
+    /**
      * Creates a new provider configuration.
      *
      * @param providerConfiguration the configuration to create
