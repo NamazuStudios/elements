@@ -21,7 +21,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CompletionStage
-import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BiConsumer
 import java.util.function.Consumer
@@ -32,8 +31,6 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
     companion object {
         val logger: Logger = LoggerFactory.getLogger(JakartaWebsocketRemoteInvoker::class.java)
     }
-
-    private val sequence = AtomicLong(0)
 
     private val session: AtomicReference<Session> = AtomicReference()
 
@@ -51,7 +48,7 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
         asyncInvocationErrorConsumer: InvocationErrorConsumer
     ): AsyncOperation {
 
-        val id = sequence.getAndIncrement().toString()
+        val id = UUID.randomUUID().toString()
         val session = this.session.get() ?: throw IllegalStateException("Session is null.")
 
         val operation = JakartaWebsocketAsyncOperation(
@@ -75,7 +72,7 @@ class JakartaWebsocketRemoteInvoker : InstanceRemoteInvoker {
         asyncInvocationErrorConsumer: InvocationErrorConsumer
     ): CompletionStage<Any> {
 
-        val id = sequence.getAndIncrement().toString()
+        val id = UUID.randomUUID().toString()
         val session = this.session.get() ?: throw IllegalStateException("Session is null.")
 
         val invocation = JakartaWebsocketRemoteInvocation(

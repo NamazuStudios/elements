@@ -27,7 +27,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
 
     @Override
     protected InvocationResult newInitialInvocationResult() {
-        return new InvocationResult(emptyList());
+        return new InvocationResult(emptyList(), 0);
     }
 
     @Override
@@ -48,7 +48,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
         final List<Object> aggregate = new ArrayList<>(la);
         aggregate.addAll(lb == null ? emptyList() : lb);
 
-        return new InvocationResult(aggregate);
+        return new InvocationResult(aggregate, a.param());
 
     }
 

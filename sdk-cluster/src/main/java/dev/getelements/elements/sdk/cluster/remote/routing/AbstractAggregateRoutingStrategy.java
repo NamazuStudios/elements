@@ -159,7 +159,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      * @return the {@link InvocationResult} used as the initial value for aggregations
      */
     protected InvocationResult newInitialInvocationResult() {
-        return new InvocationResult(newInitialResult());
+        return new InvocationResult(newInitialResult(), 0);
     }
 
     /**
@@ -182,7 +182,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     protected InvocationResult combine(final InvocationResult ra, final InvocationResult rb) {
         final Object a = ra.result();
         final Object b = rb.result();
-        return new InvocationResult(combine(a, b));
+        return new InvocationResult(combine(a, b), ra.param());
     }
 
 }

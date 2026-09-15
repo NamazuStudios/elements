@@ -1,5 +1,6 @@
 package dev.getelements.elements.cluster.client
 
+import dev.getelements.elements.cluster.common.dto.InvocationEnvelope
 import dev.getelements.elements.cluster.common.dto.InvocationErrorEnvelope
 import dev.getelements.elements.cluster.common.dto.InvocationResultEnvelope
 import dev.getelements.elements.cluster.common.dto.InvocationResultEnvelope.Mode
@@ -52,7 +53,7 @@ class JakartaWebsocketRemoteInvocation(
     fun send() : CompletableFuture<Any> = scope.future {
 
         logger.trace("Sending invocation.")
-        session?.asyncRemote?.sendObject(invocation)
+        session?.asyncRemote?.sendObject(InvocationEnvelope(id, invocation))
 
         logger.trace("Waiting for all asynchronous responses to return.")
         asyncCompleted.set(0, asyncInvocationResultConsumerList.size)
