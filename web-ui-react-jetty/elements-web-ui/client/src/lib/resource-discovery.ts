@@ -40,6 +40,7 @@ const POTENTIAL_RESOURCES = [
   
   // Other
   { name: 'Large Objects', endpoint: '/api/rest/large_object', icon: 'HardDrive', category: 'Other' },
+  { name: 'Email Templates', endpoint: '/api/rest/email_template', icon: 'Mail', category: 'Other' },
 ];
 
 export async function discoverResources(): Promise<ResourceDefinition[]> {

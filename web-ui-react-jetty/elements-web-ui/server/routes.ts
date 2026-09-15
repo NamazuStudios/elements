@@ -421,6 +421,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const authEndpoints = ['/api/rest/auth/oauth2', '/api/rest/auth/oidc', '/api/rest/session', '/api/rest/signup'];
       const isAuthEndpoint = req.method === 'POST' && authEndpoints.some(endpoint => elementsPath === endpoint);
 
+      // The admin-panel OIDC login flow is unauthenticated by design (the caller has no session yet
+      // when listing providers or starting/polling a login attempt). Unlike authEndpoints above,
+      // the poll endpoint carries a dynamic {id} path segment, so it needs a prefix match rather than
+      // an exact one. A session token is still forwarded if present (e.g. an account-linking attempt
+      // started while already holding a session) -- this only exempts the request from *requiring* one.
+      const isOidcLoginFlow =
+        elementsPath === '/api/rest/oidc/admin_login_providers' ||
+        elementsPath === '/api/rest/oidc/session' ||
+        elementsPath.startsWith('/api/rest/oidc/session/');
+
       // Static content paths served by Elements (UI plugin bundles, static assets) do not
       // require authentication — script tags cannot send auth headers anyway.
       const isStaticContent = elementsPath.startsWith('/app/ui/') || elementsPath.startsWith('/app/static/');
@@ -440,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`[PROXY] Using token: ${sessionToken ? 'present' : 'none'}`);
       }
 
-      if (!isAuthEndpoint && !isStaticContent && !sessionToken) {
+      if (!isAuthEndpoint && !isOidcLoginFlow && !isStaticContent && !sessionToken) {
         return res.status(401).json({ error: 'Authentication required' });
       }
 

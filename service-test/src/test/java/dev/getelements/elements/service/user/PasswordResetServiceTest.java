@@ -7,10 +7,12 @@ import dev.getelements.elements.sdk.dao.PasswordResetTokenDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.exception.InvalidParameterException;
+import dev.getelements.elements.sdk.model.schema.email.EmailTemplate;
 import dev.getelements.elements.sdk.model.user.PasswordResetToken;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.service.email.EmailService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import jakarta.inject.Inject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -25,6 +27,7 @@ import static com.google.inject.name.Names.named;
 import static dev.getelements.elements.sdk.dao.UserUidDao.SCHEME_EMAIL;
 import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_DESCRIPTION;
 import static dev.getelements.elements.sdk.model.Constants.PASSWORD_POLICY_REGEX;
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static dev.getelements.elements.sdk.service.user.PasswordResetService.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
@@ -243,6 +246,14 @@ public class PasswordResetServiceTest {
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(named(PASSWORD_POLICY_REGEX)).to(".*");
             bindConstant().annotatedWith(named(PASSWORD_POLICY_DESCRIPTION)).to("");
+
+            final var template = new EmailTemplate();
+            template.setSubject(SUBJECT);
+            template.setBody(TEMPLATE);
+
+            final var emailTemplateService = mock(EmailTemplateService.class);
+            when(emailTemplateService.getOrCreateEmailTemplate(any(), any(), any(), any())).thenReturn(template);
+            bind(EmailTemplateService.class).annotatedWith(named(UNSCOPED)).toInstance(emailTemplateService);
 
             bindConstant().annotatedWith(named(RESET_EMAIL_SUBJECT)).to(SUBJECT);
             bindConstant().annotatedWith(named(RESET_EMAIL_TEMPLATE)).to(TEMPLATE);
