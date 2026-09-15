@@ -47,6 +47,15 @@ public class MongoOidcProviderConfiguration {
     @Property
     private String errorRedirectUrl;
 
+    @Property
+    private boolean adminLoginEnabled;
+
+    @Property
+    private String displayName;
+
+    @Property
+    private String iconUrl;
+
     public ObjectId getId() {
         return id;
     }
@@ -135,12 +144,37 @@ public class MongoOidcProviderConfiguration {
         this.errorRedirectUrl = errorRedirectUrl;
     }
 
+    public boolean isAdminLoginEnabled() {
+        return adminLoginEnabled;
+    }
+
+    public void setAdminLoginEnabled(boolean adminLoginEnabled) {
+        this.adminLoginEnabled = adminLoginEnabled;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoOidcProviderConfiguration that = (MongoOidcProviderConfiguration) o;
-        return Objects.equals(getId(), that.getId())
+        return isAdminLoginEnabled() == that.isAdminLoginEnabled()
+                && Objects.equals(getId(), that.getId())
                 && Objects.equals(getName(), that.getName())
                 && Objects.equals(getDiscoveryUrl(), that.getDiscoveryUrl())
                 && Objects.equals(getClientId(), that.getClientId())
@@ -150,14 +184,17 @@ public class MongoOidcProviderConfiguration {
                 && Objects.equals(getExtraAuthorizeParams(), that.getExtraAuthorizeParams())
                 && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod()
                 && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
-                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl())
+                && Objects.equals(getDisplayName(), that.getDisplayName())
+                && Objects.equals(getIconUrl(), that.getIconUrl());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getName(), getDiscoveryUrl(), getClientId(), getClientSecret(),
                 getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod(),
-                getSuccessRedirectUrl(), getErrorRedirectUrl());
+                getSuccessRedirectUrl(), getErrorRedirectUrl(), isAdminLoginEnabled(),
+                getDisplayName(), getIconUrl());
     }
 
 }

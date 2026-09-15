@@ -14,7 +14,12 @@ import java.util.Objects;
         // sparse: delete soft-deletes by unsetting "name" rather than removing the document (see
         // MongoOAuth2AuthSchemeDao#deleteAuthScheme); a non-sparse unique index would reject the second
         // soft-deleted document, since it also has no "name" field.
-        @Index(fields = @Field("name"), options = @IndexOptions(unique = true, sparse = true))
+        //
+        // Explicitly named (rather than the auto-generated "name_1") because environments that ran before
+        // sparse was added already have a non-sparse index under that default name, and MongoDB rejects
+        // redefining an index's options under an existing name. See LegacyAuthSchemeIndexCleanup, which
+        // drops that old index once this one is safely in place.
+        @Index(fields = @Field("name"), options = @IndexOptions(name = "name_1_sparse", unique = true, sparse = true))
 })
 public class MongoOAuth2AuthScheme {
 

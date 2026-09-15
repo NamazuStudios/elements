@@ -28,6 +28,7 @@ public class SuperUserMissionService extends AnonMissionService implements Missi
         mission.setMetadata(request.getMetadata());
         mission.setSteps(request.getSteps());
         mission.setTags(request.getTags());
+        mission.setAuthoritative(request.getAuthoritative());
 
         return missionDao.updateMission(mission);
     }
@@ -44,6 +45,7 @@ public class SuperUserMissionService extends AnonMissionService implements Missi
         mission.setMetadata(request.getMetadata());
         mission.setSteps(request.getSteps());
         mission.setTags(request.getTags());
+        mission.setAuthoritative(request.getAuthoritative());
 
         return missionDao.createMission(mission);
     }

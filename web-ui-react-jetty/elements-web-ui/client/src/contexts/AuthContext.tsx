@@ -6,9 +6,49 @@ interface AuthContextType {
   userLevel: string | null;
   username: string | null;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  loginWithOidcProvider: (providerName: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
   sessionExpired: boolean;
+}
+
+// Applies a completed session's level/userId to auth state (and, if rememberMe, localStorage), enforcing the
+// same SUPERUSER-only admin panel gate regardless of how the session was created (username/password or OIDC).
+function applySessionOrThrow(
+  session: { userId?: string; level?: string; expiry?: number } | undefined,
+  rememberMe: boolean,
+  setUserLevel: (level: string) => void,
+  setUsername: (username: string) => void,
+  setIsAuthenticated: (value: boolean) => void,
+) {
+  const level = session?.level;
+  const userId = session?.userId || 'unknown';
+
+  // SECURITY: Only allow SUPERUSER level to access admin interface. A non-SUPERUSER session was still
+  // created successfully (the account exists and is usable elsewhere) -- it just can't use this panel
+  // until an existing administrator elevates it via the user-management UI/API.
+  if (level !== 'SUPERUSER') {
+    setIsAuthenticated(false);
+    throw new Error(
+      'Your account was authenticated, but only SUPERUSER level accounts can access the admin ' +
+      'interface. Ask an existing administrator to elevate your account, then sign in again.'
+    );
+  }
+
+  setUserLevel(level);
+  setUsername(userId);
+  setIsAuthenticated(true);
+
+  if (rememberMe) {
+    localStorage.setItem('elements-user', JSON.stringify({
+      username: userId,
+      level,
+      sessionToken: apiClient.getSessionToken(),
+      expiry: session?.expiry,
+    }));
+  } else {
+    localStorage.removeItem('elements-user');
+  }
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -112,6 +152,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithOidcProvider = async (providerName: string, rememberMe = false) => {
+    setIsLoading(true);
+
+    let popup: Window | null = null;
+
+    try {
+      const { id, authorizeUrl } = await apiClient.beginOidcSession(providerName);
+
+      popup = window.open(authorizeUrl, 'oidc-admin-login', 'width=500,height=700');
+
+      if (!popup) {
+        throw new Error('Could not open the login popup. Please allow popups for this site and try again.');
+      }
+
+      // Poll for completion. The provider callback finishes in the popup; this tab has no way to know
+      // when that happens other than polling the attempt's status.
+      const POLL_INTERVAL_MS = 1500;
+      const TIMEOUT_MS = 2 * 60 * 1000;
+      const deadline = Date.now() + TIMEOUT_MS;
+
+      while (Date.now() < deadline) {
+
+        if (popup.closed) {
+          throw new Error('Login window was closed before completing sign-in.');
+        }
+
+        const status = await apiClient.pollOidcSession(id);
+
+        if (status.status === 'COMPLETE') {
+          if (status.session?.sessionSecret) {
+            apiClient.setSessionToken(status.session.sessionSecret);
+          }
+          applySessionOrThrow(status.session, rememberMe, setUserLevel, setUsername, setIsAuthenticated);
+          setSessionExpired(false);
+          return;
+        }
+
+        if (status.status === 'FAILED') {
+          throw new Error(status.reason || 'The login attempt failed.');
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+      }
+
+      throw new Error('Login attempt timed out. Please try again.');
+    } catch (error) {
+      setIsAuthenticated(false);
+      throw error;
+    } finally {
+      if (popup && !popup.closed) {
+        popup.close();
+      }
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       await apiClient.logout();
@@ -127,7 +223,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, logout, isLoading, sessionExpired }}>
+    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, loginWithOidcProvider, logout, isLoading, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );

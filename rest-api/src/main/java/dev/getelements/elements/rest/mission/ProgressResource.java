@@ -88,6 +88,20 @@ public class ProgressResource {
         getProgressService().deleteProgress(progressId);
     }
 
+    @POST
+    @Path("{progressId}/advance")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation( summary = "Advances the Progress identified by id",
+            description = "Decrements the Progress's remaining action count by the supplied number of actions, " +
+                    "advancing to subsequent Steps and issuing their Rewards as needed. Only permitted for " +
+                    "Missions explicitly marked non-authoritative; superusers may always advance any Progress " +
+                    "regardless of the Mission's authoritative setting.")
+    public Progress advanceProgress(@PathParam("progressId") final String progressId,
+                                    @QueryParam("actions") @DefaultValue("1") final int actions) {
+
+        return getProgressService().advanceProgress(progressId, actions);
+    }
+
     public ProgressService getProgressService() {
         return progressService;
     }

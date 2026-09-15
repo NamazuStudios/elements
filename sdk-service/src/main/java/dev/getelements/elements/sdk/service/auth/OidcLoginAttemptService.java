@@ -31,6 +31,19 @@ public interface OidcLoginAttemptService {
     OidcLoginAttemptBegin begin(String provider);
 
     /**
+     * Same as {@link #begin(String)}, additionally requesting that the given application's primary profile be
+     * attached to the resulting session (auto-creating it, subject to the application's autoCreateProfile/
+     * maxProfiles settings, if it does not exist) once the attempt resolves. Snapshotted onto the pending attempt
+     * at begin() time, since the callback that later resolves it shares no request body with this call.
+     *
+     * @param provider the provider identifier (e.g. "twitch")
+     * @param applicationNameOrId the name or ID of the application whose primary profile should be attached, or
+     *                             {@code null} for the legacy JWT aud-claim-driven, ungated behavior
+     * @return the pending attempt's id, authorize URL, and expiry
+     */
+    OidcLoginAttemptBegin begin(String provider, String applicationNameOrId);
+
+    /**
      * Polls a pending attempt by id. Returns COMPLETE with the session exactly once, on the poll that first
      * observes completion; every subsequent poll for the same id returns EXPIRED.
      *

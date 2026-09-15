@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ServerCog, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
+import { ServerCog, CheckCircle2, AlertCircle, RefreshCw, BookOpen, FileText, Cloud, Rocket, ExternalLink } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,11 +17,60 @@ interface HealthStatus {
   invokerHealthStatus?: any;
 }
 
+interface VersionInfo {
+  version: string;
+  revision: string;
+}
+
+// Builds the apidocs URL for the running server's version. SNAPSHOT builds append the
+// short git commit (e.g. 3.9.0-SNAPSHOT-e7c18562d) so docs match the exact build in use.
+function buildDocsUrl(versionInfo?: VersionInfo): string {
+  if (!versionInfo?.version) return 'https://apidocs.namazustudios.com/';
+
+  const versionParam = versionInfo.version.endsWith('-SNAPSHOT') && versionInfo.revision
+    ? `${versionInfo.version}-${versionInfo.revision.slice(0, 9)}`
+    : versionInfo.version;
+
+  return `https://apidocs.namazustudios.com/?version=${encodeURIComponent(versionParam)}`;
+}
+
+const ctaLinks = [
+  {
+    title: 'Read the Docs',
+    description: 'API reference for your running version',
+    icon: BookOpen,
+    href: (versionInfo?: VersionInfo) => buildDocsUrl(versionInfo),
+  },
+  {
+    title: 'Read the Manual',
+    description: 'Guides and concepts for Namazu Elements',
+    icon: FileText,
+    href: () => 'https://namazustudios.com/docs',
+  },
+  {
+    title: 'Host on AWS',
+    description: 'Deploy Elements from the AWS Marketplace',
+    icon: Cloud,
+    href: () => 'https://aws.amazon.com/marketplace/seller-profile?id=seller-ondtddsmhzhte',
+  },
+  {
+    title: 'Sign up for Namazu Cloud',
+    description: 'Fully managed Elements hosting',
+    icon: Rocket,
+    href: () => 'https://cloud.namazustudios.com?signup',
+  },
+];
+
 export default function Dashboard() {
   const { data: healthStatus, isLoading: isHealthLoading, isFetching: isHealthFetching, error: healthError } = useQuery<HealthStatus>({
     queryKey: ['/api/rest/health'],
     refetchInterval: 30000, // Refetch every 30 seconds
     retry: false, // Don't retry on failure for health checks
+  });
+
+  const { data: versionInfo } = useQuery<VersionInfo>({
+    queryKey: ['/api/proxy/api/rest/version'],
+    staleTime: Infinity, // Version doesn't change during session
   });
 
   const getHealthColor = () => {
@@ -143,8 +192,30 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="text-sm text-muted-foreground">
-        <p>More dashboard metrics will be available once the appropriate endpoints are created.</p>
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Get Started</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {ctaLinks.map(({ title, description, icon: Icon, href }) => (
+            <a
+              key={title}
+              href={href(versionInfo)}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid={`link-cta-${title.toLowerCase().replace(/\s+/g, '-')}`}
+            >
+              <Card className="h-full hover-elevate">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Icon className="w-5 h-5 text-muted-foreground" />
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium">{title}</p>
+                  <p className="text-xs text-muted-foreground">{description}</p>
+                </CardContent>
+              </Card>
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

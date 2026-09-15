@@ -69,6 +69,7 @@ public class OidcSessionResource {
 
             final var oidcSessionRequest = new OidcSessionRequest();
             oidcSessionRequest.setJwt(request.getIdToken());
+            oidcSessionRequest.setApplicationNameOrId(request.getApplicationNameOrId());
 
             final var sessionCreation = getOidcAuthService().createSession(oidcSessionRequest);
             final var body = OidcLoginAttemptResponse.complete(sessionCreation);
@@ -77,7 +78,7 @@ public class OidcSessionResource {
 
         }
 
-        final var begin = getOidcLoginAttemptService().begin(request.getProvider());
+        final var begin = getOidcLoginAttemptService().begin(request.getProvider(), request.getApplicationNameOrId());
         final var body = OidcLoginAttemptResponse.pending(
                 begin.getId(), begin.getAuthorizeUrl(), begin.getExpiresAt(), begin.getConfirmToken());
 

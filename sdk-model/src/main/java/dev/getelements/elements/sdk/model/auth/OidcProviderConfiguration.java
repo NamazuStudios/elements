@@ -71,6 +71,23 @@ public class OidcProviderConfiguration {
             "per login attempt.")
     private String errorRedirectUrl;
 
+    @Schema(description = "When true, this provider is offered as a login option on the admin panel's login " +
+            "page, in addition to normal player login. Defaults to false. A user logging in this way still " +
+            "lands with standard (non-privileged) permissions; elevation to SUPERUSER is never automatic and " +
+            "must be done separately by an existing administrator.")
+    private boolean adminLoginEnabled;
+
+    @Schema(description = "Optional human-readable name for this provider, shown on login buttons (e.g. " +
+            "'Google', 'Sign in with Twitch'). Falls back to name if unset. Each provider's brand guidelines " +
+            "differ, so this is entirely operator-supplied rather than derived or templated by Elements.")
+    private String displayName;
+
+    @Schema(description = "Optional URL of an icon/logo to show on this provider's login button, alongside " +
+            "displayName. Operator-supplied; Elements does not host or bundle any provider's brand assets. " +
+            "Must be publicly fetchable with no authentication, since it is rendered on the admin panel's " +
+            "login page before any session exists.")
+    private String iconUrl;
+
     /**
      * Returns the unique ID of the provider configuration.
      *
@@ -269,12 +286,67 @@ public class OidcProviderConfiguration {
         this.errorRedirectUrl = errorRedirectUrl;
     }
 
+    /**
+     * Returns whether this provider is offered as an admin-panel login option.
+     *
+     * @return true if enabled for admin-panel login
+     */
+    public boolean isAdminLoginEnabled() {
+        return adminLoginEnabled;
+    }
+
+    /**
+     * Sets whether this provider is offered as an admin-panel login option.
+     *
+     * @param adminLoginEnabled true to enable for admin-panel login
+     */
+    public void setAdminLoginEnabled(boolean adminLoginEnabled) {
+        this.adminLoginEnabled = adminLoginEnabled;
+    }
+
+    /**
+     * Returns the human-readable display name for this provider's login button.
+     *
+     * @return the display name, or {@code null} if unset
+     */
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    /**
+     * Sets the human-readable display name for this provider's login button.
+     *
+     * @param displayName the display name
+     */
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    /**
+     * Returns the icon/logo URL for this provider's login button.
+     *
+     * @return the icon URL, or {@code null} if unset
+     */
+    public String getIconUrl() {
+        return iconUrl;
+    }
+
+    /**
+     * Sets the icon/logo URL for this provider's login button.
+     *
+     * @param iconUrl the icon URL
+     */
+    public void setIconUrl(String iconUrl) {
+        this.iconUrl = iconUrl;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OidcProviderConfiguration that = (OidcProviderConfiguration) o;
-        return Objects.equals(getId(), that.getId())
+        return isAdminLoginEnabled() == that.isAdminLoginEnabled()
+                && Objects.equals(getId(), that.getId())
                 && Objects.equals(getName(), that.getName())
                 && Objects.equals(getDiscoveryUrl(), that.getDiscoveryUrl())
                 && Objects.equals(getClientId(), that.getClientId())
@@ -284,14 +356,17 @@ public class OidcProviderConfiguration {
                 && Objects.equals(getExtraAuthorizeParams(), that.getExtraAuthorizeParams())
                 && getTokenEndpointAuthMethod() == that.getTokenEndpointAuthMethod()
                 && Objects.equals(getSuccessRedirectUrl(), that.getSuccessRedirectUrl())
-                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl());
+                && Objects.equals(getErrorRedirectUrl(), that.getErrorRedirectUrl())
+                && Objects.equals(getDisplayName(), that.getDisplayName())
+                && Objects.equals(getIconUrl(), that.getIconUrl());
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(getId(), getName(), getDiscoveryUrl(), getClientId(), getClientSecret(),
                 getScopes(), getRedirectUri(), getExtraAuthorizeParams(), getTokenEndpointAuthMethod(),
-                getSuccessRedirectUrl(), getErrorRedirectUrl());
+                getSuccessRedirectUrl(), getErrorRedirectUrl(), isAdminLoginEnabled(),
+                getDisplayName(), getIconUrl());
     }
 
     @Override
@@ -307,6 +382,9 @@ public class OidcProviderConfiguration {
                 ", tokenEndpointAuthMethod=" + tokenEndpointAuthMethod +
                 ", successRedirectUrl='" + successRedirectUrl + '\'' +
                 ", errorRedirectUrl='" + errorRedirectUrl + '\'' +
+                ", adminLoginEnabled=" + adminLoginEnabled +
+                ", displayName='" + displayName + '\'' +
+                ", iconUrl='" + iconUrl + '\'' +
                 '}';
     }
 

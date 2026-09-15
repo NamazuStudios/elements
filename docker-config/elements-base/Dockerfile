@@ -3,12 +3,12 @@ FROM ubuntu:24.04 AS dockerize
 ARG TARGETARCH
 ENV DOCKERIZE_VERSION=v0.9.2
 
-RUN apt-get update && apt-get install -y wget
+RUN for i in 1 2 3 4 5; do apt-get update && apt-get install -y wget && exit 0; sleep 5; done; exit 1
 RUN wget -O - https://github.com/jwilder/dockerize/releases/download/${DOCKERIZE_VERSION}/dockerize-linux-${TARGETARCH}-${DOCKERIZE_VERSION}.tar.gz | tar xzf - -C /usr/local/bin
 
 FROM ubuntu:24.04
 
-RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-21-jdk musl
+RUN for i in 1 2 3 4 5; do apt-get update && apt-get -y install wget bash ca-certificates openjdk-21-jdk musl && exit 0; sleep 5; done; exit 1
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
