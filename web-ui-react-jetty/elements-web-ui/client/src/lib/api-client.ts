@@ -147,19 +147,34 @@ export class ApiClient {
     return undefined as T;
   }
 
-  async createUsernamePasswordSession(username: string, password: string, rememberMe = false): Promise<{ success: boolean; session?: { userId?: string; level?: string; expiry?: number } }> {
+  async getCaptchaPublicConfig(): Promise<{ enabled: boolean; provider?: string; siteKey?: string }> {
+    const captchaEndpoint = await getApiPath('/api/rest/captcha');
+    const response = await fetch(captchaEndpoint, { credentials: 'include' });
+
+    if (!response.ok) {
+      // CAPTCHA bootstrap is best-effort: if it can't be reached, don't block the login form on it.
+      return { enabled: false };
+    }
+
+    return await response.json();
+  }
+
+  async createUsernamePasswordSession(username: string, password: string, rememberMe = false, captchaToken?: string): Promise<{ success: boolean; session?: { userId?: string; level?: string; expiry?: number } }> {
     // Use the config system to determine production vs development mode
     const { getApiConfig, getApiPath } = await import('./config');
     const config = await getApiConfig();
-    
+
     console.log('[LOGIN] Mode:', config.mode);
     console.log('[LOGIN] Config baseUrl:', config.baseUrl);
-    
+
     // Always use /api/rest/session - getApiPath will add proxy prefix in development
     const loginEndpoint = await getApiPath('/api/rest/session');
     console.log('[LOGIN] Login endpoint:', loginEndpoint);
-    
-    const requestBody = { userId: username, password: password };
+
+    const requestBody: Record<string, string> = { userId: username, password: password };
+    if (captchaToken) {
+      requestBody.captchaToken = captchaToken;
+    }
 
     const response = await fetch(loginEndpoint, {
       method: 'POST',

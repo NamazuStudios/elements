@@ -62,7 +62,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
             final List<ConstraintViolation<Object>> violationList = ex.getConstraintViolations();
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             final List<String> messages = violationList
                 .stream()
@@ -82,7 +82,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
 
-            LOG.info("Caught constraint violation exception while processing request.", ex);
+            LOG.debug("Caught constraint violation exception while processing request.", ex);
 
             final List<String> messages = ex.getConstraintViolations()
                 .stream()
@@ -100,7 +100,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
         } catch (UnhealthyException ex) {
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             final var errorResponse = new HealthErrorResponse();
             errorResponse.setHealthStatus(ex.getHealthStatus());
@@ -116,7 +116,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
@@ -131,7 +131,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
-            LOG.info("Caught expected exception while processing request.", ex);
+            LOG.debug("Caught expected exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
