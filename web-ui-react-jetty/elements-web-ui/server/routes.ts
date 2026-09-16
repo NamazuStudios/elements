@@ -487,6 +487,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('[MULTIPART] Forwarding raw multipart body, size:', (req.body as Buffer)?.length || 0);
           }
 
+          // Node's native fetch (undici) requires `duplex` when streaming a request body, but the
+          // DOM lib's RequestInit type doesn't declare it -- extend the type locally rather than
+          // casting the whole call to `any`.
           const response = await fetch(targetUrl, {
             method: req.method,
             headers: {
@@ -494,8 +497,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Content-Type': req.headers['content-type']!, // Forward exact Content-Type with boundary
             },
             body: req.body, // Raw buffer from express.raw()
-            duplex: 'half' as any,
-          });
+            duplex: 'half',
+          } as RequestInit & { duplex: 'half' });
 
           // Handle response
           res.status(response.status);

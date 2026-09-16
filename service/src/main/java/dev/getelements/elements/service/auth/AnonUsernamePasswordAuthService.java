@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
+import dev.getelements.elements.sdk.model.auth.CaptchaVerifyRequest;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.profile.ProfileNotFoundException;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
@@ -13,6 +14,7 @@ import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
 
+import dev.getelements.elements.sdk.service.auth.CaptchaService;
 import dev.getelements.elements.sdk.service.auth.UsernamePasswordAuthService;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -22,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
+import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -42,6 +45,8 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private ValidationHelper validationHelper;
 
+    private CaptchaService captchaService;
+
     private long sessionTimeoutSeconds;
 
     @Override
@@ -57,6 +62,14 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final var applicationId = usernamePasswordSessionRequest.getApplicationNameOrId();
 
         final var user = getUserDao().validateUserPassword(userId, password);
+
+        // The admin panel is the only client of this shared endpoint that authenticates SUPERUSER accounts, so
+        // scoping the CAPTCHA gate to SUPERUSER logins enforces the admin login form's requirement without
+        // affecting regular USER-level game client logins.
+        if (User.Level.SUPERUSER.equals(user.getLevel())) {
+            requireValidCaptchaIfEnabled(usernamePasswordSessionRequest.getCaptchaToken());
+        }
+
         final var profile = getProfileIfSpecified(profileId)
                 .or(() -> selectProfileIfSpecified(user, profileSelector))
                 .or(() -> selectPrimaryProfileIfApplicationSpecified(user, applicationId));
@@ -77,6 +90,25 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         session.setExpiry(expiry);
 
         return getSessionDao().create(session);
+
+    }
+
+    private void requireValidCaptchaIfEnabled(final String captchaToken) {
+
+        if (!getCaptchaService().getPublicConfiguration().isEnabled()) {
+            return;
+        }
+
+        if (captchaToken == null || captchaToken.isBlank()) {
+            throw new ForbiddenException("CAPTCHA verification is required.");
+        }
+
+        final var request = new CaptchaVerifyRequest();
+        request.setToken(captchaToken);
+
+        if (!getCaptchaService().verify(request).isSuccess()) {
+            throw new ForbiddenException("CAPTCHA verification failed.");
+        }
 
     }
 
@@ -171,6 +203,15 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
+    }
+
+    public CaptchaService getCaptchaService() {
+        return captchaService;
+    }
+
+    @Inject
+    public void setCaptchaService(@Named(UNSCOPED) CaptchaService captchaService) {
+        this.captchaService = captchaService;
     }
 
 }

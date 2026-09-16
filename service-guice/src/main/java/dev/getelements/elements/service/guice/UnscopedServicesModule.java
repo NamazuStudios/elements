@@ -39,6 +39,8 @@ import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcAuthSchemeService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcLoginAttemptService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigurationService;
+import dev.getelements.elements.service.auth.captcha.DefaultCaptchaService;
+import dev.getelements.elements.service.auth.captcha.SuperUserCaptchaConfigurationService;
 import dev.getelements.elements.service.auth.oidc.DefaultOidcAdminLoginService;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
@@ -266,6 +268,14 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcProviderConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOidcProviderConfigurationService.class);
+
+        bind(CaptchaConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserCaptchaConfigurationService.class);
+
+        bind(CaptchaService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(DefaultCaptchaService.class);
 
         bind(OidcAdminLoginService.class)
                 .annotatedWith(named(UNSCOPED))

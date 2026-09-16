@@ -61,7 +61,7 @@ export function extractUiBasePaths(containers: Array<{ uris?: string[] }>): stri
       }
     }
   }
-  return [...new Set(paths)];
+  return Array.from(new Set(paths));
 }
 
 /**

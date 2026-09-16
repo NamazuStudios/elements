@@ -5,7 +5,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userLevel: string | null;
   username: string | null;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean, captchaToken?: string) => Promise<void>;
   loginWithOidcProvider: (providerName: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
@@ -108,10 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string, rememberMe = false) => {
+  const login = async (username: string, password: string, rememberMe = false, captchaToken?: string) => {
     setIsLoading(true);
     try {
-      const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe);
+      const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe, captchaToken);
       
       // Use the session data returned from login response
       const level = response.session?.level;
