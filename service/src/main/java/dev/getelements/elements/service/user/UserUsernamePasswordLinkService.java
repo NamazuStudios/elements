@@ -23,10 +23,14 @@ public class UserUsernamePasswordLinkService implements UsernamePasswordLinkServ
 
     private Provider<Transaction> transactionProvider;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     @Override
     public User linkUsernamePassword(final String username, final String password) {
         final var normalizedUsername = username.trim();
         final var existingName = getCurrentUser().getName();
+
+        getPasswordPolicyValidator().validate(password);
 
         if (existingName != null && !existingName.isBlank() && !existingName.equals(normalizedUsername)) {
             throw new ForbiddenException(
@@ -93,6 +97,15 @@ public class UserUsernamePasswordLinkService implements UsernamePasswordLinkServ
     @Inject
     public void setTransactionProvider(Provider<Transaction> transactionProvider) {
         this.transactionProvider = transactionProvider;
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }

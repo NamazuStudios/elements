@@ -43,6 +43,8 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
     private PasswordGenerator passwordGenerator;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     private long sessionTimeoutSeconds;
 
     @Override
@@ -76,9 +78,14 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         getNameService().assignNameAndEmailIfNecessary(user);
 
         // reuse existing DAO method
-        final var password = isNullOrEmpty(userCreateRequest.getPassword())
-            ? getPasswordGenerator().generate()
-            : userCreateRequest.getPassword();
+        final String password;
+
+        if (isNullOrEmpty(userCreateRequest.getPassword())) {
+            password = getPasswordGenerator().generate();
+        } else {
+            getPasswordPolicyValidator().validate(userCreateRequest.getPassword());
+            password = userCreateRequest.getPassword();
+        }
 
         final var created = getUserDao().createUserWithPasswordStrict(user, password);
 
@@ -123,9 +130,14 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
 
         final String password = nullToEmpty(userUpdateRequest.getPassword()).trim();
 
-        final var updated = isNullOrEmpty(password) ?
-            getUserDao().updateUser(user) :
-            getUserDao().updateUser(user, password);
+        final User updated;
+
+        if (isNullOrEmpty(password)) {
+            updated = getUserDao().updateUser(user);
+        } else {
+            getPasswordPolicyValidator().validate(password);
+            updated = getUserDao().updateUser(user, password);
+        }
 
         getElementRegistry().publish(Event.builder()
                 .argument(updated)
@@ -205,6 +217,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Inject
     public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
         this.sessionTimeoutSeconds = sessionTimeoutSeconds;
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }

@@ -237,6 +237,96 @@ export class ApiClient {
     };
   }
 
+  // Extracts the same { userId, level, sessionSecret, expiry } shape used for a username/password login from
+  // a raw SessionCreation-shaped response body, shared by every OIDC completion path below.
+  private extractOidcSessionInfo(responseData: any): { userId?: string; level?: string; sessionSecret?: string; expiry?: number } {
+    const sessionSecret = responseData.sessionSecret || responseData.session?.sessionSecret;
+
+    let expiryTimestamp: number | undefined;
+    const expiresAt = responseData.session?.expiresAt || responseData.expiresAt;
+    const expiry = responseData.session?.expiry || responseData.expiry;
+
+    if (expiresAt) {
+      expiryTimestamp = new Date(expiresAt).getTime();
+    } else if (expiry) {
+      expiryTimestamp = typeof expiry === 'string' ? new Date(expiry).getTime() : expiry;
+    }
+
+    return {
+      userId: responseData.session?.user?.name,
+      level: responseData.session?.user?.level,
+      sessionSecret,
+      expiry: expiryTimestamp,
+    };
+  }
+
+  /** Lists the OIDC providers offered as admin-panel login options. No authentication required. */
+  async getOidcAdminLoginProviders(): Promise<{ id: string; name: string; displayName?: string; iconUrl?: string }[]> {
+    const endpoint = await getApiPath('/api/rest/oidc/admin_login_providers');
+    const response = await fetch(endpoint, { credentials: 'include' });
+
+    if (!response.ok) {
+      throw new Error('Failed to load OIDC login providers');
+    }
+
+    return response.json();
+  }
+
+  /** Begins a browser-redirect OIDC login attempt for the given provider name. */
+  async beginOidcSession(provider: string): Promise<{ id: string; authorizeUrl: string }> {
+    const endpoint = await getApiPath('/api/rest/oidc/session');
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ provider }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || 'Failed to start OIDC login');
+    }
+
+    const data = await response.json();
+
+    if (!data.id || !data.authorizeUrl) {
+      throw new Error('Unexpected response starting OIDC login');
+    }
+
+    return { id: data.id, authorizeUrl: data.authorizeUrl };
+  }
+
+  /** Polls a pending OIDC login attempt started via {@link beginOidcSession}. */
+  async pollOidcSession(id: string): Promise<{
+    status: 'PENDING' | 'COMPLETE' | 'FAILED';
+    session?: { userId?: string; level?: string; sessionSecret?: string; expiry?: number };
+    reason?: string;
+  }> {
+    const endpoint = await getApiPath(`/api/rest/oidc/session/${id}`);
+    const response = await fetch(endpoint, { credentials: 'include' });
+
+    if (response.status === 404) {
+      return { status: 'FAILED', reason: 'The login attempt expired. Please try again.' };
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to poll OIDC login status');
+    }
+
+    const data = await response.json();
+
+    if (data.status === 'COMPLETE') {
+      return { status: 'COMPLETE', session: this.extractOidcSessionInfo(data) };
+    }
+
+    if (data.status === 'FAILED') {
+      return { status: 'FAILED', reason: data.reason || 'The login attempt failed.' };
+    }
+
+    return { status: 'PENDING' };
+  }
+
   async logout(): Promise<void> {
     // Always use /api/rest/session - getApiPath will add proxy prefix in development
     const logoutEndpoint = await getApiPath('/api/rest/session');

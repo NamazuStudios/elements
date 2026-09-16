@@ -51,7 +51,9 @@ export default function LoginPage() {
   const [captchaLoadError, setCaptchaLoadError] = useState<string | null>(null);
   const captchaContainerRef = useRef<HTMLDivElement>(null);
   const captchaWidgetId = useRef<number | null>(null);
-  const { login, sessionExpired: authSessionExpired } = useAuth();
+  const [oidcProviders, setOidcProviders] = useState<{ id: string; name: string; displayName?: string; iconUrl?: string }[]>([]);
+  const [oidcLoadingProvider, setOidcLoadingProvider] = useState<string | null>(null);
+  const { login, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
   const { toast } = useToast();
 
   // Fetch the public CAPTCHA bootstrap configuration on mount. Best-effort: if this fails, the login form
@@ -93,6 +95,33 @@ export default function LoginPage() {
       cancelled = true;
     };
   }, [captchaConfig.enabled, captchaConfig.siteKey]);
+
+  // Load the list of OIDC providers offered for admin-panel login, if any. No error toast on failure --
+  // this endpoint requires no auth, so a failure here just means username/password remains the only option.
+  useEffect(() => {
+    apiClient.getOidcAdminLoginProviders()
+      .then(setOidcProviders)
+      .catch(() => setOidcProviders([]));
+  }, []);
+
+  const handleOidcLogin = async (provider: { id: string; name: string; displayName?: string; iconUrl?: string }) => {
+    setOidcLoadingProvider(provider.id);
+    try {
+      await loginWithOidcProvider(provider.name, rememberMe);
+      toast({
+        title: 'Access Granted',
+        description: 'Welcome to the Elements Admin Dashboard',
+      });
+    } catch (error) {
+      toast({
+        title: 'Authentication Failed',
+        description: error instanceof Error ? error.message : 'OIDC login failed',
+        variant: 'destructive',
+      });
+    } finally {
+      setOidcLoadingProvider(null);
+    }
+  };
 
   // Check for session expiration query parameter (from 403 redirect)
   useEffect(() => {
@@ -258,6 +287,38 @@ export default function LoginPage() {
               </Link>
             </div>
           </form>
+
+          {oidcProviders.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+                </div>
+              </div>
+
+              {oidcProviders.map((provider) => (
+                <Button
+                  key={provider.id}
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center gap-2"
+                  disabled={oidcLoadingProvider !== null}
+                  onClick={() => handleOidcLogin(provider)}
+                  data-testid={`button-oidc-login-${provider.name}`}
+                >
+                  {provider.iconUrl && (
+                    <img src={provider.iconUrl} alt="" className="w-4 h-4" aria-hidden="true" />
+                  )}
+                  {oidcLoadingProvider === provider.id
+                    ? 'Signing in...'
+                    : `Sign in with ${provider.displayName || provider.name}`}
+                </Button>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
       

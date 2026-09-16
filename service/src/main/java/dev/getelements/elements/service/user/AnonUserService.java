@@ -24,6 +24,8 @@ public class AnonUserService extends AbstractUserService implements UserService 
 
     private PasswordGenerator passwordGenerator;
 
+    private PasswordPolicyValidator passwordPolicyValidator;
+
     @Override
     public User getUser(String userId)  {
         throw new ForbiddenException();
@@ -49,9 +51,14 @@ public class AnonUserService extends AbstractUserService implements UserService 
 
         getNameService().assignNameAndEmailIfNecessary(user);
 
-        final var password = isNullOrEmpty(userCreateRequest.getPassword())
-            ? getPasswordGenerator().generate()
-            : userCreateRequest.getPassword();
+        final String password;
+
+        if (isNullOrEmpty(userCreateRequest.getPassword())) {
+            password = getPasswordGenerator().generate();
+        } else {
+            getPasswordPolicyValidator().validate(userCreateRequest.getPassword());
+            password = userCreateRequest.getPassword();
+        }
 
         final var created = getUserDao().createUserWithPasswordStrict(user, password);
 
@@ -116,6 +123,15 @@ public class AnonUserService extends AbstractUserService implements UserService 
     @Inject
     public void setPasswordGenerator(PasswordGenerator passwordGenerator) {
         this.passwordGenerator = passwordGenerator;
+    }
+
+    public PasswordPolicyValidator getPasswordPolicyValidator() {
+        return passwordPolicyValidator;
+    }
+
+    @Inject
+    public void setPasswordPolicyValidator(PasswordPolicyValidator passwordPolicyValidator) {
+        this.passwordPolicyValidator = passwordPolicyValidator;
     }
 
 }

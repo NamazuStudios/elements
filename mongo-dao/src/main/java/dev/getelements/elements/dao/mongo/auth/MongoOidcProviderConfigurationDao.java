@@ -64,6 +64,16 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
     }
 
     @Override
+    public List<OidcProviderConfiguration> getAdminLoginEnabledProviderConfigurations() {
+        final var query = getDatastore().find(MongoOidcProviderConfiguration.class)
+                .filter(eq("adminLoginEnabled", true));
+
+        try (final var stream = query.stream()) {
+            return stream.map(this::transform).toList();
+        }
+    }
+
+    @Override
     public OidcProviderConfiguration createProviderConfiguration(final OidcProviderConfiguration providerConfiguration) {
         getValidationHelper().validateModel(providerConfiguration, ValidationGroups.Insert.class);
         final var entity = getBeanMapper().map(providerConfiguration, MongoOidcProviderConfiguration.class);
@@ -102,6 +112,9 @@ public class MongoOidcProviderConfigurationDao implements OidcProviderConfigurat
         builder.with(set("tokenEndpointAuthMethod", providerConfiguration.getTokenEndpointAuthMethod()));
         builder.with(set("successRedirectUrl", providerConfiguration.getSuccessRedirectUrl()));
         builder.with(set("errorRedirectUrl", providerConfiguration.getErrorRedirectUrl()));
+        builder.with(set("adminLoginEnabled", providerConfiguration.isAdminLoginEnabled()));
+        builder.with(set("displayName", providerConfiguration.getDisplayName()));
+        builder.with(set("iconUrl", providerConfiguration.getIconUrl()));
 
         final var entity = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))

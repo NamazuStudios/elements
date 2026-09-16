@@ -23,6 +23,8 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(ASYNC_TIMEOUT_LIMIT, Integer.toString(0));
         defaultProperties.setProperty(GENERATED_PASSWORD_LENGTH, "24");
         defaultProperties.setProperty(GLOBAL_SECRET, "");
+        defaultProperties.setProperty(PASSWORD_POLICY_REGEX, ".{4,}");
+        defaultProperties.setProperty(PASSWORD_POLICY_DESCRIPTION, "Password must be at least 4 characters.");
 
         // The way the dependent code uses this is a little weird and should be reworked to eliminate some redundancy.
         defaultProperties.setProperty(APP_OUTSIDE_URL, "http://localhost:8080/");

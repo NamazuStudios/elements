@@ -363,10 +363,14 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(CaptchaConfigurationServiceProvider.class)
                 .in(scope);
 
-        // Behavior does not vary by caller identity, so this is bound directly for all access levels rather
-        // than switched by a level-based Provider (mirrors HealthStatusService).
+        // Behavior does not vary by caller identity, so these are bound directly for all access levels
+        // rather than switched by a level-based Provider (mirrors HealthStatusService).
         bind(CaptchaService.class)
                 .to(DefaultCaptchaService.class)
+                .in(scope);
+
+        bind(OidcAdminLoginService.class)
+                .to(DefaultOidcAdminLoginService.class)
                 .in(scope);
 
         bind(OAuth2AuthSchemeService.class)
