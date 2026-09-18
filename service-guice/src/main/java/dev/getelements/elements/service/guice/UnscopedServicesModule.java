@@ -39,6 +39,7 @@ import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcAuthSchemeService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcLoginAttemptService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigurationService;
+import dev.getelements.elements.service.auth.oidc.DefaultOidcAdminLoginService;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.near.SuperUserNearSmartContractInvocationService;
@@ -54,6 +55,7 @@ import dev.getelements.elements.sdk.service.profile.ProfileService;
 import dev.getelements.elements.sdk.service.progress.ProgressService;
 import dev.getelements.elements.sdk.service.savedata.SaveDataDocumentService;
 import dev.getelements.elements.sdk.service.schema.MetadataSpecService;
+import dev.getelements.elements.sdk.service.schema.email.EmailTemplateService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
@@ -88,6 +90,7 @@ import dev.getelements.elements.service.progress.SuperUserProgressService;
 import dev.getelements.elements.service.receipt.SuperuserReceiptService;
 import dev.getelements.elements.service.savedata.SuperUserSaveDataDocumentService;
 import dev.getelements.elements.service.schema.SuperUserMetadataSpecService;
+import dev.getelements.elements.service.schema.email.SuperUserEmailTemplateService;
 import dev.getelements.elements.service.system.SuperUserElementDeploymentService;
 import dev.getelements.elements.service.system.SuperUserElementInspectorService;
 import dev.getelements.elements.service.user.AnonPasswordResetService;
@@ -248,6 +251,10 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserMetadataSpecService.class);
 
+        bind(EmailTemplateService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserEmailTemplateService.class);
+
         bind(AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserAuthSchemeService.class);
@@ -259,6 +266,10 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcProviderConfigurationService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOidcProviderConfigurationService.class);
+
+        bind(OidcAdminLoginService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(DefaultOidcAdminLoginService.class);
 
         bind(OAuth2AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))

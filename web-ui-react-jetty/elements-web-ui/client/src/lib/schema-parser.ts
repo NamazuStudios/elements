@@ -24,7 +24,7 @@ export interface FieldSchema {
   };
   conditionalVisibility?: {
     dependsOn: string;
-    showWhen: string | string[];
+    showWhen: string | string[] | boolean;
   };
 }
 

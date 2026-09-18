@@ -42,6 +42,9 @@ public class MongoMission {
     @Property
     private Map<String, Object> metadata;
 
+    @Property
+    private Boolean authoritative;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -106,6 +109,14 @@ public class MongoMission {
         this.metadata = metadata;
     }
 
+    public Boolean getAuthoritative() {
+        return authoritative;
+    }
+
+    public void setAuthoritative(Boolean authoritative) {
+        this.authoritative = authoritative;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -120,6 +131,7 @@ public class MongoMission {
         if (getTags() != null ? !getTags().equals(mission.getTags()) : mission.getTags() != null) return false;
         if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
         if (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null) return false;
+        if (getAuthoritative() != null ? !getAuthoritative().equals(mission.getAuthoritative()) : mission.getAuthoritative() != null) return false;
         return (getMetadata() != null ? !getMetadata().equals(mission.getMetadata()) : mission.getMetadata() != null);
     }
 
@@ -133,6 +145,7 @@ public class MongoMission {
         result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
         result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
+        result = 31 * result + (getAuthoritative() != null ? getAuthoritative().hashCode() : 0);
         return result;
     }
 
@@ -147,6 +160,7 @@ public class MongoMission {
                 ", steps='" + steps + '\'' +
                 ", finalRepeatStep='" + finalRepeatStep + '\'' +
                 ", metadata='" + metadata + '\'' +
+                ", authoritative='" + authoritative + '\'' +
                 '}';
     }
 

@@ -26,6 +26,7 @@ public class MongoDaoElementModule extends SharedElementModule {
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
                 .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
+        install(new PreDatastoreMigrationModule());
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());
         expose(ElementEntityRegistrar.class);

@@ -3,12 +3,7 @@ package dev.getelements.elements.dao.mongo.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import dev.getelements.elements.dao.mongo.provider.IndexConflictResolver;
-import dev.getelements.elements.dao.mongo.provider.MigrateMorphiaConfigProvider;
-import dev.getelements.elements.dao.mongo.provider.MongoIndexConflictResolver;
-import dev.getelements.elements.dao.mongo.provider.MorphiaSelfHealingIndexApplier;
-import dev.getelements.elements.dao.mongo.provider.SelfHealingAtomicReferenceDataStoreProvider;
-import dev.getelements.elements.dao.mongo.provider.SelfHealingIndexApplier;
+import dev.getelements.elements.dao.mongo.provider.*;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.morphia.Datastore;
@@ -33,11 +28,13 @@ public class MongoDatastoreBootstrapModule extends AbstractModule {
     protected void configure() {
 
         bind(MorphiaConfig.class)
-                .toProvider(MigrateMorphiaConfigProvider.class);
+                .toProvider(MorphiaConfigProvider.class);
 
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
-                .toProvider(SelfHealingAtomicReferenceDataStoreProvider.class)
+                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
+
+        install(new PreDatastoreMigrationModule());
 
         bind(IndexConflictResolver.class).to(MongoIndexConflictResolver.class);
 

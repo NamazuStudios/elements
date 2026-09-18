@@ -6,6 +6,7 @@ import dev.getelements.elements.config.DefaultConfigurationSupplier;
 import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
+import dev.getelements.elements.dao.mongo.guice.PreDatastoreMigrationModule;
 import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
@@ -89,6 +90,7 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
                 .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
+        install(new PreDatastoreMigrationModule());
         install(new MongoDaoModule());
 
         bind(JeroMQSecurity.class).toInstance(JeroMQSecurity.DEFAULT);

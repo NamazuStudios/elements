@@ -71,6 +71,12 @@ public class SuperUserProgressService implements ProgressService {
         getProgressDao().deleteProgress(progressNameOrId);
     }
 
+    @Override
+    public Progress advanceProgress(final String progressId, final int actions) {
+        final var progress = getProgressDao().getProgress(progressId);
+        return getProgressDao().advanceProgress(progress, actions);
+    }
+
     public ProgressDao getProgressDao() {
         return progressDao;
     }

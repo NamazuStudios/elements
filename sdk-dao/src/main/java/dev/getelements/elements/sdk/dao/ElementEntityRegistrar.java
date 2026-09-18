@@ -26,4 +26,44 @@ public interface ElementEntityRegistrar {
      */
     void unregisterEntityClasses(Element element);
 
+    /**
+     * Begins a batch of {@link #registerEntityClasses(Element)}/{@link #unregisterEntityClasses(Element)}
+     * mutations. Mutations made through the returned {@link Batch} are accumulated without rebuilding the
+     * underlying mapper; the rebuild happens exactly once, when the batch is closed.
+     *
+     * <p>Use this instead of individual register/unregister calls when processing several elements
+     * together (e.g. all elements in a single deployment), to avoid a full mapper rebuild per element.
+     *
+     * @return a new {@link Batch}
+     */
+    Batch beginBatch();
+
+    /**
+     * Accumulates {@link #registerEntityClasses(Element)}/{@link #unregisterEntityClasses(Element)}
+     * mutations, applying them all at once when closed.
+     */
+    interface Batch extends AutoCloseable {
+
+        /**
+         * Accumulates a registration to be applied when this batch is closed.
+         *
+         * @param element the element whose entity classes should be registered
+         */
+        void registerEntityClasses(Element element);
+
+        /**
+         * Accumulates a deregistration to be applied when this batch is closed.
+         *
+         * @param element the element whose entity classes should be deregistered
+         */
+        void unregisterEntityClasses(Element element);
+
+        /**
+         * Applies all accumulated mutations, rebuilding the underlying mapper exactly once.
+         */
+        @Override
+        void close();
+
+    }
+
 }

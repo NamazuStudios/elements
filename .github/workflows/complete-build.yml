@@ -96,7 +96,7 @@ jobs:
             **/target/*.dump
             **/target/*.dumpstream
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 1
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

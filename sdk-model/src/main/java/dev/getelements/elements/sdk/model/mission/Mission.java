@@ -57,6 +57,11 @@ public class Mission implements Serializable, Taggable {
     @Schema(description = "The metadata for this mission")
     private Map<String, Object> metadata;
 
+    @Schema(description = "Whether this mission's Progress is authoritative (server-only mutation via " +
+            "Element code) or may be advanced directly by a client via the REST API. If unspecified, " +
+            "defaults to true (authoritative).")
+    private Boolean authoritative;
+
     /**
      * Returns the unique ID of the mission.
      *
@@ -202,6 +207,25 @@ public class Mission implements Serializable, Taggable {
     }
 
     /**
+     * Returns whether this mission's progress is authoritative (server-only mutation). If null
+     * (unspecified), the server treats this as {@code true}.
+     *
+     * @return whether progress is authoritative, or null if unspecified
+     */
+    public Boolean getAuthoritative() {
+        return authoritative;
+    }
+
+    /**
+     * Sets whether this mission's progress is authoritative (server-only mutation).
+     *
+     * @param authoritative whether progress is authoritative
+     */
+    public void setAuthoritative(Boolean authoritative) {
+        this.authoritative = authoritative;
+    }
+
+    /**
      * Adds a metadata entry to this mission.
      *
      * @param name the metadata key
@@ -248,6 +272,7 @@ public class Mission implements Serializable, Taggable {
         if (getTags() != null ? !getTags().equals(mission.getTags()) : mission.getTags() != null) return false;
         if (getSteps() != null ? !getSteps().equals(mission.getSteps()) : mission.getSteps() != null) return false;
         if (getMetadata() != null ? !getMetadata().equals(mission.getMetadata()) : mission.getMetadata() != null) return false;
+        if (getAuthoritative() != null ? !getAuthoritative().equals(mission.getAuthoritative()) : mission.getAuthoritative() != null) return false;
         return (getFinalRepeatStep() != null ? !getFinalRepeatStep().equals(mission.getFinalRepeatStep()) : mission.getFinalRepeatStep() != null);
     }
 
@@ -261,6 +286,7 @@ public class Mission implements Serializable, Taggable {
         result = 31 * result + (getSteps() != null ? getSteps().hashCode() : 0);
         result = 31 * result + (getFinalRepeatStep() != null ? getFinalRepeatStep().hashCode() : 0);
         result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
+        result = 31 * result + (getAuthoritative() != null ? getAuthoritative().hashCode() : 0);
         return result;
     }
 
@@ -275,6 +301,7 @@ public class Mission implements Serializable, Taggable {
                 ", steps='" + steps + '\'' +
                 ", finalRepeatStep='" + finalRepeatStep + '\'' +
                 ", metadata=" + metadata +
+                ", authoritative=" + authoritative +
                 '}';
     }
 
