@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, MfaRequiredError } from '@/lib/api-client';
 import logoPath from '@assets/elements-logo-square (1)_1760052619243.png';
 
 export default function LoginPage() {
@@ -21,7 +21,9 @@ export default function LoginPage() {
   const [urlSessionExpired, setUrlSessionExpired] = useState(false);
   const [oidcProviders, setOidcProviders] = useState<{ id: string; name: string; displayName?: string; iconUrl?: string }[]>([]);
   const [oidcLoadingProvider, setOidcLoadingProvider] = useState<string | null>(null);
-  const { login, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
+  const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const { login, completeMfaLogin, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
   const { toast } = useToast();
 
   // Load the list of OIDC providers offered for admin-panel login, if any. No error toast on failure --
@@ -94,9 +96,38 @@ export default function LoginPage() {
         description: 'Welcome to the Elements Admin Dashboard',
       });
     } catch (error) {
+      if (error instanceof MfaRequiredError) {
+        setMfaChallengeId(error.challengeId);
+        return;
+      }
       toast({
         title: 'Authentication Failed',
         description: error instanceof Error ? error.message : 'Invalid credentials',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!mfaChallengeId || !mfaCode.trim()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await completeMfaLogin(mfaChallengeId, mfaCode.trim(), rememberMe);
+      toast({
+        title: 'Access Granted',
+        description: 'Welcome to the Elements Admin Dashboard',
+      });
+    } catch (error) {
+      toast({
+        title: 'Verification Failed',
+        description: error instanceof Error ? error.message : 'Invalid or expired code',
         variant: 'destructive',
       });
     } finally {
@@ -119,6 +150,50 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {mfaChallengeId ? (
+            <form onSubmit={handleMfaSubmit} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the code from your authenticator app, or one of your recovery codes.
+              </p>
+
+              <div className="space-y-2">
+                <Label htmlFor="mfa-code">Authentication Code</Label>
+                <Input
+                  id="mfa-code"
+                  data-testid="input-mfa-code"
+                  type="text"
+                  placeholder="123456 or recovery code"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                data-testid="button-mfa-submit"
+              >
+                {isLoading ? 'Verifying...' : 'Verify'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setMfaChallengeId(null);
+                  setMfaCode('');
+                }}
+                data-testid="button-mfa-back"
+              >
+                Back
+              </Button>
+            </form>
+          ) : (
+          <>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -221,6 +296,8 @@ export default function LoginPage() {
                 </Button>
               ))}
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>

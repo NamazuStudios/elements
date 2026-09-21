@@ -6,6 +6,7 @@ interface AuthContextType {
   userLevel: string | null;
   username: string | null;
   login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  completeMfaLogin: (challengeId: string, code: string, rememberMe?: boolean) => Promise<void>;
   loginWithOidcProvider: (providerName: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   isLoading: boolean;
@@ -152,6 +153,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const completeMfaLogin = async (challengeId: string, code: string, rememberMe = false) => {
+    setIsLoading(true);
+    try {
+      const response = await apiClient.completeMfaSession(challengeId, code);
+      applySessionOrThrow(response.session, rememberMe, setUserLevel, setUsername, setIsAuthenticated);
+      setSessionExpired(false);
+    } catch (error) {
+      setIsAuthenticated(false);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const loginWithOidcProvider = async (providerName: string, rememberMe = false) => {
     setIsLoading(true);
 
@@ -223,7 +238,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, loginWithOidcProvider, logout, isLoading, sessionExpired }}>
+    <AuthContext.Provider value={{ isAuthenticated, userLevel, username, login, completeMfaLogin, loginWithOidcProvider, logout, isLoading, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );

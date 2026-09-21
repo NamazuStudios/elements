@@ -188,6 +188,7 @@
         <flapdoodle.mongo.version>3.0.0</flapdoodle.mongo.version>
         <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
         <nimbus.jose.jwt.version>9.37.3</nimbus.jose.jwt.version>
+        <samstevens.totp.version>1.7.1</samstevens.totp.version>
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
         <neow3j.version>3.14.0</neow3j.version>
@@ -864,6 +865,11 @@
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>${nimbus.jose.jwt.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>dev.samstevens.totp</groupId>
+                <artifactId>totp</artifactId>
+                <version>${samstevens.totp.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.neow3j</groupId>
