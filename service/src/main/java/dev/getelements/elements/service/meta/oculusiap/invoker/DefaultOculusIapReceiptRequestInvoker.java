@@ -38,7 +38,10 @@ public class DefaultOculusIapReceiptRequestInvoker implements OculusIapReceiptRe
                 .post(entity);
 
         try(response) {
-            final var success = response.getStatusInfo() == Response.Status.OK;
+            // Compare numeric status codes, not StatusType identity -- Jersey may hand back a different
+            // StatusType instance for a 200 than the Response.Status.OK enum constant, which made this always
+            // evaluate to false and silently overwrite Meta's real success:true with false (#101).
+            final var success = response.getStatus() == Response.Status.OK.getStatusCode();
             final var responseEntity = response.readEntity(OculusIapVerifyReceiptResponse.class);
             responseEntity.setSuccess(success);
             return responseEntity;
