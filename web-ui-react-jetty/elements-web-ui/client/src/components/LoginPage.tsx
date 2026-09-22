@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,11 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState('');
   const { login, completeMfaLogin, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
   const { toast } = useToast();
+  // The MFA screen's "Back" button and the login form's "Sign In" button both sit in the same
+  // primary-action slot, so a click landing right as the screen swaps back to the login form can
+  // register as a second, genuine click on "Sign In" (confirmed via a trusted DOM submit event in
+  // testing). Ignore any submit that follows a "Back" click within this window.
+  const mfaBackClickedAtRef = useRef(0);
 
   // Load the list of OIDC providers offered for admin-panel login, if any. No error toast on failure --
   // this endpoint requires no auth, so a failure here just means username/password remains the only option.
@@ -79,6 +84,9 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (Date.now() - mfaBackClickedAtRef.current < 500) {
+      return;
+    }
     if (!username.trim() || !password.trim()) {
       toast({
         title: 'Error',
@@ -97,6 +105,11 @@ export default function LoginPage() {
       });
     } catch (error) {
       if (error instanceof MfaRequiredError) {
+        // Don't hold the plaintext password in state any longer than it takes to make this one
+        // request. It also means that if anything -- a stray re-render, a password manager's
+        // autofill/auto-submit, whatever -- ever re-invokes handleLogin while the MFA screen is
+        // showing, the empty-field guard above rejects it instead of silently re-submitting.
+        setPassword('');
         setMfaChallengeId(error.challengeId);
         return;
       }
@@ -184,8 +197,14 @@ export default function LoginPage() {
                 variant="ghost"
                 className="w-full"
                 onClick={() => {
+                  mfaBackClickedAtRef.current = Date.now();
                   setMfaChallengeId(null);
                   setMfaCode('');
+                  // Clear the credentials too -- password is already cleared once the MFA screen
+                  // is reached, but wipe username as well so the login form comes back genuinely
+                  // blank rather than pre-filled with the previous attempt's values.
+                  setUsername('');
+                  setPassword('');
                 }}
                 data-testid="button-mfa-back"
               >

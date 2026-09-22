@@ -418,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const targetUrl = `${ELEMENTS_BACKEND_URL}${elementsPath}${queryString ? `?${queryString}` : ''}`;
 
       // Check if this is an auth endpoint that should not require/include session header
-      const authEndpoints = ['/api/rest/auth/oauth2', '/api/rest/auth/oidc', '/api/rest/session', '/api/rest/signup'];
+      const authEndpoints = ['/api/rest/auth/oauth2', '/api/rest/auth/oidc', '/api/rest/session', '/api/rest/session/mfa', '/api/rest/signup'];
       const isAuthEndpoint = req.method === 'POST' && authEndpoints.some(endpoint => elementsPath === endpoint);
 
       // The admin-panel OIDC login flow is unauthenticated by design (the caller has no session yet

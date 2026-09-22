@@ -110,7 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string, rememberMe = false) => {
-    setIsLoading(true);
+    // Deliberately does NOT touch the shared `isLoading` flag -- that gates whether App.tsx's top-level
+    // router renders LoginPage at all. Toggling it here would unmount LoginPage mid-call and discard its
+    // local state (e.g. the pending MFA challenge set from this call's result). Per-attempt loading UI is
+    // LoginPage's own local state.
     try {
       const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe);
       
@@ -148,13 +151,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       setIsAuthenticated(false);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const completeMfaLogin = async (challengeId: string, code: string, rememberMe = false) => {
-    setIsLoading(true);
+    // See the comment in login() above -- shared isLoading is deliberately not touched here either.
     try {
       const response = await apiClient.completeMfaSession(challengeId, code);
       applySessionOrThrow(response.session, rememberMe, setUserLevel, setUsername, setIsAuthenticated);
@@ -162,14 +163,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       setIsAuthenticated(false);
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const loginWithOidcProvider = async (providerName: string, rememberMe = false) => {
-    setIsLoading(true);
-
+    // See the comment in login() above -- shared isLoading is deliberately not touched here either.
     let popup: Window | null = null;
 
     try {
@@ -219,7 +217,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (popup && !popup.closed) {
         popup.close();
       }
-      setIsLoading(false);
     }
   };
 
