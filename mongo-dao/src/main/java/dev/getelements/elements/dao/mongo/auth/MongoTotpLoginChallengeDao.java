@@ -43,16 +43,13 @@ public class MongoTotpLoginChallengeDao implements TotpLoginChallengeDao {
     }
 
     @Override
-    public Optional<TotpLoginChallenge> findAndConsume(final String id) {
+    public Optional<TotpLoginChallenge> find(final String id) {
 
-        final var query = getDatastore().find(MongoTotpLoginChallenge.class).filter(eq("_id", id));
-        final var entity = query.first();
+        final var entity = getDatastore().find(MongoTotpLoginChallenge.class).filter(eq("_id", id)).first();
 
         if (entity == null) {
             return Optional.empty();
         }
-
-        query.delete();
 
         // The TTL index handles routine expiry cleanup, but check here too in case it hasn't reaped this
         // document yet -- an expired challenge must never be usable just because it's still physically present.
@@ -64,6 +61,11 @@ public class MongoTotpLoginChallengeDao implements TotpLoginChallengeDao {
 
         return Optional.of(transform(entity));
 
+    }
+
+    @Override
+    public void consume(final String id) {
+        getDatastore().find(MongoTotpLoginChallenge.class).filter(eq("_id", id)).delete();
     }
 
     private TotpLoginChallenge transform(final MongoTotpLoginChallenge entity) {

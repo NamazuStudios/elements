@@ -27,12 +27,22 @@ public interface TotpLoginChallengeDao {
     String createChallenge(String userId, String profileId, String profileSelector, String applicationNameOrId, Timestamp expiry);
 
     /**
-     * Atomically finds and deletes a challenge by ID, so it can never be consumed twice. Also treats an
-     * already-expired challenge as absent, in case the TTL index hasn't reaped it yet.
+     * Finds a challenge by ID without consuming it, so an incorrect code (or trying a recovery code after a
+     * mistyped TOTP code) can be retried against the same challenge rather than burning it on a failed
+     * attempt. Also treats an already-expired challenge as absent, in case the TTL index hasn't reaped it yet.
      *
      * @param id the challenge ID
      * @return an {@link Optional} containing the challenge, or empty if unknown, already consumed, or expired
      */
-    Optional<TotpLoginChallenge> findAndConsume(String id);
+    Optional<TotpLoginChallenge> find(String id);
+
+    /**
+     * Deletes a challenge by ID. Callers must only do this once the submitted code has actually verified
+     * successfully -- consuming on a failed attempt would let one wrong guess permanently invalidate the
+     * challenge for the legitimate follow-up attempt.
+     *
+     * @param id the challenge ID
+     */
+    void consume(String id);
 
 }

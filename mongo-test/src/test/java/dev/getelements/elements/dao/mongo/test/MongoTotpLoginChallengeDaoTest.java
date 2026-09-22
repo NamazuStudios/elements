@@ -15,7 +15,7 @@ public class MongoTotpLoginChallengeDaoTest {
     private TotpLoginChallengeDao totpLoginChallengeDao;
 
     @Test
-    public void testCreateAndConsumeRoundTrips() {
+    public void testCreateAndFindRoundTrips() {
 
         final var expiry = new Timestamp(System.currentTimeMillis() + 60_000);
 
@@ -25,13 +25,27 @@ public class MongoTotpLoginChallengeDaoTest {
 
         assertNotNull(id);
 
-        final var consumed = getTotpLoginChallengeDao().findAndConsume(id);
+        final var found = getTotpLoginChallengeDao().find(id);
 
-        assertTrue(consumed.isPresent());
-        assertEquals(consumed.get().getUserId(), "user-1");
-        assertEquals(consumed.get().getProfileId(), "profile-1");
-        assertNull(consumed.get().getProfileSelector());
-        assertEquals(consumed.get().getApplicationNameOrId(), "app-1");
+        assertTrue(found.isPresent());
+        assertEquals(found.get().getUserId(), "user-1");
+        assertEquals(found.get().getProfileId(), "profile-1");
+        assertNull(found.get().getProfileSelector());
+        assertEquals(found.get().getApplicationNameOrId(), "app-1");
+
+    }
+
+    @Test
+    public void testFindDoesNotConsume() {
+
+        final var expiry = new Timestamp(System.currentTimeMillis() + 60_000);
+        final var id = getTotpLoginChallengeDao().createChallenge("user-2", null, null, null, expiry);
+
+        // A failed verification attempt must be retryable against the same challenge -- find() alone must
+        // never remove it, only an explicit consume() should.
+        assertTrue(getTotpLoginChallengeDao().find(id).isPresent());
+        assertTrue(getTotpLoginChallengeDao().find(id).isPresent());
+        assertTrue(getTotpLoginChallengeDao().find(id).isPresent());
 
     }
 
@@ -39,10 +53,11 @@ public class MongoTotpLoginChallengeDaoTest {
     public void testConsumeIsSingleUse() {
 
         final var expiry = new Timestamp(System.currentTimeMillis() + 60_000);
-        final var id = getTotpLoginChallengeDao().createChallenge("user-2", null, null, null, expiry);
+        final var id = getTotpLoginChallengeDao().createChallenge("user-3", null, null, null, expiry);
 
-        assertTrue(getTotpLoginChallengeDao().findAndConsume(id).isPresent());
-        assertTrue(getTotpLoginChallengeDao().findAndConsume(id).isEmpty());
+        assertTrue(getTotpLoginChallengeDao().find(id).isPresent());
+        getTotpLoginChallengeDao().consume(id);
+        assertTrue(getTotpLoginChallengeDao().find(id).isEmpty());
 
     }
 
@@ -50,15 +65,20 @@ public class MongoTotpLoginChallengeDaoTest {
     public void testExpiredChallengeIsTreatedAsAbsent() {
 
         final var alreadyExpired = new Timestamp(System.currentTimeMillis() - 1_000);
-        final var id = getTotpLoginChallengeDao().createChallenge("user-3", null, null, null, alreadyExpired);
+        final var id = getTotpLoginChallengeDao().createChallenge("user-4", null, null, null, alreadyExpired);
 
-        assertTrue(getTotpLoginChallengeDao().findAndConsume(id).isEmpty());
+        assertTrue(getTotpLoginChallengeDao().find(id).isEmpty());
 
     }
 
     @Test
     public void testUnknownChallengeIsAbsent() {
-        assertTrue(getTotpLoginChallengeDao().findAndConsume("does-not-exist").isEmpty());
+        assertTrue(getTotpLoginChallengeDao().find("does-not-exist").isEmpty());
+    }
+
+    @Test
+    public void testConsumingUnknownChallengeDoesNotThrow() {
+        getTotpLoginChallengeDao().consume("does-not-exist");
     }
 
     public TotpLoginChallengeDao getTotpLoginChallengeDao() {

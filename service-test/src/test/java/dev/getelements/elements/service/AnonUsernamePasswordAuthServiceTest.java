@@ -97,7 +97,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         final var challenge = new TotpLoginChallenge();
         challenge.setId("challenge-1");
         challenge.setUserId(USER_ID);
-        when(totpLoginChallengeDao.findAndConsume("challenge-1")).thenReturn(Optional.of(challenge));
+        when(totpLoginChallengeDao.find("challenge-1")).thenReturn(Optional.of(challenge));
         when(totpVerificationService.verify(user, "123456")).thenReturn(true);
 
         final var request = new MfaVerifyRequest();
@@ -119,7 +119,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         final var challenge = new TotpLoginChallenge();
         challenge.setId("challenge-1");
         challenge.setUserId(USER_ID);
-        when(totpLoginChallengeDao.findAndConsume("challenge-1")).thenReturn(Optional.of(challenge));
+        when(totpLoginChallengeDao.find("challenge-1")).thenReturn(Optional.of(challenge));
         when(totpVerificationService.verify(user, "000000")).thenReturn(false);
 
         final var request = new MfaVerifyRequest();
@@ -129,12 +129,45 @@ public class AnonUsernamePasswordAuthServiceTest {
         assertThrows(ForbiddenException.class, () -> service.completeMfaChallenge(request));
         verify(sessionDao, never()).create(any());
 
+        // A wrong guess must not burn the challenge -- the DAO's consume() must never be called on failure,
+        // so a legitimate follow-up attempt (e.g. falling back to a recovery code) can still use it.
+        verify(totpLoginChallengeDao, never()).consume(any());
+
+    }
+
+    @Test
+    public void testCompleteMfaChallengeRetrySucceedsAfterAFailedAttempt() {
+
+        final var user = userWithId(USER_ID);
+        when(userDao.getUser(USER_ID)).thenReturn(user);
+
+        final var challenge = new TotpLoginChallenge();
+        challenge.setId("challenge-1");
+        challenge.setUserId(USER_ID);
+        when(totpLoginChallengeDao.find("challenge-1")).thenReturn(Optional.of(challenge));
+        when(totpVerificationService.verify(user, "000000")).thenReturn(false);
+        when(totpVerificationService.verify(user, "recovery-code-1")).thenReturn(true);
+
+        final var badAttempt = new MfaVerifyRequest();
+        badAttempt.setChallengeId("challenge-1");
+        badAttempt.setCode("000000");
+        assertThrows(ForbiddenException.class, () -> service.completeMfaChallenge(badAttempt));
+
+        // Same challenge ID, now with a recovery code -- must still be usable since the first attempt failed.
+        final var retryAttempt = new MfaVerifyRequest();
+        retryAttempt.setChallengeId("challenge-1");
+        retryAttempt.setCode("recovery-code-1");
+        service.completeMfaChallenge(retryAttempt);
+
+        verify(sessionDao).create(any());
+        verify(totpLoginChallengeDao).consume("challenge-1");
+
     }
 
     @Test
     public void testCompleteMfaChallengeRejectsUnknownChallenge() {
 
-        when(totpLoginChallengeDao.findAndConsume("missing")).thenReturn(Optional.empty());
+        when(totpLoginChallengeDao.find("missing")).thenReturn(Optional.empty());
 
         final var request = new MfaVerifyRequest();
         request.setChallengeId("missing");

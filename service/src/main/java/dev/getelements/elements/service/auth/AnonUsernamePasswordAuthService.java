@@ -98,14 +98,19 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         getValidationHelper().validateModel(mfaVerifyRequest);
 
         final var challenge = getTotpLoginChallengeDao()
-                .findAndConsume(mfaVerifyRequest.getChallengeId())
+                .find(mfaVerifyRequest.getChallengeId())
                 .orElseThrow(() -> new NotFoundException("MFA challenge not found or expired."));
 
         final var user = getUserDao().getUser(challenge.getUserId());
 
+        // Only consume the challenge on success -- a wrong guess must not burn it, or a legitimate
+        // follow-up attempt (e.g. falling back to a recovery code after mistyping a TOTP code) would
+        // incorrectly see "challenge not found" instead of getting to actually retry.
         if (!getTotpVerificationService().verify(user, mfaVerifyRequest.getCode())) {
             throw new ForbiddenException("Invalid authentication code.");
         }
+
+        getTotpLoginChallengeDao().consume(challenge.getId());
 
         return buildSession(
                 user,
