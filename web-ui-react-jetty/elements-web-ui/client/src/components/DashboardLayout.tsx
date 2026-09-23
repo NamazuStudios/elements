@@ -3,19 +3,59 @@ import { AppSidebar } from './AppSidebar';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import * as Icons from 'lucide-react';
+import { apiRequest } from '@/lib/queryClient';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+function totpBadgeDismissedKey(username: string | null) {
+  return `totp-nudge-dismissed:${username ?? 'unknown'}`;
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { username, logout } = useAuth();
-  const [, setLocation] = useLocation();
-  
+  const [location, setLocation] = useLocation();
+
   // Track which category groups are open - lifted to persist across navigation
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Nudge badge: shown on the Settings icon when TOTP is available system-wide but this account hasn't
+  // enrolled yet. Dismissed (for this account) the first time they visit Settings, regardless of whether
+  // they actually enroll -- it's a one-time nudge, not a persistent "you're insecure" warning.
+  const [badgeDismissed, setBadgeDismissed] = useState(
+    () => localStorage.getItem(totpBadgeDismissedKey(username)) === 'true'
+  );
+
+  const { data: totpConfig } = useQuery<{ enabled: boolean }>({
+    queryKey: ['/api/rest/totp_configuration'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/rest/totp_configuration');
+      return await response.json();
+    },
+    staleTime: 60_000,
+  });
+
+  const { data: isEnrolled } = useQuery<boolean>({
+    queryKey: ['/api/rest/totp'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/rest/totp');
+      return await response.json();
+    },
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (location === '/settings' && !badgeDismissed) {
+      localStorage.setItem(totpBadgeDismissedKey(username), 'true');
+      setBadgeDismissed(true);
+    }
+  }, [location, badgeDismissed, username]);
+
+  const showTotpBadge = !!totpConfig?.enabled && isEnrolled === false && !badgeDismissed;
 
   const style = {
     '--sidebar-width': '16rem',
@@ -39,10 +79,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button
                 variant="ghost"
                 size="icon"
+                className="relative"
                 onClick={() => setLocation('/settings')}
                 data-testid="button-settings"
               >
                 <Icons.Settings className="w-4 h-4" />
+                {showTotpBadge && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground"
+                    data-testid="badge-totp-nudge"
+                  >
+                    !
+                  </span>
+                )}
               </Button>
               <Button
                 variant="ghost"

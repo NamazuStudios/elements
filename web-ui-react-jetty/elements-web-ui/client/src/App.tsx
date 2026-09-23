@@ -16,6 +16,7 @@ import ResourceManager from "@/pages/ResourceManager";
 import LargeObjects from "@/pages/LargeObjects";
 import EmailTemplates from "@/pages/EmailTemplates";
 import CaptchaConfiguration from "@/pages/CaptchaConfiguration";
+import TotpConfiguration from "@/pages/TotpConfiguration";
 import MultiMatch from "@/pages/MultiMatch";
 import Vaults from "@/pages/Vaults";
 import ProductBundles from "@/pages/ProductBundles";
@@ -156,6 +157,9 @@ function Routes() {
         </Route>
         <Route path="/resource/product-bundles">
           <ProductBundles />
+        </Route>
+        <Route path="/resource/two-factor-auth">
+          <TotpConfiguration />
         </Route>
         <Route path="/plugin/:route">
           <PluginPage />

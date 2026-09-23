@@ -5,6 +5,7 @@ import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -61,6 +62,18 @@ public class MongoUser {
 
     @Property
     private Map<String, Map<String, String>> linkedAccountProfiles;
+
+    // TOTP credential material, deliberately never mapped onto the public User model (mirrors passwordHash/salt
+    // above). totpSecret holds the pending or confirmed Base32 shared secret; totpEnabled only flips true once
+    // enrollment is confirmed with a valid code, gating whether login actually challenges for it.
+    @Property
+    private String totpSecret;
+
+    @Property
+    private boolean totpEnabled;
+
+    @Property
+    private List<String> totpRecoveryCodeHashes;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -166,17 +179,41 @@ public class MongoUser {
         this.linkedAccountProfiles = linkedAccountProfiles;
     }
 
+    public String getTotpSecret() {
+        return totpSecret;
+    }
+
+    public void setTotpSecret(String totpSecret) {
+        this.totpSecret = totpSecret;
+    }
+
+    public boolean isTotpEnabled() {
+        return totpEnabled;
+    }
+
+    public void setTotpEnabled(boolean totpEnabled) {
+        this.totpEnabled = totpEnabled;
+    }
+
+    public List<String> getTotpRecoveryCodeHashes() {
+        return totpRecoveryCodeHashes;
+    }
+
+    public void setTotpRecoveryCodeHashes(List<String> totpRecoveryCodeHashes) {
+        this.totpRecoveryCodeHashes = totpRecoveryCodeHashes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(linkedAccounts, mongoUser.linkedAccounts) && Objects.equals(displayName, mongoUser.displayName) && Objects.equals(linkedAccountProfiles, mongoUser.linkedAccountProfiles);
+        return Objects.equals(objectId, mongoUser.objectId) && Objects.equals(name, mongoUser.name) && Objects.equals(primaryPhoneNb, mongoUser.primaryPhoneNb) && Objects.equals(firstName, mongoUser.firstName) && Objects.equals(lastName, mongoUser.lastName) && Objects.equals(email, mongoUser.email) && Objects.equals(hashAlgorithm, mongoUser.hashAlgorithm) && Arrays.equals(salt, mongoUser.salt) && Arrays.equals(passwordHash, mongoUser.passwordHash) && level == mongoUser.level && Objects.equals(linkedAccounts, mongoUser.linkedAccounts) && Objects.equals(displayName, mongoUser.displayName) && Objects.equals(linkedAccountProfiles, mongoUser.linkedAccountProfiles) && Objects.equals(totpSecret, mongoUser.totpSecret) && totpEnabled == mongoUser.totpEnabled && Objects.equals(totpRecoveryCodeHashes, mongoUser.totpRecoveryCodeHashes);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, linkedAccounts, displayName, linkedAccountProfiles);
+        int result = Objects.hash(objectId, name, primaryPhoneNb, firstName, lastName, email, hashAlgorithm, level, linkedAccounts, displayName, linkedAccountProfiles, totpSecret, totpEnabled, totpRecoveryCodeHashes);
         result = 31 * result + Arrays.hashCode(salt);
         result = 31 * result + Arrays.hashCode(passwordHash);
         return result;

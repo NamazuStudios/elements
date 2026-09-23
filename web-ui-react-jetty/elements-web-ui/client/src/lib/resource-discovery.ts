@@ -30,6 +30,7 @@ const POTENTIAL_RESOURCES = [
   { name: 'Custom', endpoint: '/api/rest/auth_scheme/custom', icon: 'Lock', category: 'Auth' },
   { name: 'OIDC Providers', endpoint: '/api/rest/auth_scheme/oidc_provider', icon: 'Globe', category: 'Auth' },
   { name: 'CAPTCHA', endpoint: '/api/rest/captcha_configuration', icon: 'ShieldCheck', category: 'Auth' },
+  { name: 'Two-Factor Auth', endpoint: '/api/rest/totp_configuration', icon: 'Fingerprint', category: 'Auth' },
   
   // Metadata
   { name: 'Metadata', endpoint: '/api/rest/metadata', icon: 'Database', category: 'Metadata' },

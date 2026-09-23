@@ -1,5 +1,18 @@
 import { getApiPath, getApiConfig } from './config';
 
+/** Thrown by {@link ApiClient.createUsernamePasswordSession} when the account has TOTP 2FA enrolled and enforced. */
+export class MfaRequiredError extends Error {
+  challengeId: string;
+  expiresAt?: number;
+
+  constructor(challengeId: string, expiresAt?: number) {
+    super('A second authentication factor is required to complete this login.');
+    this.name = 'MfaRequiredError';
+    this.challengeId = challengeId;
+    this.expiresAt = expiresAt;
+  }
+}
+
 // Helper function to determine if current route is a core resource page
 // (not an API explorer page where session overrides might be in use)
 function isCoreResourcePage(): boolean {
@@ -190,19 +203,25 @@ export class ApiClient {
       let errorMessage = 'Authentication failed';
       try {
         const errorData = JSON.parse(errorText);
+        if (errorData.code === 'MFA_REQUIRED' && errorData.challengeId) {
+          throw new MfaRequiredError(errorData.challengeId, errorData.expiresAt);
+        }
         errorMessage = errorData.error || errorMessage;
-      } catch {
+      } catch (e) {
+        if (e instanceof MfaRequiredError) {
+          throw e;
+        }
         errorMessage = errorText || errorMessage;
       }
       throw new Error(errorMessage);
     }
 
     const responseData = await response.json();
-    
+
     // Extract session token from response and store it
     // Try multiple possible paths for session token
-    let sessionToken = responseData.session?.sessionSecret 
-      || responseData.sessionSecret 
+    let sessionToken = responseData.session?.sessionSecret
+      || responseData.sessionSecret
       || responseData.token;
     
     if (sessionToken) {
@@ -233,6 +252,45 @@ export class ApiClient {
         userId: responseData.session?.user?.name || username,
         level: responseData.session?.user?.level,
         expiry: expiryTimestamp,
+      },
+    };
+  }
+
+  /** Completes a login that {@link createUsernamePasswordSession} interrupted with an {@link MfaRequiredError}. */
+  async completeMfaSession(challengeId: string, code: string): Promise<{ success: boolean; session?: { userId?: string; level?: string; expiry?: number } }> {
+    const endpoint = await getApiPath('/api/rest/session/mfa');
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ challengeId, code }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = 'Invalid or expired code';
+      try {
+        errorMessage = JSON.parse(errorText).message || errorMessage;
+      } catch {
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const responseData = await response.json();
+    const info = this.extractOidcSessionInfo(responseData);
+
+    if (info.sessionSecret) {
+      this.setSessionToken(info.sessionSecret);
+    }
+
+    return {
+      success: true,
+      session: {
+        userId: info.userId,
+        level: info.level,
+        expiry: info.expiry,
       },
     };
   }

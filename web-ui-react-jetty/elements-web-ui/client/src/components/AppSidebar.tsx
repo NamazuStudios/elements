@@ -38,6 +38,7 @@ const iconMap: Record<string, any> = {
   KeyRound: Icons.KeyRound,
   Lock: Icons.Lock,
   Globe: Icons.Globe,
+  Fingerprint: Icons.Fingerprint,
   FileCode: Icons.FileCode,
   Vault: Icons.Vault,
   Boxes: Icons.Boxes,

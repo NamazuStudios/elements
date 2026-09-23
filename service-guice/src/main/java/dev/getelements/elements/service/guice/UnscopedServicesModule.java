@@ -42,6 +42,9 @@ import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigura
 import dev.getelements.elements.service.auth.captcha.DefaultCaptchaService;
 import dev.getelements.elements.service.auth.captcha.SuperUserCaptchaConfigurationService;
 import dev.getelements.elements.service.auth.oidc.DefaultOidcAdminLoginService;
+import dev.getelements.elements.service.auth.totp.DefaultTotpVerificationService;
+import dev.getelements.elements.service.auth.totp.SuperUserTotpAdminService;
+import dev.getelements.elements.service.auth.totp.SuperUserTotpConfigurationService;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.SuperUserFlowSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.near.SuperUserNearSmartContractInvocationService;
@@ -280,6 +283,18 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(OidcAdminLoginService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(DefaultOidcAdminLoginService.class);
+
+        bind(TotpConfigurationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserTotpConfigurationService.class);
+
+        bind(TotpAdminService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserTotpAdminService.class);
+
+        bind(TotpVerificationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(DefaultTotpVerificationService.class);
 
         bind(OAuth2AuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
