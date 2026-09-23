@@ -39,6 +39,14 @@ docker-compose up --build -d
 
 No additional configuration is needed; services default to localhost on standard ports.
 
+## Documentation
+
+The user-facing manual lives in the [NamazuStudios/elements-manual](https://github.com/NamazuStudios/elements-manual) repository and is published at namazustudios.com/docs. It is a bi-directional mirror: edits on the live site sync back to that repository, and PRs merged there sync out to the live site.
+
+**When a plan adds or changes a user-facing feature (a new REST endpoint, configuration key, model field, event, admin-console screen, or CLI), the plan must also include opening a documentation PR in `NamazuStudios/elements-manual` as part of the same body of work.** Cross-reference this repository's source when writing or reviewing that documentation, since the engine source is the ground truth for API shapes, configuration keys, and behavior, and the manual may lag behind it.
+
+Manual pages are flat Markdown files under `site/`, one per page, with bodies written as WordPress Gutenberg blocks (not plain Markdown, the block comments are required for the site's round-trip sync) and internal links written as bare slugs (e.g. `href="sessions"`) matching the target page's filename. See that repository's own `AGENTS.md` for the full conventions.
+
 ## Architecture
 
 ### N-Tiered Layer Structure
