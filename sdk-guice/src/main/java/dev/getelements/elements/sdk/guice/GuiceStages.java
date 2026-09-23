@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.guice;
 
 import com.google.inject.Stage;
+import dev.getelements.elements.sdk.util.OperatorProperties;
 
 /**
  * Resolves the {@link Stage} a Guice injector should be built with from an operator-controlled system
@@ -10,6 +11,12 @@ import com.google.inject.Stage;
  * {@link Stage#PRODUCTION}'s eager singleton construction and upfront binding validation stay strictly
  * opt-in: the default is the slower, but safer for iteration, {@link Stage#DEVELOPMENT}, and only a real
  * server deployment that explicitly sets the property/environment variable gets {@link Stage#PRODUCTION}.
+ *
+ * <p>Resolution goes through {@link OperatorProperties}, the same environment-variable/system-property
+ * scheme used elsewhere in the platform (see {@code DefaultConfigurationSupplier} in {@code common-util}),
+ * rather than reading {@link System#getProperty} / {@link System#getenv} directly -- a real deployment may
+ * set this via a translated environment variable (e.g. {@code dev_getelements_elements_guice_stage}) rather
+ * than the dotted system-property form, and a raw lookup would silently miss that.</p>
  */
 public final class GuiceStages {
 
@@ -34,7 +41,8 @@ public final class GuiceStages {
      */
     public static Stage get() {
 
-        final var raw = System.getProperty(STAGE_PROPERTY, System.getenv(STAGE_ENV_VAR));
+        final var properties = OperatorProperties.resolve();
+        final var raw = properties.getProperty(STAGE_PROPERTY, properties.getProperty(STAGE_ENV_VAR));
 
         if (raw == null || raw.isBlank()) {
             return Stage.DEVELOPMENT;
