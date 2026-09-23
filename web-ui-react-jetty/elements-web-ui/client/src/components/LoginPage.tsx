@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api-client';
+import { apiClient, MfaRequiredError } from '@/lib/api-client';
 import logoPath from '@assets/elements-logo-square (1)_1760052619243.png';
 
 export default function LoginPage() {
@@ -21,8 +21,15 @@ export default function LoginPage() {
   const [urlSessionExpired, setUrlSessionExpired] = useState(false);
   const [oidcProviders, setOidcProviders] = useState<{ id: string; name: string; displayName?: string; iconUrl?: string }[]>([]);
   const [oidcLoadingProvider, setOidcLoadingProvider] = useState<string | null>(null);
-  const { login, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
+  const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const { login, completeMfaLogin, loginWithOidcProvider, sessionExpired: authSessionExpired } = useAuth();
   const { toast } = useToast();
+  // The MFA screen's "Back" button and the login form's "Sign In" button both sit in the same
+  // primary-action slot, so a click landing right as the screen swaps back to the login form can
+  // register as a second, genuine click on "Sign In" (confirmed via a trusted DOM submit event in
+  // testing). Ignore any submit that follows a "Back" click within this window.
+  const mfaBackClickedAtRef = useRef(0);
 
   // Load the list of OIDC providers offered for admin-panel login, if any. No error toast on failure --
   // this endpoint requires no auth, so a failure here just means username/password remains the only option.
@@ -77,6 +84,9 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (Date.now() - mfaBackClickedAtRef.current < 500) {
+      return;
+    }
     if (!username.trim() || !password.trim()) {
       toast({
         title: 'Error',
@@ -94,9 +104,43 @@ export default function LoginPage() {
         description: 'Welcome to the Elements Admin Dashboard',
       });
     } catch (error) {
+      if (error instanceof MfaRequiredError) {
+        // Don't hold the plaintext password in state any longer than it takes to make this one
+        // request. It also means that if anything -- a stray re-render, a password manager's
+        // autofill/auto-submit, whatever -- ever re-invokes handleLogin while the MFA screen is
+        // showing, the empty-field guard above rejects it instead of silently re-submitting.
+        setPassword('');
+        setMfaChallengeId(error.challengeId);
+        return;
+      }
       toast({
         title: 'Authentication Failed',
         description: error instanceof Error ? error.message : 'Invalid credentials',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!mfaChallengeId || !mfaCode.trim()) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await completeMfaLogin(mfaChallengeId, mfaCode.trim(), rememberMe);
+      toast({
+        title: 'Access Granted',
+        description: 'Welcome to the Elements Admin Dashboard',
+      });
+    } catch (error) {
+      toast({
+        title: 'Verification Failed',
+        description: error instanceof Error ? error.message : 'Invalid or expired code',
         variant: 'destructive',
       });
     } finally {
@@ -119,6 +163,56 @@ export default function LoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {mfaChallengeId ? (
+            <form onSubmit={handleMfaSubmit} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Enter the code from your authenticator app, or one of your recovery codes.
+              </p>
+
+              <div className="space-y-2">
+                <Label htmlFor="mfa-code">Authentication Code</Label>
+                <Input
+                  id="mfa-code"
+                  data-testid="input-mfa-code"
+                  type="text"
+                  placeholder="123456 or recovery code"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  autoComplete="one-time-code"
+                  autoFocus
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+                data-testid="button-mfa-submit"
+              >
+                {isLoading ? 'Verifying...' : 'Verify'}
+              </Button>
+
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  mfaBackClickedAtRef.current = Date.now();
+                  setMfaChallengeId(null);
+                  setMfaCode('');
+                  // Clear the credentials too -- password is already cleared once the MFA screen
+                  // is reached, but wipe username as well so the login form comes back genuinely
+                  // blank rather than pre-filled with the previous attempt's values.
+                  setUsername('');
+                  setPassword('');
+                }}
+                data-testid="button-mfa-back"
+              >
+                Back
+              </Button>
+            </form>
+          ) : (
+          <>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
@@ -221,6 +315,8 @@ export default function LoginPage() {
                 </Button>
               ))}
             </div>
+          )}
+          </>
           )}
         </CardContent>
       </Card>

@@ -92,6 +92,10 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
         <dependency>
+            <groupId>dev.samstevens.totp</groupId>
+            <artifactId>totp</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.paymennt</groupId>
             <artifactId>solanaj</artifactId>
         </dependency>

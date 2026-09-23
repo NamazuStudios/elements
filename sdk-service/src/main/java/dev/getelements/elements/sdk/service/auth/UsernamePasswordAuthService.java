@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.service.auth;
 
+import dev.getelements.elements.sdk.model.session.MfaVerifyRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.sdk.annotation.ElementPublic;
@@ -38,5 +39,17 @@ public interface UsernamePasswordAuthService {
      * @return the {@link SessionCreation} if the session was created successfully.
      */
     SessionCreation createSession(UsernamePasswordSessionRequest usernamePasswordSessionRequest);
+
+    /**
+     * Completes a login that was interrupted by a TOTP challenge (see
+     * {@link dev.getelements.elements.sdk.model.exception.auth.MfaChallengeRequiredException}), verifying the
+     * submitted code and, on success, creating the session exactly as {@link #createSession} would have.
+     *
+     * @param mfaVerifyRequest the challenge ID and code
+     * @return the {@link SessionCreation} if the code was valid
+     */
+    default SessionCreation completeMfaChallenge(MfaVerifyRequest mfaVerifyRequest) {
+        throw new UnsupportedOperationException("MFA is not supported by this implementation.");
+    }
 
 }
