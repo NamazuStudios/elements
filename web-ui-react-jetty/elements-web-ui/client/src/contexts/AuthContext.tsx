@@ -5,7 +5,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   userLevel: string | null;
   username: string | null;
-  login: (username: string, password: string, rememberMe?: boolean) => Promise<void>;
+  login: (username: string, password: string, rememberMe?: boolean, captchaToken?: string) => Promise<void>;
   completeMfaLogin: (challengeId: string, code: string, rememberMe?: boolean) => Promise<void>;
   loginWithOidcProvider: (providerName: string, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
@@ -109,44 +109,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string, rememberMe = false) => {
+  const login = async (username: string, password: string, rememberMe = false, captchaToken?: string) => {
     // Deliberately does NOT touch the shared `isLoading` flag -- that gates whether App.tsx's top-level
     // router renders LoginPage at all. Toggling it here would unmount LoginPage mid-call and discard its
     // local state (e.g. the pending MFA challenge set from this call's result). Per-attempt loading UI is
     // LoginPage's own local state.
     try {
-      const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe);
-      
-      // Use the session data returned from login response
-      const level = response.session?.level;
-      const userId = response.session?.userId || username;
-      
-      // SECURITY: Only allow SUPERUSER level to access admin interface
-      if (level !== 'SUPERUSER') {
-        setIsAuthenticated(false);
-        throw new Error('Access denied. Only SUPERUSER level accounts can access the admin interface.');
-      }
-      
-      setUserLevel(level);
-      setUsername(userId);
-      setIsAuthenticated(true);
-      
-      // If "remember me" is checked, store user info and session token in localStorage
-      // This allows the UI to restore the logged-in state on page refresh
-      if (rememberMe) {
-        const sessionToken = apiClient.getSessionToken();
-        localStorage.setItem('elements-user', JSON.stringify({
-          username: userId,
-          level: level,
-          sessionToken: sessionToken,
-          expiry: response.session?.expiry
-        }));
-      } else {
-        // Clear any existing stored user
-        localStorage.removeItem('elements-user');
-      }
-      
-      // Clear session expired flag on successful login
+      const response = await apiClient.createUsernamePasswordSession(username, password, rememberMe, captchaToken);
+      applySessionOrThrow(response.session, rememberMe, setUserLevel, setUsername, setIsAuthenticated);
       setSessionExpired(false);
     } catch (error) {
       setIsAuthenticated(false);

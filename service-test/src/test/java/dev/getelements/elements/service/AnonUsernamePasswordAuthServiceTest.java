@@ -8,6 +8,9 @@ import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.TotpLoginChallengeDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.auth.CaptchaPublicConfiguration;
+import dev.getelements.elements.sdk.model.auth.CaptchaVerifyRequest;
+import dev.getelements.elements.sdk.model.auth.CaptchaVerifyResponse;
 import dev.getelements.elements.sdk.model.auth.TotpLoginChallenge;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -19,6 +22,7 @@ import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
+import dev.getelements.elements.sdk.service.auth.CaptchaService;
 import dev.getelements.elements.sdk.service.auth.TotpVerificationService;
 import dev.getelements.elements.service.auth.AnonUsernamePasswordAuthService;
 import jakarta.inject.Inject;
@@ -31,6 +35,8 @@ import java.sql.Timestamp;
 import java.util.Optional;
 
 import static com.google.inject.Guice.createInjector;
+import static dev.getelements.elements.sdk.model.user.User.Level.SUPERUSER;
+import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,6 +60,7 @@ public class AnonUsernamePasswordAuthServiceTest {
     @Inject private ApplicationDao applicationDao;
     @Inject private SessionDao sessionDao;
     @Inject private ValidationHelper validationHelper;
+    @Inject @Named(UNSCOPED) private CaptchaService captchaService;
     @Inject @Named(UNSCOPED) private TotpVerificationService totpVerificationService;
     @Inject private TotpLoginChallengeDao totpLoginChallengeDao;
 
@@ -61,7 +68,32 @@ public class AnonUsernamePasswordAuthServiceTest {
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+
+        final var captchaDisabled = new CaptchaPublicConfiguration();
+        captchaDisabled.setEnabled(false);
+        when(captchaService.getPublicConfiguration()).thenReturn(captchaDisabled);
+
         when(totpVerificationService.isRequiredFor(any())).thenReturn(false);
+    }
+
+    @Test
+    public void testSuperuserLoginRequiresCaptchaWhenEnabled() {
+
+        final var user = userWithId(USER_ID);
+        user.setLevel(SUPERUSER);
+        when(userDao.validateUserPassword(anyString(), anyString())).thenReturn(user);
+
+        final var captchaEnabled = new CaptchaPublicConfiguration();
+        captchaEnabled.setEnabled(true);
+        when(captchaService.getPublicConfiguration()).thenReturn(captchaEnabled);
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(USER_ID);
+        request.setPassword("password");
+
+        assertThrows(ForbiddenException.class, () -> service.createSession(request));
+        verify(sessionDao, never()).create(any());
+
     }
 
     @Test
@@ -85,6 +117,60 @@ public class AnonUsernamePasswordAuthServiceTest {
         }
 
         verify(sessionDao, never()).create(any());
+
+    }
+
+    @Test
+    public void testSuperuserLoginRejectedWhenCaptchaVerificationFails() {
+
+        final var user = userWithId(USER_ID);
+        user.setLevel(SUPERUSER);
+        when(userDao.validateUserPassword(anyString(), anyString())).thenReturn(user);
+
+        final var captchaEnabled = new CaptchaPublicConfiguration();
+        captchaEnabled.setEnabled(true);
+        when(captchaService.getPublicConfiguration()).thenReturn(captchaEnabled);
+
+        final var failure = new CaptchaVerifyResponse();
+        failure.setSuccess(false);
+        when(captchaService.verify(any())).thenReturn(failure);
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(USER_ID);
+        request.setPassword("password");
+        request.setCaptchaToken("bad-token");
+
+        assertThrows(ForbiddenException.class, () -> service.createSession(request));
+        verify(sessionDao, never()).create(any());
+
+    }
+
+    @Test
+    public void testSuperuserLoginSucceedsWithValidCaptcha() {
+
+        final var user = userWithId(USER_ID);
+        user.setLevel(SUPERUSER);
+        when(userDao.validateUserPassword(anyString(), anyString())).thenReturn(user);
+
+        final var captchaEnabled = new CaptchaPublicConfiguration();
+        captchaEnabled.setEnabled(true);
+        when(captchaService.getPublicConfiguration()).thenReturn(captchaEnabled);
+
+        final var success = new CaptchaVerifyResponse();
+        success.setSuccess(true);
+        when(captchaService.verify(any())).thenReturn(success);
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(USER_ID);
+        request.setPassword("password");
+        request.setCaptchaToken("good-token");
+
+        service.createSession(request);
+
+        final var captor = org.mockito.ArgumentCaptor.forClass(CaptchaVerifyRequest.class);
+        verify(captchaService).verify(captor.capture());
+        assertEquals(captor.getValue().getToken(), "good-token");
+        verify(sessionDao).create(any());
 
     }
 
@@ -132,6 +218,28 @@ public class AnonUsernamePasswordAuthServiceTest {
         // A wrong guess must not burn the challenge -- the DAO's consume() must never be called on failure,
         // so a legitimate follow-up attempt (e.g. falling back to a recovery code) can still use it.
         verify(totpLoginChallengeDao, never()).consume(any());
+
+    }
+
+    @Test
+    public void testUserLoginNotGatedByCaptchaEvenWhenEnabled() {
+
+        final var user = userWithId(USER_ID);
+        user.setLevel(USER);
+        when(userDao.validateUserPassword(anyString(), anyString())).thenReturn(user);
+
+        final var captchaEnabled = new CaptchaPublicConfiguration();
+        captchaEnabled.setEnabled(true);
+        when(captchaService.getPublicConfiguration()).thenReturn(captchaEnabled);
+
+        final var request = new UsernamePasswordSessionRequest();
+        request.setUserId(USER_ID);
+        request.setPassword("password");
+
+        service.createSession(request);
+
+        verify(captchaService, never()).verify(any());
+        verify(sessionDao).create(any());
 
     }
 
@@ -280,6 +388,7 @@ public class AnonUsernamePasswordAuthServiceTest {
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
             bind(Validator.class).toInstance(mock(Validator.class));
             bind(ValidationHelper.class).toInstance(mock(ValidationHelper.class));
+            bind(CaptchaService.class).annotatedWith(Names.named(UNSCOPED)).toInstance(mock(CaptchaService.class));
             bind(TotpVerificationService.class)
                     .annotatedWith(Names.named(UNSCOPED))
                     .toInstance(mock(TotpVerificationService.class));

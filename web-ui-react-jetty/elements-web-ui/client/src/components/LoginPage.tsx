@@ -12,6 +12,33 @@ import { useToast } from '@/hooks/use-toast';
 import { apiClient, MfaRequiredError } from '@/lib/api-client';
 import logoPath from '@assets/elements-logo-square (1)_1760052619243.png';
 
+const RECAPTCHA_SCRIPT_URL = 'https://www.google.com/recaptcha/api.js?render=explicit';
+
+let recaptchaScriptPromise: Promise<void> | null = null;
+
+function loadRecaptchaScript(): Promise<void> {
+  if ((window as any).grecaptcha?.render) {
+    return Promise.resolve();
+  }
+  if (!recaptchaScriptPromise) {
+    recaptchaScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = RECAPTCHA_SCRIPT_URL;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        // The <script> tag's onload only means the file downloaded -- grecaptcha does further async
+        // bootstrapping before .render() actually exists. grecaptcha.ready() queues the callback until
+        // the full API (including render) is genuinely available.
+        (window as any).grecaptcha.ready(() => resolve());
+      };
+      script.onerror = () => reject(new Error('Failed to load reCAPTCHA script'));
+      document.head.appendChild(script);
+    });
+  }
+  return recaptchaScriptPromise;
+}
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,6 +46,11 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [urlSessionExpired, setUrlSessionExpired] = useState(false);
+  const [captchaConfig, setCaptchaConfig] = useState<{ enabled: boolean; siteKey?: string }>({ enabled: false });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaLoadError, setCaptchaLoadError] = useState<string | null>(null);
+  const captchaContainerRef = useRef<HTMLDivElement>(null);
+  const captchaWidgetId = useRef<number | null>(null);
   const [oidcProviders, setOidcProviders] = useState<{ id: string; name: string; displayName?: string; iconUrl?: string }[]>([]);
   const [oidcLoadingProvider, setOidcLoadingProvider] = useState<string | null>(null);
   const [mfaChallengeId, setMfaChallengeId] = useState<string | null>(null);
@@ -30,6 +62,46 @@ export default function LoginPage() {
   // register as a second, genuine click on "Sign In" (confirmed via a trusted DOM submit event in
   // testing). Ignore any submit that follows a "Back" click within this window.
   const mfaBackClickedAtRef = useRef(0);
+
+  // Fetch the public CAPTCHA bootstrap configuration on mount. Best-effort: if this fails, the login form
+  // simply proceeds without a CAPTCHA gate (the server enforces the requirement independently, if enabled).
+  useEffect(() => {
+    apiClient.getCaptchaPublicConfig()
+      .then(setCaptchaConfig)
+      .catch(() => setCaptchaConfig({ enabled: false }));
+  }, []);
+
+  // Render the reCAPTCHA widget once we know it's enabled and have a site key.
+  useEffect(() => {
+    if (!captchaConfig.enabled || !captchaConfig.siteKey || !captchaContainerRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+    setCaptchaLoadError(null);
+
+    loadRecaptchaScript()
+      .then(() => {
+        if (cancelled || !captchaContainerRef.current || captchaWidgetId.current !== null) {
+          return;
+        }
+        captchaWidgetId.current = (window as any).grecaptcha.render(captchaContainerRef.current, {
+          sitekey: captchaConfig.siteKey,
+          callback: (token: string) => setCaptchaToken(token),
+          'expired-callback': () => setCaptchaToken(null),
+        });
+      })
+      .catch((error) => {
+        console.error('[LOGIN] Failed to load CAPTCHA widget:', error);
+        if (!cancelled) {
+          setCaptchaLoadError('CAPTCHA failed to load. Check your connection or browser extensions (ad blockers can block it), then reload the page.');
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [captchaConfig.enabled, captchaConfig.siteKey]);
 
   // Load the list of OIDC providers offered for admin-panel login, if any. No error toast on failure --
   // this endpoint requires no auth, so a failure here just means username/password remains the only option.
@@ -96,9 +168,18 @@ export default function LoginPage() {
       return;
     }
 
+    if (captchaConfig.enabled && !captchaToken) {
+      toast({
+        title: 'Error',
+        description: 'Please complete the CAPTCHA challenge',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await login(username, password, rememberMe);
+      await login(username, password, rememberMe, captchaToken ?? undefined);
       toast({
         title: 'Access Granted',
         description: 'Welcome to the Elements Admin Dashboard',
@@ -118,6 +199,11 @@ export default function LoginPage() {
         description: error instanceof Error ? error.message : 'Invalid credentials',
         variant: 'destructive',
       });
+      // A failed attempt invalidates the solved CAPTCHA (single-use); reset so the widget can be re-solved.
+      if (captchaConfig.enabled && (window as any).grecaptcha?.reset && captchaWidgetId.current !== null) {
+        (window as any).grecaptcha.reset(captchaWidgetId.current);
+      }
+      setCaptchaToken(null);
     } finally {
       setIsLoading(false);
     }
@@ -268,6 +354,17 @@ export default function LoginPage() {
                 Remember me on this device
               </Label>
             </div>
+
+            {captchaConfig.enabled && (
+              <div className="space-y-2">
+                <div ref={captchaContainerRef} data-testid="captcha-widget" />
+                {captchaLoadError && (
+                  <p className="text-sm text-destructive" data-testid="text-captcha-load-error">
+                    {captchaLoadError}
+                  </p>
+                )}
+              </div>
+            )}
 
             <Button
               type="submit"

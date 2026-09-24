@@ -34,6 +34,11 @@ public class UsernamePasswordSessionRequest {
             "user's primary profile for it cannot be resolved, the session is created without a profile.")
     private String applicationNameOrId;
 
+    @Schema(description = "A CAPTCHA response token, obtained from the widget rendered using the " +
+            "configuration returned by GET /captcha. Only required when logging into a SUPERUSER account " +
+            "while CAPTCHA is enabled; ignored otherwise.")
+    private String captchaToken;
+
     /**
      * Returns the user ID (login name or email) for this session request.
      *
@@ -124,17 +129,35 @@ public class UsernamePasswordSessionRequest {
         this.applicationNameOrId = applicationNameOrId;
     }
 
+    /**
+     * Returns the CAPTCHA response token, if supplied.
+     *
+     * @return the CAPTCHA response token
+     */
+    public String getCaptchaToken() {
+        return captchaToken;
+    }
+
+    /**
+     * Sets the CAPTCHA response token.
+     *
+     * @param captchaToken the CAPTCHA response token
+     */
+    public void setCaptchaToken(String captchaToken) {
+        this.captchaToken = captchaToken;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UsernamePasswordSessionRequest that = (UsernamePasswordSessionRequest) o;
-        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId());
+        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getPassword(), that.getPassword()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getProfileSelector(), that.getProfileSelector()) && Objects.equals(getApplicationNameOrId(), that.getApplicationNameOrId()) && Objects.equals(getCaptchaToken(), that.getCaptchaToken());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getUserId(), getPassword(), getProfileId(), getProfileSelector(), getApplicationNameOrId());
+        return Objects.hash(getUserId(), getPassword(), getProfileId(), getProfileSelector(), getApplicationNameOrId(), getCaptchaToken());
     }
 
     @Override
