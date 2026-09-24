@@ -21,6 +21,25 @@ Element's own name is used as the fallback.
 | `dev.getelements.element.static.uri` | Override the full mount path for the **Standard** tree. |
 | `dev.getelements.element.ui.uri` | Override the full mount path for the **UI** tree. |
 
+### Path conflicts and deployment scoping
+
+An explicit override URI (`dev.getelements.element.ui.uri` / `dev.getelements.element.static.uri`) always wins and is
+used as-is. If an override conflicts with an already-registered path or a reserved system path, the tree is refused
+with a warning and the element's static content is not mounted.
+
+When the *default* path (`/app/ui/{prefix}` or `/app/static/{prefix}`) is already in use by another mounted tree, the
+element is served under a **deployment-scoped** path instead:
+
+```
+/app/ui/{deployment-id}/{prefix}      # UI tree
+/app/static/{deployment-id}/{prefix}  # Standard tree
+```
+
+This lets two different deployments expose distinct UI at the same `app.serve.prefix` without colliding. The
+deployment-scoped mount is reported as a warning on the deployment, naming both the conflicting path and the
+deployment that owns it. Every deployment mounts its own content tree independently; there is no cross-deployment
+deduplication of identical element content.
+
 ---
 
 ## Index file
