@@ -112,6 +112,12 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
         final var builder = new UpdateBuilder();
 
+        if (mongoElementDeployment.getName() != null) {
+            builder.with(set("name", mongoElementDeployment.getName()));
+        } else {
+            builder.with(unset("name"));
+        }
+
         if (mongoElementDeployment.getElm() != null) {
             builder.with(set("elm", mongoElementDeployment.getElm()));
         } else {

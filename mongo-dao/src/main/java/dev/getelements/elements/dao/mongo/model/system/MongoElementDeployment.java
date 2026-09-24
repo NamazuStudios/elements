@@ -16,6 +16,9 @@ public class MongoElementDeployment {
     @Id
     private ObjectId objectId;
 
+    @Property
+    private String name;
+
     @Indexed
     @Reference
     private MongoApplication application;
@@ -56,6 +59,14 @@ public class MongoElementDeployment {
 
     public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public MongoApplication getApplication() {

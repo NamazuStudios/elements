@@ -18,7 +18,10 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
   // Derive segment from userLevel; defaults to 'superuser' until user-level dashboards are introduced.
   const segment = userLevel?.toLowerCase() ?? 'superuser';
 
-  const { data: containers } = useQuery<Array<{ uris?: string[]; runtime?: { deployment?: { application?: { name?: string } } } }>>({
+  const { data: containers } = useQuery<Array<{
+    uris?: string[];
+    runtime?: { deployment?: { id?: string; name?: string; application?: { name?: string } } };
+  }>>({
     queryKey: ['/api/rest/elements/container'],
     enabled: isAuthenticated,
   });
@@ -29,6 +32,8 @@ export function PluginProvider({ children }: { children: React.ReactNode }) {
     const mappedContainers = containers.map(c => ({
       uris: c.uris,
       application: c.runtime?.deployment?.application?.name,
+      deploymentId: c.runtime?.deployment?.id,
+      deploymentName: c.runtime?.deployment?.name,
     }));
 
     setIsLoading(true);

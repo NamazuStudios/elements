@@ -21,6 +21,9 @@ interface PluginGroupsProps {
 }
 
 function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
+  const qualifiedPluginPath = (plugin: LoadedPlugin) =>
+    `/plugin/${encodeURIComponent(plugin.qualifiedKey)}`;
+
   // Separate plugins with an application from those without
   const grouped: Record<string, LoadedPlugin[]> = {};
   const ungrouped: LoadedPlugin[] = [];
@@ -52,11 +55,12 @@ function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
               <SidebarMenuSub>
                 {grouped[appName].map(plugin => {
                   const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+                  const path = qualifiedPluginPath(plugin);
                   return (
-                    <SidebarMenuSubItem key={plugin.route}>
+                    <SidebarMenuSubItem key={plugin.qualifiedKey}>
                       <SidebarMenuSubButton
-                        onClick={() => setLocation(`/plugin/${plugin.route}`)}
-                        isActive={location.startsWith(`/plugin/${plugin.route}`)}
+                        onClick={() => setLocation(path)}
+                        isActive={location.startsWith(path)}
                       >
                         <IconComponent className="w-4 h-4" />
                         <span>{plugin.label}</span>
@@ -72,11 +76,12 @@ function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
 
       {ungrouped.map(plugin => {
         const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+        const path = qualifiedPluginPath(plugin);
         return (
-          <SidebarMenuItem key={plugin.route}>
+          <SidebarMenuItem key={plugin.qualifiedKey}>
             <SidebarMenuButton
-              onClick={() => setLocation(`/plugin/${plugin.route}`)}
-              isActive={location.startsWith(`/plugin/${plugin.route}`)}
+              onClick={() => setLocation(path)}
+              isActive={location.startsWith(path)}
               className={hasGroups ? 'pl-2' : ''}
             >
               <IconComponent className="w-4 h-4" />
