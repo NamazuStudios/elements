@@ -304,11 +304,13 @@ public abstract class StaticContentLoader implements Loader {
     /**
      * Resolves the context path for an element's static content tree.
      *
-     * <p>An explicit {@code dev.getelements.element.ui.uri} (or {@code ...static.uri}) override always wins and
-     * is used as-is. Otherwise the default path ({@code /app/ui/{prefix}} or {@code /app/static/{prefix}}) is used.
-     * When the default path is already taken by another mounted tree, the element is instead served under a
-     * deployment-scoped path ({@code /app/ui/{deploymentId}/{prefix}}) so that distinct deployments can each
-     * expose their own UI at the same prefix.</p>
+     * <p>An explicit {@code dev.getelements.element.ui.uri} (or {@code ...static.uri}) override is the preferred
+     * path and is used as-is when available. Otherwise the default path ({@code /app/ui/{prefix}} or
+     * {@code /app/static/{prefix}}) is used. When the preferred path is already taken by another mounted tree, the
+     * element is instead served under a deployment-scoped path ({@code /app/ui/{deploymentId}/{prefix}} or
+     * {@code /app/ui/{deploymentId}/{suffix}} for overrides) so that distinct deployments can each expose their
+     * own UI at the same route. Only paths that remain inside a reserved system namespace or another content tree
+     * even after scoping are refused.</p>
      *
      * @return the resolved context path, or {@code null} if no viable path could be assigned
      */
@@ -320,37 +322,24 @@ public abstract class StaticContentLoader implements Loader {
 
         final var elementName = element.getElementRecord().definition().name();
 
-        if (overrideUri != null) {
-            if (checkPathConflict(overrideUri) == PathConflict.INNER) {
-                pending.logWarningf(
-                        "WARNING: Static content path '%s' for element %s conflicts with a reserved system path " +
-                        "or another mounted content tree. Refusing to load static content; assign a distinct " +
-                        "content URI override.",
-                        overrideUri,
-                        elementName
-                );
-                return null;
-            }
-            return overrideUri;
+        final var requestedPath = overrideUri == null
+                ? getHttpContextRoot().formatNormalized(defaultContextPathFormat, prefix)
+                : overrideUri;
+
+        if (checkPathConflict(requestedPath) != PathConflict.INNER) {
+            return requestedPath;
         }
 
-        final var defaultPath = getHttpContextRoot().formatNormalized(defaultContextPathFormat, prefix);
-
-        if (checkPathConflict(defaultPath) != PathConflict.INNER) {
-            return defaultPath;
-        }
-
-        final var owner = findOwnerDeploymentId(defaultPath);
+        final var owner = findOwnerDeploymentId(requestedPath);
         final var ownerLabel = owner == null ? "a system path" : "deployment " + owner;
 
-        final var scopedFormat = defaultContextPathFormat.replace("%s", deploymentId + "/%s");
-        final var scopedPath = getHttpContextRoot().formatNormalized(scopedFormat, prefix);
+        final var scopedPath = scopedContextPath(overrideUri == null ? prefix : requestedPath, deploymentId);
 
         if (checkPathConflict(scopedPath) == PathConflict.INNER) {
             pending.logWarningf(
                     "WARNING: Static content path '%s' for element %s is in use by %s and the deployment-scoped " +
                     "path '%s' is also unavailable. Refusing to load static content for element %s.",
-                    defaultPath,
+                    requestedPath,
                     elementName,
                     ownerLabel,
                     scopedPath,
@@ -362,7 +351,7 @@ public abstract class StaticContentLoader implements Loader {
         pending.logWarningf(
                 "WARNING: Static content path '%s' for element %s is in use by %s. Mounting at the " +
                 "deployment-scoped path '%s' instead.",
-                defaultPath,
+                requestedPath,
                 elementName,
                 ownerLabel,
                 scopedPath
@@ -370,6 +359,32 @@ public abstract class StaticContentLoader implements Loader {
 
         return scopedPath;
 
+    }
+
+    /**
+     * Builds the deployment-scoped variant of a context path: {@code /app/ui/{deploymentId}/{suffix}} where the
+     * suffix is either the element's application prefix (default paths) or the portion of an override path beneath
+     * the mount root (e.g. {@code grillmaster} for the override {@code /app/ui/grillmaster}).
+     */
+    private String scopedContextPath(final String suffixSource, final String deploymentId) {
+        final var suffix = suffixSource.startsWith(mountRoot())
+                ? stripLeadingSlashes(suffixSource.substring(mountRoot().length()))
+                : stripLeadingSlashes(suffixSource);
+        final var scopedFormat = defaultContextPathFormat.replace("%s", deploymentId + "/%s");
+        return getHttpContextRoot().formatNormalized(scopedFormat, suffix);
+    }
+
+    private static String stripLeadingSlashes(final String value) {
+        var result = value;
+        while (result.startsWith("/")) {
+            result = result.substring(1);
+        }
+        return result;
+    }
+
+    private String mountRoot() {
+        final var idx = defaultContextPathFormat.indexOf("%s");
+        return idx >= 0 ? defaultContextPathFormat.substring(0, idx) : defaultContextPathFormat;
     }
 
     private String findOwnerDeploymentId(final String contextPath) {
