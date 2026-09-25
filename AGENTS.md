@@ -50,7 +50,7 @@ No additional configuration is needed; services default to localhost on standard
 3. Scan branches for WIP work not yet PR'd: `git branch -a | rg -i <number-or-keyword>`.
 4. If already covered, do not duplicate the work — comment on the ticket noting the covering PR.
 
-**Claim early and stay discoverable:** name branches `fix/<issue>-<slug>` (or `feature/<issue>-...`) referencing the issue number, and open the PR promptly so others can see the ticket is taken.
+**Claim early and stay discoverable:** create the branch with `gh issue develop <number>` (from the default base, it creates `fix/<number>-<slug>`/`feature/<number>-<slug>` and links the issue to the branch), or name the branch `fix/<issue>-<slug>` manually. Open the PR promptly so others can see the ticket is taken.
 
 **Link tickets so they auto-close:** every PR that resolves an issue must reference it with a GitHub closing keyword in the body or title (`Fixes #N`, `Closes #N`, `Resolves #N`). These keywords are case-insensitive and create a permanent issue↔PR link on merge. `Implements #N` and `Addresses #N` do NOT close anything. After merging, spot-check open issues for ones whose fix merged without a keyword, and close them manually.
 
