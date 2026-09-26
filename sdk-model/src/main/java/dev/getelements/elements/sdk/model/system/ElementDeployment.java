@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @param pathSpiBuiltins map of element paths to builtin SPI configurations
  * @param pathSpiClassPaths map of element paths to custom SPI class paths
  * @param pathAttributes map of element paths to their custom attributes
- * @param elements list of Element definitions specifying the classpaths and artifacts
+ * @param elements list of Element definitions specifying the classpaths and artifacts (deprecated; use ELM packages)
  * @param packages list of Element package definitions specifying ELM artifacts to deploy
  * @param useDefaultRepositories flag indicating whether to use the default artifact repositories
  * @param repositories list of artifact repositories for resolving artifacts
@@ -81,12 +81,9 @@ public record ElementDeployment(
         )
         Map<String, Map<String, Object>> pathAttributes,
 
+        @Deprecated
         @Valid
-        @Schema(description =
-                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
-                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
-                "single ELM artifact coordinate."
-        )
+        @Schema(hidden = true)
         List<ElementPathDefinition> elements,
 
         @Valid

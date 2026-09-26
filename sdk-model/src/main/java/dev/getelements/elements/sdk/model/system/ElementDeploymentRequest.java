@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.model.system;
 
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectState;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
@@ -26,7 +27,10 @@ public interface ElementDeploymentRequest {
      * definitions specified.
      *
      * @return the Element definitions
+     * @deprecated manual Element definitions are deprecated; use {@link #packages()} instead
      */
+    @Deprecated
+    @Schema(hidden = true)
     List<ElementPathDefinition> elements();
 
     /**

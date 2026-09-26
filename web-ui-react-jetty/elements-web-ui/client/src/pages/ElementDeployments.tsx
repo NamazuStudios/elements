@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Check, Sparkles, FileText, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ElementArtifactRepository {
@@ -71,11 +71,6 @@ interface FormData {
 }
 
 const DEPLOYMENT_STATES_EDIT = ['ENABLED', 'DISABLED'] as const;
-
-interface ElementSpi {
-  id: string;
-  description?: string;
-}
 
 interface ElmInspectorRecord {
   path: string;
@@ -553,7 +548,7 @@ export default function ElementDeployments() {
   };
 
   const openCreateDialog = () => {
-    setFormData({ ...emptyFormData, elements: [], packages: [], repositories: [] });
+    setFormData({ ...emptyFormData, packages: [], repositories: [] });
     setWizardStep(0);
     setWizardCreatedDeployment(null);
     setWizardElmFile(null);
@@ -918,7 +913,7 @@ export default function ElementDeployments() {
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
               {wizardStep === 0 && 'Upload your ELM file and configure the deployment settings.'}
-              {wizardStep === 1 && 'Optionally add element definitions and packages from external sources (e.g. Maven).'}
+              {wizardStep === 1 && 'Optionally add packages from external sources (e.g. Maven).'}
               {wizardStep === 2 && 'Review your deployment configuration before creating.'}
               {wizardStep === 3 && 'Your deployment has been created.'}
             </DialogDescription>
@@ -967,9 +962,6 @@ export default function ElementDeployments() {
           {wizardStep === 2 && (
             <div className="space-y-4" data-testid="wizard-step-review">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {formData.elements.length > 0 && (
-                  <Badge variant="outline">{formData.elements.length} Element Definition{formData.elements.length !== 1 ? 's' : ''}</Badge>
-                )}
                 {formData.packages.length > 0 && (
                   <Badge variant="outline">{formData.packages.length} Package{formData.packages.length !== 1 ? 's' : ''}</Badge>
                 )}
@@ -1955,217 +1947,6 @@ function PathKeyValueMapEditor({
   );
 }
 
-function SpiBuiltinEditor({
-  value,
-  onChange,
-  available,
-  loading,
-  testIdPrefix,
-}: {
-  value: string[];
-  onChange: (val: string[]) => void;
-  available: ElementSpi[];
-  loading: boolean;
-  testIdPrefix: string;
-}) {
-  const predefinedIds = available.map(s => s.id);
-  const selectedPredefined = value.find(v => predefinedIds.includes(v)) || '';
-  const customEntries = value.filter(v => !predefinedIds.includes(v));
-
-  const onPredefinedChange = (id: string) => {
-    const withoutPredefined = value.filter(v => !predefinedIds.includes(v));
-    if (id) {
-      onChange([id, ...withoutPredefined]);
-    } else {
-      onChange(withoutPredefined);
-    }
-  };
-
-  const onCustomChange = (vals: string[]) => {
-    const predefined = value.filter(v => predefinedIds.includes(v));
-    onChange([...predefined, ...vals]);
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <Label className="text-xs">SPI Builtin</Label>
-        {loading ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Loading available SPIs...
-          </div>
-        ) : available.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">No builtin SPIs available from the server.</p>
-        ) : (
-          <Select
-            value={selectedPredefined || '__none__'}
-            onValueChange={(v) => onPredefinedChange(v === '__none__' ? '' : v)}
-          >
-            <SelectTrigger data-testid={`${testIdPrefix}-trigger`}>
-              <SelectValue placeholder="Select a builtin SPI" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">None</SelectItem>
-              {available.map((spi) => (
-                <SelectItem key={spi.id} value={spi.id} data-testid={`${testIdPrefix}-option-${spi.id}`}>
-                  {spi.id}{spi.description ? ` — ${spi.description}` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Framework-provided SPI implementation to use for this element path.
-        </p>
-      </div>
-      <ArtifactListEditor
-        label="Additional SPI Builtins (optional)"
-        values={customEntries}
-        onChange={onCustomChange}
-        placeholder="custom-spi-builtin"
-        description="Additional builtin SPI names beyond the predefined selection above."
-        testIdPrefix={`${testIdPrefix}-custom`}
-      />
-    </div>
-  );
-}
-
-function ElementDefinitionEditor({
-  elements,
-  onChange,
-  availableSpis,
-  spisLoading,
-  hintsByPath,
-}: {
-  elements: ElementPathDefinition[];
-  onChange: (els: ElementPathDefinition[]) => void;
-  availableSpis: ElementSpi[];
-  spisLoading: boolean;
-  hintsByPath?: Record<string, PerPathHints>;
-}) {
-  const addElement = () => {
-    onChange([...elements, {
-      path: '',
-      apiArtifacts: [],
-      spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
-      spiArtifacts: [],
-      elementArtifacts: [],
-      attributes: {},
-    }]);
-  };
-
-  const removeElement = (index: number) => {
-    onChange(elements.filter((_, i) => i !== index));
-  };
-
-  const updateElement = (index: number, updated: ElementPathDefinition) => {
-    const copy = [...elements];
-    copy[index] = updated;
-    onChange(copy);
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <Label>Element Definitions</Label>
-        <Button type="button" variant="outline" size="sm" onClick={addElement} data-testid="button-add-element">
-          <Plus className="w-3 h-3 mr-1" />
-          Add Definition
-        </Button>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Each definition specifies the classpath and artifacts for an Element to deploy. Specify Maven artifact coordinates for SPI, Element implementations, and optionally API artifacts.
-      </p>
-      {elements.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">No element definitions. Click "Add Definition" to add one.</p>
-      )}
-      {elements.map((el, i) => (
-        <Card key={i} data-testid={`card-element-def-${i}`}>
-          <CardContent className="p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Definition #{i + 1}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeElement(i)}
-                data-testid={`button-remove-element-${i}`}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor={`el-path-${i}`} className="text-xs">Path (optional)</Label>
-              <Input
-                id={`el-path-${i}`}
-                value={el.path}
-                onChange={(e) => updateElement(i, { ...el, path: e.target.value })}
-                placeholder="my-element"
-                className="font-mono text-xs"
-                data-testid={`input-element-path-${i}`}
-              />
-              <p className="text-xs text-muted-foreground">
-                Single directory name where this element is deployed. Must not contain "/" or "\".
-              </p>
-            </div>
-            <SpiBuiltinEditor
-              value={el.spiBuiltins || []}
-              onChange={(val) => updateElement(i, { ...el, spiBuiltins: val })}
-              available={availableSpis}
-              loading={spisLoading}
-              testIdPrefix={`el-${i}-spi-builtin`}
-            />
-            <ArtifactListEditor
-              label="SPI Artifacts (optional)"
-              values={el.spiArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, spiArtifacts: vals })}
-              placeholder="com.example:spi-artifact:1.0"
-              testIdPrefix={`el-${i}-spi-art`}
-            />
-            <p className="text-xs text-muted-foreground">
-              Custom SPI implementation artifact coordinates, if needed beyond the builtins above.
-            </p>
-            <ArtifactListEditor
-              label="Element Artifacts *"
-              values={el.elementArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, elementArtifacts: vals })}
-              placeholder="com.example:element-artifact:1.0"
-              description="List of Element implementation artifact coordinates. These contain the actual Element code."
-              testIdPrefix={`el-${i}-elem`}
-            />
-            <ArtifactListEditor
-              label="API Artifacts (optional)"
-              values={el.apiArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, apiArtifacts: vals })}
-              placeholder="com.example:api-artifact:1.0"
-              testIdPrefix={`el-${i}-api`}
-            />
-            <p className="text-xs text-muted-foreground">
-              API Artifacts are loaded into a shared classloader accessible to all Elements. Only needed to expose methods to other Elements.
-            </p>
-            <KeyValueEditor
-              value={el.attributes || {}}
-              onChange={(attrs) => updateElement(i, { ...el, attributes: attrs })}
-              label="Attributes"
-              testIdPrefix={`el-${i}-attrs`}
-              keyPlaceholder="attribute key"
-              valuePlaceholder="attribute value"
-              hints={hintsByPath?.[el.path]?.hints}
-              requiredHints={hintsByPath?.[el.path]?.required}
-              sensitiveKeys={hintsByPath?.[el.path]?.sensitive}
-              inheritedAttrs={hintsByPath?.[el.path]?.inherited}
-            />
-            <p className="text-xs text-muted-foreground">
-              Custom attributes passed to this Element at load time via the AttributesLoader mechanism.
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 function PackageDefinitionEditor({
   packages,
   onChange,
@@ -2397,102 +2178,6 @@ function RepositoryEditor({
         </div>
       ))}
     </div>
-  );
-}
-
-function ElementDefinitionSubDialog({
-  open,
-  onOpenChange,
-  element,
-  onSave,
-  availableSpis,
-  spisLoading,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  element: ElementPathDefinition;
-  onSave: (el: ElementPathDefinition) => void;
-  availableSpis: ElementSpi[];
-  spisLoading: boolean;
-}) {
-  const [draft, setDraft] = useState<ElementPathDefinition>(element);
-  const prevOpenRef = useRef(false);
-  if (open && !prevOpenRef.current) {
-    setDraft({ ...element });
-  }
-  prevOpenRef.current = open;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <DialogHeader>
-          <DialogTitle>Element Definition</DialogTitle>
-          <DialogDescription>
-            Configure the classpath and artifacts for an Element to deploy.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Path (optional)</Label>
-            <Input
-              value={draft.path}
-              onChange={(e) => setDraft({ ...draft, path: e.target.value })}
-              placeholder="my-element"
-              className="font-mono text-xs"
-              data-testid="input-subdialog-element-path"
-            />
-            <p className="text-xs text-muted-foreground">
-              Single directory name where this element is deployed. Must not contain "/" or "\".
-            </p>
-          </div>
-          <SpiBuiltinEditor
-            value={draft.spiBuiltins || []}
-            onChange={(val) => setDraft({ ...draft, spiBuiltins: val })}
-            available={availableSpis}
-            loading={spisLoading}
-            testIdPrefix="subdialog-el-spi-builtin"
-          />
-          <ArtifactListEditor
-            label="SPI Artifacts (optional)"
-            values={draft.spiArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, spiArtifacts: vals })}
-            placeholder="com.example:spi-artifact:1.0"
-            testIdPrefix="subdialog-el-spi-art"
-          />
-          <ArtifactListEditor
-            label="Element Artifacts *"
-            values={draft.elementArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, elementArtifacts: vals })}
-            placeholder="com.example:element-artifact:1.0"
-            description="Element implementation artifact coordinates."
-            testIdPrefix="subdialog-el-elem"
-          />
-          <ArtifactListEditor
-            label="API Artifacts (optional)"
-            values={draft.apiArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, apiArtifacts: vals })}
-            placeholder="com.example:api-artifact:1.0"
-            testIdPrefix="subdialog-el-api"
-          />
-          <KeyValueEditor
-            value={draft.attributes || {}}
-            onChange={(attrs) => setDraft({ ...draft, attributes: attrs })}
-            label="Attributes"
-            testIdPrefix="subdialog-el-attrs"
-            keyPlaceholder="attribute key"
-            valuePlaceholder="attribute value"
-          />
-        </div>
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-element">
-            Cancel
-          </Button>
-          <Button onClick={() => { onSave(draft); onOpenChange(false); }} data-testid="button-subdialog-save-element">
-            Save
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -2828,37 +2513,8 @@ function WizardAdditionalElementsStep({
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
 
-  const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
-    queryKey: ['/api/rest/elements/builtin_spi'],
-    queryFn: async () => {
-      const data = await apiClient.request<any>('/api/rest/elements/builtin_spi');
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object') {
-        const keys = Object.keys(data);
-        if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
-          return keys.sort((a, b) => Number(a) - Number(b)).map(k => data[k]);
-        }
-        if (data.objects) return data.objects;
-        if (data.content) return data.content;
-      }
-      return [];
-    },
-    staleTime: 60000,
-  });
-
-  const [elementDialogOpen, setElementDialogOpen] = useState(false);
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
-  const [editingElementIndex, setEditingElementIndex] = useState<number | null>(null);
   const [editingPackageIndex, setEditingPackageIndex] = useState<number | null>(null);
-
-  const newElementDefault = (): ElementPathDefinition => ({
-    path: '',
-    apiArtifacts: [],
-    spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
-    spiArtifacts: [],
-    elementArtifacts: [],
-    attributes: {},
-  });
 
   const newPackageDefault = (): ElementPackageDefinition => ({
     elmArtifact: '',
@@ -2867,34 +2523,7 @@ function WizardAdditionalElementsStep({
     pathAttributes: {},
   });
 
-  const [editingElement, setEditingElement] = useState<ElementPathDefinition>(newElementDefault());
   const [editingPackage, setEditingPackage] = useState<ElementPackageDefinition>(newPackageDefault());
-
-  const openAddElement = () => {
-    setEditingElementIndex(null);
-    setEditingElement(newElementDefault());
-    setElementDialogOpen(true);
-  };
-
-  const openEditElement = (index: number) => {
-    setEditingElementIndex(index);
-    setEditingElement({ ...formData.elements[index] });
-    setElementDialogOpen(true);
-  };
-
-  const saveElement = (el: ElementPathDefinition) => {
-    if (editingElementIndex !== null) {
-      const copy = [...formData.elements];
-      copy[editingElementIndex] = el;
-      update({ elements: copy });
-    } else {
-      update({ elements: [...formData.elements, el] });
-    }
-  };
-
-  const removeElement = (index: number) => {
-    update({ elements: formData.elements.filter((_, i) => i !== index) });
-  };
 
   const openAddPackage = () => {
     setEditingPackageIndex(null);
@@ -2922,15 +2551,7 @@ function WizardAdditionalElementsStep({
     update({ packages: formData.packages.filter((_, i) => i !== index) });
   };
 
-  const hasItems = formData.elements.length > 0 || formData.packages.length > 0;
-
-  const getElementLabel = (el: ElementPathDefinition, index: number) => {
-    if (el.path && el.path.trim()) return el.path;
-    if (el.elementArtifacts && el.elementArtifacts.length > 0 && el.elementArtifacts[0].trim()) {
-      return el.elementArtifacts[0];
-    }
-    return `Element Definition ${index + 1}`;
-  };
+  const hasItems = formData.packages.length > 0;
 
   const getPackageLabel = (pkg: ElementPackageDefinition, index: number) => {
     if (pkg.elmArtifact && pkg.elmArtifact.trim()) return pkg.elmArtifact;
@@ -2941,18 +2562,9 @@ function WizardAdditionalElementsStep({
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">
-          Optionally add element definitions or package configurations from external sources such as Maven.
+          Optionally add package configurations from external sources such as Maven by specifying an ELM artifact.
         </p>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={openAddElement}
-            data-testid="button-add-element-config"
-          >
-            <Database className="w-4 h-4 mr-2" />
-            Add Element Definition
-          </Button>
           <Button
             type="button"
             variant="outline"
@@ -2968,35 +2580,12 @@ function WizardAdditionalElementsStep({
       {!hasItems && (
         <div className="py-8 text-center border-2 border-dashed rounded-md">
           <p className="text-sm text-muted-foreground">No additional configurations added.</p>
-          <p className="text-xs text-muted-foreground mt-1">Use the buttons above to add element definitions or packages from external sources.</p>
+          <p className="text-xs text-muted-foreground mt-1">Use the button above to add packages from external sources.</p>
         </div>
       )}
 
       {hasItems && (
         <div className="space-y-2">
-          {formData.elements.map((el, i) => (
-            <div
-              key={`el-${i}`}
-              className="flex items-center justify-between gap-3 p-3 border rounded-md"
-              data-testid={`config-item-element-${i}`}
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <Database className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="font-mono text-sm truncate" data-testid={`text-element-label-${i}`}>
-                  {getElementLabel(el, i)}
-                </span>
-                <Badge variant="secondary" className="shrink-0">Element</Badge>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button size="icon" variant="ghost" onClick={() => openEditElement(i)} data-testid={`button-edit-element-${i}`}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => removeElement(i)} data-testid={`button-remove-element-${i}`}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
           {formData.packages.map((pkg, i) => (
             <div
               key={`pkg-${i}`}
@@ -3048,14 +2637,6 @@ function WizardAdditionalElementsStep({
         </div>
       </div>
 
-      <ElementDefinitionSubDialog
-        open={elementDialogOpen}
-        onOpenChange={setElementDialogOpen}
-        element={editingElement}
-        onSave={saveElement}
-        availableSpis={availableSpis}
-        spisLoading={spisLoading}
-      />
       <PackageDefinitionSubDialog
         open={packageDialogOpen}
         onOpenChange={setPackageDialogOpen}
@@ -3301,24 +2882,6 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
     staleTime: 30000,
   });
 
-  const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
-    queryKey: ['/api/rest/elements/builtin_spi'],
-    queryFn: async () => {
-      const data = await apiClient.request<any>('/api/rest/elements/builtin_spi');
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object') {
-        const keys = Object.keys(data);
-        if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
-          return keys.sort((a, b) => Number(a) - Number(b)).map(k => data[k]);
-        }
-        if (data.objects) return data.objects;
-        if (data.content) return data.content;
-      }
-      return [];
-    },
-    staleTime: 60000,
-  });
-
   return (
     <div className="space-y-5">
 
@@ -3470,7 +3033,7 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
           {attributesOpen && (
             <div className="space-y-3 pt-2">
               <p className="text-xs text-muted-foreground">
-                Per-path attribute overrides for Elements in the uploaded ELM file. The key is the element path (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time. Elements from packages or element definitions are configured in the Additional Elements section.
+                Per-path attribute overrides for Elements in the uploaded ELM file. The key is the element path (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time. Elements from packages are configured in the Additional Elements section.
                 {(() => {
                   const runtime = runtimeStatuses?.find(r => r.deployment?.id === deployment?.id);
                   const elmFailed = (runtime?.failedElements ?? []).filter(el => {
@@ -3598,7 +3161,7 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
                   <div className="space-y-1">
                     <p className="font-medium">Elements require configuration</p>
-                    <p>The following elements failed to load. Open the package or element definition that contains them and fill in the required attributes (highlighted in red).</p>
+                    <p>The following elements failed to load. Open the package that contains them and fill in the required attributes (highlighted in red).</p>
                     <ul className="mt-1 space-y-0.5 font-mono">
                       {unresolved.map((el, i) => (
                         <li key={i} className="truncate">{el.elementPath ?? el.definition?.name}</li>
@@ -3608,13 +3171,6 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                 </div>
               );
             })()}
-            <ElementDefinitionEditor
-              elements={formData.elements}
-              onChange={(elements) => update({ elements })}
-              availableSpis={availableSpis}
-              spisLoading={spisLoading}
-              hintsByPath={hintsByPath}
-            />
             <div className="border-t pt-4">
               <PackageDefinitionEditor
                 packages={formData.packages}
