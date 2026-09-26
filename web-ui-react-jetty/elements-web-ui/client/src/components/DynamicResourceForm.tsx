@@ -188,42 +188,13 @@ export function DynamicResourceForm({
         continue; // Skip the rest of the logic for this field
       }
       
-      // Special case: OIDC Providers extraAuthorizeParams is Map<String, String> on the backend, but a
-      // provider's extra param value (e.g. Twitch's 'claims') is itself a JSON object serialized as a string.
-      // Typing that as double-escaped JSON-within-JSON by hand is error-prone, so accept a plain nested object
-      // for any entry and auto-stringify it here rather than sending it as-is and failing Jackson deserialization
-      // ("Cannot deserialize value of type String from Object value") on submit.
+      // Special case: OIDC Providers extraAuthorizeParams is Map<String, String> on the backend and is
+      // produced directly by the KeyValueMapEditor (rows of key/value text inputs). Values are plain
+      // strings; a provider's extra param value (e.g. Twitch's 'claims') is itself a JSON object typed
+      // into the value input and submitted as a JSON-encoded string, which is exactly what the backend
+      // stores. No parse/transform needed here.
       if (resourceName === 'OIDC Providers' && field.name === 'extraAuthorizeParams') {
-        shape[field.name] = z.string().transform((val, ctx) => {
-          if (!val || val.trim() === '') {
-            return {};
-          }
-
-          let parsed: unknown;
-          try {
-            parsed = JSON.parse(val);
-          } catch {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: 'Invalid JSON format',
-            });
-            return z.NEVER;
-          }
-
-          if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-            ctx.addIssue({
-              code: z.ZodIssueCode.custom,
-              message: 'Must be a JSON object of key/value pairs',
-            });
-            return z.NEVER;
-          }
-
-          const stringified: Record<string, string> = {};
-          for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
-            stringified[key] = typeof value === 'string' ? value : JSON.stringify(value);
-          }
-          return stringified;
-        });
+        shape[field.name] = z.record(z.string());
         continue; // Skip the rest of the logic for this field
       }
 
@@ -412,6 +383,9 @@ export function DynamicResourceForm({
         } else if (field.name === 'validStatusCodes' && field.type === 'integer' && field.isArray) {
           // Valid status codes - keep as array of numbers
           values[field.name] = Array.isArray(value) ? value : [];
+        } else if (resourceName === 'OIDC Providers' && field.name === 'extraAuthorizeParams') {
+          // OIDC extra authorize params - keep as Map<String, String> object for KeyValueMapEditor
+          values[field.name] = (typeof value === 'object' && value !== null) ? value : {};
         } else if (field.type === 'object' || field.isMap || field.isArray) {
           // For other resources, convert objects/arrays to JSON strings
           values[field.name] = value ? JSON.stringify(value, null, 2) : '';
@@ -459,6 +433,8 @@ export function DynamicResourceForm({
         values[field.name] = [];
       } else if (field.type === 'boolean') {
         values[field.name] = false;
+      } else if (resourceName === 'OIDC Providers' && field.name === 'extraAuthorizeParams') {
+        values[field.name] = {};
       } else if (field.type === 'object' || field.isMap) {
         values[field.name] = '';
       } else if (field.isArray) {
