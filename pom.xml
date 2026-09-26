@@ -146,10 +146,10 @@
         <guice.version>7.0.0</guice.version>
         <guice.bridge.version>3.0.6</guice.bridge.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <slf4j.version>1.7.32</slf4j.version>
-        <logback.version>1.2.3</logback.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <logback.version>1.2.13</logback.version>
         <guava.version>33.0.0-jre</guava.version>
-        <commons.lang.version>3.12.0</commons.lang.version>
+        <commons.lang.version>3.18.0</commons.lang.version>
         <jersey.version>3.1.9</jersey.version>
         <jakarta.xml.bind.api.version>4.0.2</jakarta.xml.bind.api.version>
         <jakarta.el.version>5.0.0-M1</jakarta.el.version>
@@ -169,17 +169,15 @@
         <classgraph.version>4.8.175</classgraph.version>
         <swagger.version>2.2.43</swagger.version>
         <rocoto.version>6.2</rocoto.version>
-        <orgjson.version>20230227</orgjson.version>
         <libphonenumber.version>8.13.27</libphonenumber.version>
         <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
         <hibernate.validator.guice.version>3.0.2</hibernate.validator.guice.version>
         <commons.logging.version>1.2</commons.logging.version>
         <restfb.version>3.0.0-RC.2</restfb.version>
-        <jgit.version>6.10.0.202406032230-r</jgit.version>
+        <jgit.version>6.10.1.202505221210-r</jgit.version>
         <mockito.version>5.13.0</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
         <jeromq.version>0.5.2</jeromq.version>
-        <beanutils.version>1.9.3</beanutils.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.version>9.7.0</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>
@@ -187,7 +185,7 @@
         <jetty.version>12.0.12</jetty.version>
         <flapdoodle.mongo.version>3.0.0</flapdoodle.mongo.version>
         <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
-        <nimbus.jose.jwt.version>9.37.3</nimbus.jose.jwt.version>
+        <nimbus.jose.jwt.version>9.37.4</nimbus.jose.jwt.version>
         <samstevens.totp.version>1.7.1</samstevens.totp.version>
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
@@ -822,11 +820,6 @@
                 <version>${boolparser.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.json</groupId>
-                <artifactId>json</artifactId>
-                <version>${orgjson.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.googlecode.libphonenumber</groupId>
                 <artifactId>libphonenumber</artifactId>
                 <version>${libphonenumber.version}</version>
@@ -905,11 +898,6 @@
                 <groupId>org.zeromq</groupId>
                 <artifactId>jeromq</artifactId>
                 <version>${jeromq.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils</artifactId>
-                <version>${beanutils.version}</version>
             </dependency>
             <dependency>
                 <groupId>commons-logging</groupId>
