@@ -10,6 +10,7 @@ import java.util.Map;
 /**
  * Request to update a new Element with specified artifacts and their repositories.
  *
+ * @param name the optional human-readable name for the deployment
  * @param elements list of element path definitions
  * @param packages list of element package definitions
  * @param useDefaultRepositories whether to use default artifact repositories
@@ -26,6 +27,13 @@ import java.util.Map;
         "all dependencies transitively."
 )
 public record UpdateElementDeploymentRequest(
+
+        @Schema(description =
+                "An optional human-readable name for the deployment. Used to qualify plugin/menu entries from " +
+                "this deployment so that elements from different deployments never collide, even when their plugin " +
+                "routes match. If null, the existing name is preserved."
+        )
+        String name,
 
         @Valid
         @Schema(description =

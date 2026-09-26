@@ -97,6 +97,7 @@ public class MongoElementDeploymentDaoTest {
 
         final var deployment = new ElementDeployment(
                 null,
+                null,
                 application,
                 null,
                 pathSpiBuiltins,
@@ -150,6 +151,7 @@ public class MongoElementDeploymentDaoTest {
         );
 
         final var deployment = new ElementDeployment(
+                null,
                 null,
                 null,
                 null,
@@ -295,6 +297,7 @@ public class MongoElementDeploymentDaoTest {
 
         final var updated = new ElementDeployment(
                 deployment.id(),
+                deployment.name(),
                 deployment.application(),
                 deployment.elm(),
                 updatedPathSpiBuiltins,

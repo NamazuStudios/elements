@@ -232,6 +232,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             // Build ElementDeployment from request
             final var deployment = new ElementDeployment(
                     deploymentId,
+                    null,
                     request.application(),
                     largeObjectReference,
                     request.pathSpiBuiltins(),

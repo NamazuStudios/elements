@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
  * Represents the deployment configuration for an Element within the system.
  *
  * @param id the database unique identifier of the Element deployment
+ * @param name an optional human-readable name for the Element deployment
  * @param application the application context under which the Element is deployed
  * @param elm the large object housing the actual ELM file
  * @param pathSpiBuiltins map of element paths to builtin SPI configurations
@@ -40,6 +41,13 @@ public record ElementDeployment(
                 "The database unique identifier of the Element deployment."
         )
         String id,
+
+        @Schema(description =
+                "An optional human-readable name for the Element deployment. Used to qualify plugin/menu entries " +
+                "from this deployment so that elements from different deployments never collide, even when their " +
+                "plugin routes match. Falls back to the deployment ID when not set."
+        )
+        String name,
 
         @Schema(description =
                 "The application context under which the Element is being deployed. If null, the Element is " +

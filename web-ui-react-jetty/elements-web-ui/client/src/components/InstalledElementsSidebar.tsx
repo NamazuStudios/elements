@@ -21,42 +21,48 @@ interface PluginGroupsProps {
 }
 
 function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
-  // Separate plugins with an application from those without
+  const qualifiedPluginPath = (plugin: LoadedPlugin) =>
+    `/plugin/${encodeURIComponent(plugin.qualifiedKey)}`;
+
+  // Group by the same qualifier used for namespacing, so plugins from
+  // deployments without an application still get a stable, readable group.
   const grouped: Record<string, LoadedPlugin[]> = {};
   const ungrouped: LoadedPlugin[] = [];
 
   for (const plugin of plugins) {
-    if (plugin.application) {
-      (grouped[plugin.application] ??= []).push(plugin);
+    const groupKey = plugin.application ?? plugin.deploymentName ?? plugin.deploymentId;
+    if (groupKey) {
+      (grouped[groupKey] ??= []).push(plugin);
     } else {
       ungrouped.push(plugin);
     }
   }
 
-  const appNames = Object.keys(grouped).sort();
-  const hasGroups = appNames.length > 0;
+  const groupNames = Object.keys(grouped).sort();
+  const hasGroups = groupNames.length > 0;
 
   return (
     <SidebarMenu>
-      {appNames.map(appName => (
-        <SidebarMenuItem key={appName}>
+      {groupNames.map(groupName => (
+        <SidebarMenuItem key={groupName}>
           <Collapsible defaultOpen>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton className="font-medium">
                 <Icons.AppWindow className="w-4 h-4 shrink-0" />
-                <span className="truncate">{appName}</span>
+                <span className="truncate">{groupName}</span>
                 <Icons.ChevronDown className="ml-auto w-3 h-3 shrink-0 transition-transform [[data-state=open]_&]:rotate-180" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <SidebarMenuSub>
-                {grouped[appName].map(plugin => {
+                {grouped[groupName].map(plugin => {
                   const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+                  const path = qualifiedPluginPath(plugin);
                   return (
-                    <SidebarMenuSubItem key={plugin.route}>
+                    <SidebarMenuSubItem key={plugin.qualifiedKey}>
                       <SidebarMenuSubButton
-                        onClick={() => setLocation(`/plugin/${plugin.route}`)}
-                        isActive={location.startsWith(`/plugin/${plugin.route}`)}
+                        onClick={() => setLocation(path)}
+                        isActive={location.startsWith(path)}
                       >
                         <IconComponent className="w-4 h-4" />
                         <span>{plugin.label}</span>
@@ -72,11 +78,12 @@ function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
 
       {ungrouped.map(plugin => {
         const IconComponent = (Icons as Record<string, any>)[plugin.icon] || Icons.Package;
+        const path = qualifiedPluginPath(plugin);
         return (
-          <SidebarMenuItem key={plugin.route}>
+          <SidebarMenuItem key={plugin.qualifiedKey}>
             <SidebarMenuButton
-              onClick={() => setLocation(`/plugin/${plugin.route}`)}
-              isActive={location.startsWith(`/plugin/${plugin.route}`)}
+              onClick={() => setLocation(path)}
+              isActive={location.startsWith(path)}
               className={hasGroups ? 'pl-2' : ''}
             >
               <IconComponent className="w-4 h-4" />

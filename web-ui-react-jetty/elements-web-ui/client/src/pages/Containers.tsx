@@ -39,6 +39,7 @@ interface ElementMetadata {
 
 interface ElementDeployment {
   id: string;
+  name?: string;
   state: string;
   version: number;
   pathSpiBuiltins?: Record<string, string[]> | null;
@@ -208,6 +209,11 @@ export default function Containers() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0 space-y-2">
+                    {container.runtime?.deployment?.name && (
+                      <div className="text-sm font-semibold truncate" data-testid={`text-container-name-${idx}`}>
+                        {container.runtime.deployment.name}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getContainerDotColor(container)} ${container.status === 'LOADING' ? 'animate-pulse' : ''}`} />
                       <span className="font-mono text-sm font-medium" data-testid={`text-container-deployment-${idx}`}>
@@ -231,6 +237,9 @@ export default function Containers() {
                           </span>
                         ) : null;
                       })()}
+                      {container.runtime?.deployment?.application && (
+                        <span className="text-muted-foreground">App: <span className="font-medium text-foreground">{container.runtime.deployment.application.name || container.runtime.deployment.application.id}</span></span>
+                      )}
                       {container.elements && container.elements.length > 0 && (
                         <span className="text-muted-foreground">{container.elements.length} element{container.elements.length !== 1 ? 's' : ''}</span>
                       )}
@@ -262,6 +271,12 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
           <span className="font-mono text-sm font-medium">
             {container.runtime?.deployment?.id || 'Container'}
           </span>
+          {container.runtime?.deployment?.name && (
+            <Badge variant="secondary" className="text-xs">{container.runtime.deployment.name}</Badge>
+          )}
+          {container.runtime?.deployment?.application && (
+            <Badge variant="outline" className="text-xs">App: {container.runtime.deployment.application.name || container.runtime.deployment.application.id}</Badge>
+          )}
           <Badge variant={getStatusVariant(container.status)}>
             {container.status}
           </Badge>
@@ -446,7 +461,7 @@ function ContainerDetail({ container }: { container: ElementContainerStatus }) {
 
 function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }) {
   const [extraOpen, setExtraOpen] = useState(false);
-  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, pathSpiBuiltins, pathSpiClassPaths, pathAttributes, ...rest } = deployment;
+  const { id, name, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, pathSpiBuiltins, pathSpiClassPaths, pathAttributes, ...rest } = deployment;
   const extraKeys = Object.keys(rest);
 
   const attrOverrideCount = pathAttributes
@@ -465,6 +480,12 @@ function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }
             <>
               <span className="text-xs text-muted-foreground">ID</span>
               <span className="font-mono text-xs break-all">{id}</span>
+            </>
+          )}
+          {name && (
+            <>
+              <span className="text-xs text-muted-foreground">Name</span>
+              <span className="text-xs font-medium">{name}</span>
             </>
           )}
           {state && (

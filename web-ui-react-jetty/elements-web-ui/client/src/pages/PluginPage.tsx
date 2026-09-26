@@ -5,7 +5,13 @@ import { PluginErrorBoundary } from '@/components/PluginErrorBoundary';
 export default function PluginPage() {
   const params = useParams<{ route: string }>();
   const { plugins, isLoading } = usePlugins();
-  const route = params.route;
+
+  let route = params.route;
+  try {
+    route = decodeURIComponent(route);
+  } catch {
+    // Malformed percent-encoding; fall back to the raw segment
+  }
 
   if (isLoading) {
     return (
@@ -18,7 +24,7 @@ export default function PluginPage() {
     );
   }
 
-  const plugin = plugins.find(p => p.route === route);
+  const plugin = plugins.find(p => p.qualifiedKey === route);
 
   if (!plugin) {
     return (

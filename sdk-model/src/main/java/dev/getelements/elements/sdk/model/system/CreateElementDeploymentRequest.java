@@ -9,6 +9,7 @@ import java.util.Map;
 /**
  * Request to create a new Element with specified artifacts and their repositories.
  *
+ * @param name the optional human-readable name for the deployment
  * @param applicationNameOrId the application name or ID, or null for global scope
  * @param elements the Element path definitions
  * @param packages the Element package definitions
@@ -26,6 +27,13 @@ import java.util.Map;
         "all dependencies transitively."
 )
 public record CreateElementDeploymentRequest(
+
+        @Schema(description =
+                "An optional human-readable name for the deployment. Used to qualify plugin/menu entries from " +
+                "this deployment so that elements from different deployments never collide, even when their plugin " +
+                "routes match. Falls back to the deployment ID when not set."
+        )
+        String name,
 
         @Schema(description =
                 "The application name or ID. May be null. If null, then the Element will be scoped to the " +

@@ -17,8 +17,11 @@ export interface LoadedPlugin {
   label: string;
   icon: string;
   route: string;
+  qualifiedKey: string;
   component: React.ComponentType;
   application?: string;
+  deploymentId?: string;
+  deploymentName?: string;
 }
 
 declare global {
@@ -32,7 +35,8 @@ declare global {
       getResultsPerPage(): number;
     };
     __elementsPlugins: {
-      _registry: Record<string, React.ComponentType>;
+      _registry: Record<string, Record<string, React.ComponentType>>;
+      _activeNamespace: string | null;
       register(route: string, component: React.ComponentType): void;
     };
   }
@@ -109,37 +113,73 @@ export function loadPluginBundle(bundleUrl: string): Promise<void> {
  * Orchestrates full plugin discovery and loading from a list of containers.
  * @param segment - UI content segment directory, e.g. 'superuser' or 'user'.
  * Returns successfully loaded plugins; failures are silently skipped.
+ *
+ * Each plugin is registered into a namespace keyed by its deployment id, then
+ * surfaced with a `qualifiedKey` of `{application ?? deploymentName ?? deploymentId}:{route}`
+ * so that deployments sharing a `route` value never collide in the registry,
+ * sidebar, or plugin URL.
  */
 export async function discoverAndLoadPlugins(
-  containers: Array<{ uris?: string[]; application?: string }>,
+  containers: Array<{ uris?: string[]; application?: string; deploymentId?: string; deploymentName?: string }>,
   segment: string
 ): Promise<LoadedPlugin[]> {
   const loadedPlugins: LoadedPlugin[] = [];
-  const seenPaths = new Set<string>();
+  const seenPathsByNamespace = new Map<string, Set<string>>();
+  const seenQualifiedKeys = new Set<string>();
 
   for (const container of containers) {
+    const qualifier = container.application ?? container.deploymentName ?? container.deploymentId;
+    const namespace = container.deploymentId ?? '';
+
+    const containerPaths = seenPathsByNamespace.get(namespace) ?? new Set<string>();
+    seenPathsByNamespace.set(namespace, containerPaths);
+
     const uiBasePaths = extractUiBasePaths([container]);
     for (const uiBasePath of uiBasePaths) {
-      if (seenPaths.has(uiBasePath)) continue;
-      seenPaths.add(uiBasePath);
+      if (containerPaths.has(uiBasePath)) continue;
+      containerPaths.add(uiBasePath);
 
       const manifest = await fetchPluginManifest(uiBasePath, segment);
       if (!manifest) continue;
 
       for (const entry of manifest.entries) {
         try {
+          if (!qualifier) {
+            console.warn(
+              `[Elements] Skipping plugin entry "${entry.route}": its container has no application, deployment name, or deployment id to qualify it.`
+            );
+            continue;
+          }
+
           const bundleRelPath = `${uiBasePath}${segment}/${entry.bundlePath}`;
           const bundleUrl = await getApiPath(bundleRelPath);
-          await loadPluginBundle(bundleUrl);
 
-          const component = window.__elementsPlugins?._registry?.[entry.route];
+          window.__elementsPlugins._activeNamespace = namespace;
+          try {
+            await loadPluginBundle(bundleUrl);
+          } finally {
+            window.__elementsPlugins._activeNamespace = null;
+          }
+
+          const component = window.__elementsPlugins?._registry?.[namespace]?.[entry.route];
           if (component) {
+            const qualifiedKey = `${qualifier}:${entry.route}`;
+            if (seenQualifiedKeys.has(qualifiedKey)) {
+              console.warn(
+                `[Elements] Plugin menu collision: multiple deployments expose "${qualifiedKey}". Only the first is shown; the later registration is ignored.`
+              );
+              continue;
+            }
+            seenQualifiedKeys.add(qualifiedKey);
             loadedPlugins.push({
               label: entry.label,
               icon: entry.icon,
               route: entry.route,
+              qualifiedKey,
               component,
               application: container.application,
+              deploymentId: container.deploymentId,
+              deploymentName: container.deploymentName,
             });
           }
         } catch {

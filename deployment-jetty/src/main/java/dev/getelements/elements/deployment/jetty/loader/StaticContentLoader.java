@@ -85,21 +85,7 @@ public abstract class StaticContentLoader implements Loader {
 
         try (var mon = Monitor.enter(lock)) {
 
-            final var alreadyDeployed = activeDeployments
-                    .stream()
-                    .anyMatch(d -> d.element().equals(element));
-
-            if (alreadyDeployed) {
-
-                pending.logWarningf("WARNING: Detected existing static content deployment for %s.", element
-                        .getElementRecord()
-                        .definition()
-                        .name()
-                );
-
-                return;
-
-            }
+            final var deploymentId = record.deployment().id();
 
             final var elementPathRecord = record.elementPathsByElement().get(element);
             if (elementPathRecord == null) return;
@@ -135,21 +121,24 @@ public abstract class StaticContentLoader implements Loader {
 
                     });
 
-            final var contextPath = element
+            final var overrideUri = element
                     .getElementRecord()
                     .attributes()
                     .getAttributeOptional(uriOverrideAttributeKey)
                     .filter(String.class::isInstance)
                     .map(String.class::cast)
                     .filter(Predicate.not(String::isBlank))
-                    .orElseGet(() -> getHttpContextRoot().formatNormalized(defaultContextPathFormat, prefix));
+                    .orElse(null);
+
+            final var contextPath = resolveContextPath(pending, element, prefix, overrideUri, deploymentId);
+            if (contextPath == null) return;
 
             final var conflict = checkPathConflict(contextPath);
 
             if (conflict == PathConflict.INNER) {
                 pending.logWarningf(
-                        "WARNING: Static content path '%s' is inside a reserved system API path. " +
-                        "Refusing to load static content for element %s.",
+                        "WARNING: Static content path '%s' is inside a reserved system API path or another " +
+                        "mounted content tree. Refusing to load static content for element %s.",
                         contextPath,
                         element.getElementRecord().definition().name()
                 );
@@ -209,7 +198,7 @@ public abstract class StaticContentLoader implements Loader {
                 throw new InternalException(ex);
             }
 
-            activeDeployments.add(new JettyDeploymentRecord(element, handlerToAdd));
+            activeDeployments.add(new JettyDeploymentRecord(deploymentId, element, handlerToAdd));
             pending.element(element);
 
             pending.logf("Serving %d static file(s) for %s at %s%s.",
@@ -224,14 +213,24 @@ public abstract class StaticContentLoader implements Loader {
     }
 
     @Override
-    public void unload(final Element element) {
-        try (var mon = Monitor.enter(lock)) {
-            final var deployment = activeDeployments.stream()
-                    .filter(d -> d.element().equals(element))
-                    .findFirst()
-                    .orElse(null);
+    public void unload(final ElementRuntimeService.RuntimeRecord record) {
+        if (record.deployment() == null) return;
+        unloadDeployments(d -> record.deployment().id().equals(d.deploymentId()));
+    }
 
-            if (deployment != null) {
+    @Override
+    public void unload(final Element element) {
+        unloadDeployments(d -> d.element().equals(element));
+    }
+
+    private void unloadDeployments(final Predicate<JettyDeploymentRecord> filter) {
+        try (var mon = Monitor.enter(lock)) {
+            final var toRemove = activeDeployments
+                    .stream()
+                    .filter(filter)
+                    .toList();
+
+            for (final var deployment : toRemove) {
                 activeDeployments.remove(deployment);
 
                 // Deregister specific paths (catch-all handlers using ReservedPathSkipHandler were never registered)
@@ -242,11 +241,16 @@ public abstract class StaticContentLoader implements Loader {
                 try {
                     deployment.handler().stop();
                     getSequence().removeHandler(deployment.handler());
-                    logger.info("Unloaded static content handler for element: {}",
-                            element.getElementRecord().definition().name());
+                    logger.info("Unloaded static content handler for element: {} in deployment: {}",
+                            deployment.element().getElementRecord().definition().name(),
+                            deployment.deploymentId()
+                    );
                 } catch (final Exception ex) {
-                    logger.error("Failed to cleanly unload static content handler for element: {}",
-                            element.getElementRecord().definition().name(), ex);
+                    logger.error("Failed to cleanly unload static content handler for element: {} in deployment: {}",
+                            deployment.element().getElementRecord().definition().name(),
+                            deployment.deploymentId(),
+                            ex
+                    );
                 }
             }
         }
@@ -295,6 +299,101 @@ public abstract class StaticContentLoader implements Loader {
     @Inject
     public void setHttpPathRegistry(final HttpPathRegistry httpPathRegistry) {
         this.httpPathRegistry = httpPathRegistry;
+    }
+
+    /**
+     * Resolves the context path for an element's static content tree.
+     *
+     * <p>An explicit {@code dev.getelements.element.ui.uri} (or {@code ...static.uri}) override is the preferred
+     * path and is used as-is when available. Otherwise the default path ({@code /app/ui/{prefix}} or
+     * {@code /app/static/{prefix}}) is used. When the preferred path is already taken by another mounted tree, the
+     * element is instead served under a deployment-scoped path ({@code /app/ui/{deploymentId}/{prefix}} or
+     * {@code /app/ui/{deploymentId}/{suffix}} for overrides) so that distinct deployments can each expose their
+     * own UI at the same route. Only paths that remain inside a reserved system namespace or another content tree
+     * even after scoping are refused.</p>
+     *
+     * @return the resolved context path, or {@code null} if no viable path could be assigned
+     */
+    private String resolveContextPath(final PendingDeployment pending,
+                                      final Element element,
+                                      final String prefix,
+                                      final String overrideUri,
+                                      final String deploymentId) {
+
+        final var elementName = element.getElementRecord().definition().name();
+
+        final var requestedPath = overrideUri == null
+                ? getHttpContextRoot().formatNormalized(defaultContextPathFormat, prefix)
+                : overrideUri;
+
+        if (checkPathConflict(requestedPath) != PathConflict.INNER) {
+            return requestedPath;
+        }
+
+        final var owner = findOwnerDeploymentId(requestedPath);
+        final var ownerLabel = owner == null ? "a system path" : "deployment " + owner;
+
+        final var scopedPath = scopedContextPath(overrideUri == null ? prefix : requestedPath, deploymentId);
+
+        if (checkPathConflict(scopedPath) == PathConflict.INNER) {
+            pending.logWarningf(
+                    "WARNING: Static content path '%s' for element %s is in use by %s and the deployment-scoped " +
+                    "path '%s' is also unavailable. Refusing to load static content for element %s.",
+                    requestedPath,
+                    elementName,
+                    ownerLabel,
+                    scopedPath,
+                    elementName
+            );
+            return null;
+        }
+
+        pending.logWarningf(
+                "WARNING: Static content path '%s' for element %s is in use by %s. Mounting at the " +
+                "deployment-scoped path '%s' instead.",
+                requestedPath,
+                elementName,
+                ownerLabel,
+                scopedPath
+        );
+
+        return scopedPath;
+
+    }
+
+    /**
+     * Builds the deployment-scoped variant of a context path: {@code /app/ui/{deploymentId}/{suffix}} where the
+     * suffix is either the element's application prefix (default paths) or the portion of an override path beneath
+     * the mount root (e.g. {@code grillmaster} for the override {@code /app/ui/grillmaster}).
+     */
+    private String scopedContextPath(final String suffixSource, final String deploymentId) {
+        final var suffix = suffixSource.startsWith(mountRoot())
+                ? stripLeadingSlashes(suffixSource.substring(mountRoot().length()))
+                : stripLeadingSlashes(suffixSource);
+        final var scopedFormat = defaultContextPathFormat.replace("%s", deploymentId + "/%s");
+        return getHttpContextRoot().formatNormalized(scopedFormat, suffix);
+    }
+
+    private static String stripLeadingSlashes(final String value) {
+        var result = value;
+        while (result.startsWith("/")) {
+            result = result.substring(1);
+        }
+        return result;
+    }
+
+    private String mountRoot() {
+        final var idx = defaultContextPathFormat.indexOf("%s");
+        return idx >= 0 ? defaultContextPathFormat.substring(0, idx) : defaultContextPathFormat;
+    }
+
+    private String findOwnerDeploymentId(final String contextPath) {
+        return activeDeployments
+                .stream()
+                .filter(d -> contextPath.equals(d.contextPath()))
+                .map(JettyDeploymentRecord::deploymentId)
+                .findFirst()
+                .orElse(null);
     }
 
     private PathConflict checkPathConflict(final String contextPath) {

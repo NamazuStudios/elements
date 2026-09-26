@@ -38,6 +38,7 @@ interface ElementPackageDefinition {
 
 interface ElementDeployment {
   id: string;
+  name?: string;
   application?: { id: string; name: string; description?: string } | null;
   elm?: any;
   pathSpiBuiltins?: Record<string, string[]>;
@@ -58,6 +59,7 @@ interface PaginatedResponse {
 
 interface FormData {
   state: string;
+  name: string;
   appNameOrId: string;
   useDefaultRepositories: boolean;
   elements: ElementPathDefinition[];
@@ -156,6 +158,7 @@ function getStateColor(state: string): string {
 
 const emptyFormData: FormData = {
   state: 'ENABLED',
+  name: '',
   appNameOrId: '',
   useDefaultRepositories: true,
   elements: [],
@@ -169,6 +172,7 @@ const emptyFormData: FormData = {
 function deploymentToFormData(d: ElementDeployment): FormData {
   return {
     state: d.state || 'ENABLED',
+    name: d.name || '',
     appNameOrId: '',
     useDefaultRepositories: d.useDefaultRepositories ?? true,
     elements: (d.elements || []).map(e => ({
@@ -368,6 +372,7 @@ export default function ElementDeployments() {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
+          name: deployment.name,
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
@@ -461,6 +466,7 @@ export default function ElementDeployments() {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
+          name: deployment.name,
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
@@ -528,6 +534,7 @@ export default function ElementDeployments() {
   const buildBody = () => {
     const body: any = {
       state: formData.state,
+      name: formData.name.trim(),
       useDefaultRepositories: formData.useDefaultRepositories,
     };
     if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
@@ -661,6 +668,11 @@ export default function ElementDeployments() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0 space-y-2">
+                      {deployment.name && (
+                        <div className="text-sm font-semibold truncate" data-testid={`text-deployment-name-${deployment.id}`}>
+                          {deployment.name}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getRuntimeDotColor(listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id)?.status, deployment.state)}`} />
                         <span className="font-mono text-sm font-medium truncate" data-testid={`text-deployment-id-${deployment.id}`}>
@@ -902,6 +914,9 @@ export default function ElementDeployments() {
                 )}
                 {formData.appNameOrId && (
                   <Badge variant="secondary">App: {formData.appNameOrId}</Badge>
+                )}
+                {formData.name.trim() && (
+                  <Badge variant="outline">Name: {formData.name.trim()}</Badge>
                 )}
               </div>
               <ScrollArea className="h-[50vh] w-full rounded-md border">
@@ -2543,6 +2558,21 @@ function WizardConfigStep({
         </Collapsible>
       )}
 
+      <div className="space-y-2">
+        <Label htmlFor="wizard-name">Name</Label>
+        <Input
+          id="wizard-name"
+          value={formData.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder="Optional deployment name"
+          className="font-mono text-xs"
+          data-testid="input-wizard-name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional human-readable name. Used to qualify this deployment's menus and plugin entries in the admin UI.
+        </p>
+      </div>
+
       <div className="space-y-2 border-t pt-4">
         <Label>Application</Label>
         <Select
@@ -3116,6 +3146,22 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
 
   return (
     <div className="space-y-5">
+
+      {/* ── Name ── */}
+      <div className="space-y-2">
+        <Label htmlFor="deployment-name">Name</Label>
+        <Input
+          id="deployment-name"
+          value={formData.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder="Optional deployment name"
+          className="font-mono text-xs"
+          data-testid="input-deployment-name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional human-readable name. Used to qualify this deployment's menus and plugin entries in the admin UI.
+        </p>
+      </div>
 
       {/* ── Deployment State (edit only) ── */}
       {mode === 'edit' && (
