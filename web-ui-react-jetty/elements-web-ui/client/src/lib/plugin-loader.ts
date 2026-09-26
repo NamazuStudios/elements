@@ -43,8 +43,25 @@ declare global {
 }
 
 /**
- * Extracts /app/ui/ path segments from container URIs.
- * Containers expose absolute URIs like http://host:port/app/ui/prefix/.
+ * Path prefixes produced by the other element loaders. Anything the backend reports that
+ * isn't one of these is treated as a candidate UI base path: UI content is normally mounted
+ * at {@code /app/ui/{...}} but its full URI can be moved anywhere via the element's
+ * {@code UI_CONTENT_URI} override, so UI bases can no longer be identified by substring alone.
+ */
+const NON_UI_PATH_PREFIXES = ['/app/rest/', '/app/ws/', '/app/static/', '/element/'];
+
+function isNonUiPath(path: string): boolean {
+  return path === '' || path === '/' || NON_UI_PATH_PREFIXES.some(prefix => path.startsWith(prefix));
+}
+
+function normalizeBasePath(path: string): string {
+  return path.endsWith('/') ? path : path + '/';
+}
+
+/**
+ * Extracts candidate UI base paths from container URIs.
+ * Containers expose absolute URIs; the path portion is used, e.g.
+ * http://host:port/app/ui/prefix/ or http://host:port/custom/ui/path.
  */
 export function extractUiBasePaths(containers: Array<{ uris?: string[] }>): string[] {
   const paths: string[] = [];
@@ -52,15 +69,13 @@ export function extractUiBasePaths(containers: Array<{ uris?: string[] }>): stri
     for (const uri of container.uris ?? []) {
       try {
         const url = new URL(uri);
-        if (url.pathname.includes('/app/ui/')) {
-          const basePath = url.pathname.endsWith('/') ? url.pathname : url.pathname + '/';
-          paths.push(basePath);
+        if (!isNonUiPath(url.pathname)) {
+          paths.push(normalizeBasePath(url.pathname));
         }
       } catch {
         // Try treating as a relative path
-        if (uri.includes('/app/ui/')) {
-          const basePath = uri.endsWith('/') ? uri : uri + '/';
-          paths.push(basePath);
+        if (!isNonUiPath(uri)) {
+          paths.push(normalizeBasePath(uri));
         }
       }
     }
