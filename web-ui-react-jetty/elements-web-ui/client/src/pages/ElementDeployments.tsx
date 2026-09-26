@@ -127,6 +127,67 @@ interface PerPathHints {
   inherited: Record<string, string>; // system-provided attributes that don't need user configuration
 }
 
+// Debounced lookup of GET /elm/inspector/artifact/{coordinates} -- lets a package's ELM Artifact
+// coordinate field drive real path/attribute discovery before any deployment attempt exists, instead
+// of only being available after a successful deploy (via /elements/runtime).
+function useElmArtifactInspection(coordinates: string) {
+  const trimmed = coordinates.trim();
+  const [debounced, setDebounced] = useState(trimmed);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(trimmed), 500);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
+
+  return useQuery<ElmInspectorRecord[]>({
+    queryKey: ['/api/rest/elm/inspector/artifact', debounced],
+    queryFn: () => apiClient.request<ElmInspectorRecord[]>(
+      `/api/rest/elm/inspector/artifact/${encodeURIComponent(debounced)}`
+    ),
+    enabled: debounced.length > 0,
+    retry: false,
+    staleTime: 60000,
+  });
+}
+
+// Adds an empty entry for any inspected path not already present. Never overwrites or removes an
+// existing entry, so a user's in-progress edits (or a path added manually) are always preserved.
+// Returns the same object reference when nothing changed, so callers can skip a state update.
+function seedPathAttributesFromInspection(
+  current: Record<string, Record<string, any>>,
+  records: ElmInspectorRecord[] | undefined,
+): Record<string, Record<string, any>> {
+  if (!records || records.length === 0) return current;
+  let changed = false;
+  const result = { ...current };
+  for (const record of records) {
+    if (record.path && !(record.path in result)) {
+      result[record.path] = {};
+      changed = true;
+    }
+  }
+  return changed ? result : current;
+}
+
+// Builds PathKeyValueMapEditor-compatible hints from static ELM inspection records, so a package's
+// paths show their real default attribute values even before any successful deployment.
+function hintsFromInspectionRecords(records: ElmInspectorRecord[] | undefined): Record<string, PerPathHints> {
+  const map: Record<string, PerPathHints> = {};
+  for (const record of records ?? []) {
+    if (!record.path) continue;
+    const hints: Record<string, DefaultAttributeHint> = {};
+    for (const [key, value] of Object.entries(record.attributes ?? {})) {
+      hints[key] = {
+        value: typeof value === 'string' ? value : JSON.stringify(value),
+        description: '',
+        sensitive: false,
+      };
+    }
+    map[record.path] = { hints, required: {}, sensitive: new Set(), inherited: {} };
+  }
+  return map;
+}
+
 function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline' | 'destructive' {
   switch (state) {
     case 'ENABLED': return 'default';
@@ -2144,60 +2205,134 @@ function PackageDefinitionEditor({
         <p className="text-xs text-muted-foreground italic">No packages. Click "Add Package" to add one.</p>
       )}
       {packages.map((pkg, i) => (
-        <Card key={i} data-testid={`card-package-def-${i}`}>
-          <CardContent className="p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Package #{i + 1}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removePackage(i)}
-                data-testid={`button-remove-package-${i}`}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor={`pkg-elm-${i}`} className="text-xs">ELM Artifact *</Label>
-              <Input
-                id={`pkg-elm-${i}`}
-                value={pkg.elmArtifact}
-                onChange={(e) => updatePackage(i, { ...pkg, elmArtifact: e.target.value })}
-                placeholder="com.example:my-elm:1.0"
-                className="font-mono text-xs"
-                data-testid={`input-package-elm-${i}`}
-              />
-              <p className="text-xs text-muted-foreground">
-                The ELM artifact coordinate to resolve and deploy. This ELM file will be downloaded, extracted, and its contents organized into the deployment directory structure.
-              </p>
-            </div>
-            <PathClassPathsEditor
-              value={pkg.pathSpiBuiltins || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathSpiBuiltins: val })}
-              label="SPI Builtin Path Mapping"
-              description="Map of element paths to builtin SPI configurations. This allows for an individual SPI specification for each Element contained within the ELM file."
-              testIdPrefix={`pkg-${i}-spi-builtins`}
-            />
-            <PathClassPathsEditor
-              value={pkg.pathSpiClassPaths || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathSpiClassPaths: val })}
-              label="SPI Classpath Path Mapping"
-              description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
-              testIdPrefix={`pkg-${i}-spi-cp`}
-            />
-            <PathKeyValueMapEditor
-              value={pkg.pathAttributes || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathAttributes: val })}
-              label="Path Attributes"
-              description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
-              testIdPrefix={`pkg-${i}-attrs`}
-              perPathHints={hintsByPath}
-            />
-          </CardContent>
-        </Card>
+        <PackageDefinitionCard
+          key={i}
+          index={i}
+          pkg={pkg}
+          onUpdate={(updated) => updatePackage(i, updated)}
+          onRemove={() => removePackage(i)}
+          runtimeHintsByPath={hintsByPath}
+        />
       ))}
     </div>
+  );
+}
+
+// Split out from PackageDefinitionEditor's .map() so each package can independently call the
+// useElmArtifactInspection hook (React hooks can't be called from inside a loop/callback).
+function PackageDefinitionCard({
+  index,
+  pkg,
+  onUpdate,
+  onRemove,
+  runtimeHintsByPath,
+}: {
+  index: number;
+  pkg: ElementPackageDefinition;
+  onUpdate: (pkg: ElementPackageDefinition) => void;
+  onRemove: () => void;
+  runtimeHintsByPath?: Record<string, PerPathHints>;
+}) {
+  const inspection = useElmArtifactInspection(pkg.elmArtifact);
+
+  // Seed real paths from inspection as soon as they're known, so this shows the ELM's actual element
+  // paths instead of requiring the user to already know (or guess, via "Add Path") its structure.
+  // Additive only -- never overwrites paths the user (or a prior successful deploy) already configured.
+  useEffect(() => {
+    if (!inspection.data) return;
+    const seeded = seedPathAttributesFromInspection(pkg.pathAttributes || {}, inspection.data);
+    if (seeded !== pkg.pathAttributes) {
+      onUpdate({ ...pkg, pathAttributes: seeded });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inspection.data]);
+
+  // Runtime hints (from a prior successful deploy) include required-attribute info the static
+  // inspector can't provide, so they take precedence over inspection-derived hints where both exist.
+  const mergedHints = useMemo(() => ({
+    ...hintsFromInspectionRecords(inspection.data),
+    ...runtimeHintsByPath,
+  }), [inspection.data, runtimeHintsByPath]);
+
+  return (
+    <Card data-testid={`card-package-def-${index}`}>
+      <CardContent className="p-3 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Package #{index + 1}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            data-testid={`button-remove-package-${index}`}
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`pkg-elm-${index}`} className="text-xs">ELM Artifact *</Label>
+          <div className="flex items-center gap-1">
+            <Input
+              id={`pkg-elm-${index}`}
+              value={pkg.elmArtifact}
+              onChange={(e) => onUpdate({ ...pkg, elmArtifact: e.target.value })}
+              placeholder="com.example:my-elm:1.0"
+              className="font-mono text-xs flex-1"
+              data-testid={`input-package-elm-${index}`}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => inspection.refetch()}
+              disabled={!pkg.elmArtifact.trim() || inspection.isFetching}
+              title="Re-inspect this ELM artifact"
+              data-testid={`button-package-inspect-${index}`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${inspection.isFetching ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The ELM artifact coordinate to resolve and deploy. This ELM file will be downloaded, extracted, and its contents organized into the deployment directory structure.
+          </p>
+          {inspection.isFetching && (
+            <p className="text-xs text-muted-foreground">Inspecting ELM artifact...</p>
+          )}
+          {inspection.isError && (
+            <p className="text-xs text-destructive">
+              Could not inspect this artifact: {(inspection.error as Error)?.message ?? 'unknown error'}. Paths can still be added manually below.
+            </p>
+          )}
+          {inspection.data && !inspection.isFetching && (
+            <p className="text-xs text-muted-foreground">
+              Found {inspection.data.length} element path{inspection.data.length !== 1 ? 's' : ''} in this ELM.
+            </p>
+          )}
+        </div>
+        <PathClassPathsEditor
+          value={pkg.pathSpiBuiltins || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathSpiBuiltins: val })}
+          label="SPI Builtin Path Mapping"
+          description="Map of element paths to builtin SPI configurations. This allows for an individual SPI specification for each Element contained within the ELM file."
+          testIdPrefix={`pkg-${index}-spi-builtins`}
+        />
+        <PathClassPathsEditor
+          value={pkg.pathSpiClassPaths || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathSpiClassPaths: val })}
+          label="SPI Classpath Path Mapping"
+          description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
+          testIdPrefix={`pkg-${index}-spi-cp`}
+        />
+        <PathKeyValueMapEditor
+          value={pkg.pathAttributes || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
+          label="Path Attributes"
+          description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
+          testIdPrefix={`pkg-${index}-attrs`}
+          perPathHints={mergedHints}
+        />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -2379,6 +2514,19 @@ function PackageDefinitionSubDialog({
   }
   prevOpenRef.current = open;
 
+  const inspection = useElmArtifactInspection(draft.elmArtifact);
+
+  // Seed real paths from inspection as soon as they're known, so the editor below shows the ELM's
+  // actual element paths instead of requiring the user to already know (or guess, via "Add Path")
+  // its internal structure. Additive only -- never overwrites paths the user already configured.
+  useEffect(() => {
+    if (!inspection.data) return;
+    setDraft(d => {
+      const seeded = seedPathAttributesFromInspection(d.pathAttributes || {}, inspection.data);
+      return seeded === d.pathAttributes ? d : { ...d, pathAttributes: seeded };
+    });
+  }, [inspection.data]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -2391,16 +2539,42 @@ function PackageDefinitionSubDialog({
         <div className="space-y-4">
           <div className="space-y-1">
             <Label className="text-xs">ELM Artifact *</Label>
-            <Input
-              value={draft.elmArtifact}
-              onChange={(e) => setDraft({ ...draft, elmArtifact: e.target.value })}
-              placeholder="com.example:my-elm:1.0"
-              className="font-mono text-xs"
-              data-testid="input-subdialog-package-elm"
-            />
+            <div className="flex items-center gap-1">
+              <Input
+                value={draft.elmArtifact}
+                onChange={(e) => setDraft({ ...draft, elmArtifact: e.target.value })}
+                placeholder="com.example:my-elm:1.0"
+                className="font-mono text-xs flex-1"
+                data-testid="input-subdialog-package-elm"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => inspection.refetch()}
+                disabled={!draft.elmArtifact.trim() || inspection.isFetching}
+                title="Re-inspect this ELM artifact"
+                data-testid="button-subdialog-package-inspect"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${inspection.isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
               The ELM artifact coordinate to resolve and deploy.
             </p>
+            {inspection.isFetching && (
+              <p className="text-xs text-muted-foreground">Inspecting ELM artifact...</p>
+            )}
+            {inspection.isError && (
+              <p className="text-xs text-destructive">
+                Could not inspect this artifact: {(inspection.error as Error)?.message ?? 'unknown error'}. Paths can still be added manually below.
+              </p>
+            )}
+            {inspection.data && !inspection.isFetching && (
+              <p className="text-xs text-muted-foreground">
+                Found {inspection.data.length} element path{inspection.data.length !== 1 ? 's' : ''} in this ELM.
+              </p>
+            )}
           </div>
           <PathClassPathsEditor
             value={draft.pathSpiBuiltins || {}}
@@ -2422,6 +2596,7 @@ function PackageDefinitionSubDialog({
             label="Path Attributes"
             description="Map of element paths to their custom attributes."
             testIdPrefix="subdialog-pkg-attrs"
+            perPathHints={hintsFromInspectionRecords(inspection.data)}
           />
         </div>
         <DialogFooter className="gap-2">
