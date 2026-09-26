@@ -11,7 +11,7 @@ import java.util.Map;
  *
  * @param name the optional human-readable name for the deployment
  * @param applicationNameOrId the application name or ID, or null for global scope
- * @param elements the Element path definitions
+ * @param elements the Element path definitions (deprecated; use ELM packages)
  * @param packages the Element package definitions
  * @param useDefaultRepositories true to include default artifact repositories
  * @param repositories the artifact repositories for dependency resolution
@@ -42,12 +42,9 @@ public record CreateElementDeploymentRequest(
         )
         String applicationNameOrId,
 
+        @Deprecated
         @Valid
-        @Schema(description =
-                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
-                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
-                "single ELM artifact coordinate."
-        )
+        @Schema(hidden = true)
         List<ElementPathDefinition> elements,
 
         @Valid
