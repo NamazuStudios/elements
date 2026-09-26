@@ -1,28 +1,18 @@
 package dev.getelements.elements.dao.mongo;
 
-import com.mongodb.client.MongoClients;
-import dev.morphia.Morphia;
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
 import dev.morphia.config.MorphiaConfig;
 import dev.morphia.mapping.DiscriminatorFunction;
 import dev.morphia.mapping.Mapper;
 import dev.morphia.mapping.codec.pojo.EntityModel;
 import dev.morphia.mapping.codec.pojo.PropertyModel;
-import dev.morphia.mapping.codec.pojo.TypeData;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
-import java.util.jar.JarFile;
 
 import static org.testng.Assert.assertTrue;
 
@@ -31,6 +21,8 @@ import static org.testng.Assert.assertTrue;
  * {@code MapKeyTypeConstraint} warns (or fails) on map keys that resolve to {@link Object} (e.g. raw or
  * {@code Document}-typed properties, see issue #105), so every map property in the mapped package must be
  * keyed by a supported type such as {@link String}.
+ * <p>
+ * Maps the same package and `MorphiaConfig` as {@link MorphiaConfigProvider} to reproduce the runtime mapping.
  */
 public class MongoMapKeyTypeTest {
 
@@ -47,11 +39,10 @@ public class MongoMapKeyTypeTest {
             Date.class,
             Locale.class,
             Class.class,
-            UUID.class,
-            URI.class);
+            UUID.class);
 
     @Test
-    public void everyMappedMapIsKeyedBySupportedType() throws Exception {
+    public void everyMappedMapIsKeyedBySupportedType() {
 
         final var config = MorphiaConfig.load()
                 .applyIndexes(true)
@@ -59,34 +50,28 @@ public class MongoMapKeyTypeTest {
                 .discriminator(DiscriminatorFunction.className())
                 .packages(List.of("dev.getelements.elements.dao.mongo.*"));
 
-        final var mapper = Morphia.createDatastore(MongoClients.create(), config).getMapper();
+        final var mapper = new Mapper(config);
+        config.packages().forEach(mapper::map);
+
         final var offenders = new ArrayList<String>();
 
-        for (final Class<?> clazz : scanMappedPackageClasses()) {
-
-            if (!clazz.isAnnotationPresent(Entity.class) && !clazz.isAnnotationPresent(Embedded.class)) {
-                continue;
-            }
-
-            final EntityModel model;
-            try {
-                model = mapper.getEntityModel(clazz);
-            } catch (final Exception ex) {
-                offenders.add(clazz.getName() + " -> failed to map: " + ex.getMessage());
-                continue;
-            }
+        for (final EntityModel model : mapper.getMappedEntities()) {
 
             for (final PropertyModel pm : model.getProperties()) {
+
                 if (!pm.isMap()) continue;
+
                 final var params = pm.getTypeData().getTypeParameters();
                 final Class<?> key = params.isEmpty() ? null : params.get(0).getType();
+
                 if (key == null || Object.class.equals(key)) {
                     offenders.add(model.getType().getName() + "#" + pm.getName()
-                            + " maps keyed as Object; key with a supported type instead (e.g. String)");
+                            + " maps keyed as Object; key it with a supported type instead (e.g. String)");
                 } else if (!isPrimitiveLike(key)) {
                     offenders.add(model.getType().getName() + "#" + pm.getName()
                             + " maps keyed by unsupported type: " + key.getName());
                 }
+
             }
 
         }
@@ -100,67 +85,6 @@ public class MongoMapKeyTypeTest {
 
     private static boolean isPrimitiveLike(final Class<?> type) {
         return PRIMITIVE_LIKE.contains(type) || type.isEnum();
-    }
-
-    private static List<Class<?>> scanMappedPackageClasses() throws Exception {
-
-        final var result = new ArrayList<Class<?>>();
-        final var classpath = System.getProperty("java.class.path", "");
-
-        for (final String element : classpath.split(File.pathSeparator)) {
-            final var path = Path.of(element);
-            if (!Files.exists(path)) continue;
-            if (Files.isDirectory(path)) {
-                scanDirectory(path, path, result);
-            } else if (element.endsWith(".jar")) {
-                scanJar(path, result);
-            }
-        }
-
-        return result.stream().distinct().toList();
-
-    }
-
-    private static void scanDirectory(final Path root, final Path dir, final List<Class<?>> output) throws Exception {
-
-        try (final var stream = Files.list(dir)) {
-            for (final Path child : stream.toList()) {
-                if (Files.isDirectory(child)) {
-                    scanDirectory(root, child, output);
-                } else if (child.toString().endsWith(".class") && child.toString().contains("dev/getelements/elements/dao/mongo")) {
-                    final var className = root.relativize(child)
-                            .toString()
-                            .replace(File.separatorChar, '.')
-                            .replace('/', '.')
-                            .replace(".class", "");
-                    addClass(output, className);
-                }
-            }
-        }
-
-    }
-
-    private static void scanJar(final Path jarPath, final List<Class<?>> output) throws Exception {
-
-        try (final var jar = new JarFile(jarPath.toFile())) {
-            final var entries = jar.entries();
-            while (entries.hasMoreElements()) {
-                final var entry = entries.nextElement();
-                final var name = entry.getName();
-                if (name.endsWith(".class") && name.contains("dev/getelements/elements/dao/mongo")) {
-                    addClass(output, name.replace('/', '.').replace(".class", ""));
-                }
-            }
-        }
-
-    }
-
-    private static void addClass(final List<Class<?>> output, final String className) {
-        if (className.contains("$") || className.endsWith(".package-info")) return;
-        try {
-            output.add(Class.forName(className, false, MongoMapKeyTypeTest.class.getClassLoader()));
-        } catch (final ClassNotFoundException | LinkageError ignored) {
-        }
     }
 
 }
