@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.security;
 
+import dev.getelements.elements.sdk.model.session.MfaVerifyRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.session.UsernamePasswordSessionRequest;
 import dev.getelements.elements.sdk.model.util.ValidationHelper;
@@ -38,6 +39,20 @@ public class UsernamePasswordResource {
     public SessionCreation createUsernamePasswordSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
         getValidationHelper().validateModel(usernamePasswordSessionRequest);
         return getUsernamePasswordAuthService().createSession(usernamePasswordSessionRequest);
+    }
+
+    @POST
+    @Path("mfa")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Completes a login that required a TOTP challenge",
+            description = "Submits the challenge ID and code (or a one-time recovery code) returned when " +
+                    "POST session first required a second authentication factor, completing the session on " +
+                    "success exactly as POST session would have.")
+    public SessionCreation completeMfaSession(final MfaVerifyRequest mfaVerifyRequest) {
+        getValidationHelper().validateModel(mfaVerifyRequest);
+        return getUsernamePasswordAuthService().completeMfaChallenge(mfaVerifyRequest);
     }
 
     public UsernamePasswordAuthService getUsernamePasswordAuthService() {

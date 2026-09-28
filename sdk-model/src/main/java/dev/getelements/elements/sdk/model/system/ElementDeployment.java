@@ -16,12 +16,13 @@ import java.util.stream.Collectors;
  * Represents the deployment configuration for an Element within the system.
  *
  * @param id the database unique identifier of the Element deployment
+ * @param name an optional human-readable name for the Element deployment
  * @param application the application context under which the Element is deployed
  * @param elm the large object housing the actual ELM file
  * @param pathSpiBuiltins map of element paths to builtin SPI configurations
  * @param pathSpiClassPaths map of element paths to custom SPI class paths
  * @param pathAttributes map of element paths to their custom attributes
- * @param elements list of Element definitions specifying the classpaths and artifacts
+ * @param elements list of Element definitions specifying the classpaths and artifacts (deprecated; use ELM packages)
  * @param packages list of Element package definitions specifying ELM artifacts to deploy
  * @param useDefaultRepositories flag indicating whether to use the default artifact repositories
  * @param repositories list of artifact repositories for resolving artifacts
@@ -40,6 +41,13 @@ public record ElementDeployment(
                 "The database unique identifier of the Element deployment."
         )
         String id,
+
+        @Schema(description =
+                "An optional human-readable name for the Element deployment. Used to qualify plugin/menu entries " +
+                "from this deployment so that elements from different deployments never collide, even when their " +
+                "plugin routes match. Falls back to the deployment ID when not set."
+        )
+        String name,
 
         @Schema(description =
                 "The application context under which the Element is being deployed. If null, the Element is " +
@@ -73,12 +81,9 @@ public record ElementDeployment(
         )
         Map<String, Map<String, Object>> pathAttributes,
 
+        @Deprecated
         @Valid
-        @Schema(description =
-                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
-                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
-                "single ELM artifact coordinate."
-        )
+        @Schema(hidden = true)
         List<ElementPathDefinition> elements,
 
         @Valid

@@ -81,7 +81,8 @@ public class JakartaWebsocketLoader implements Loader {
 
     private JettyDeploymentRecord loadClasses(final PendingDeployment pending,
                                               final List<Class<?>> classes,
-                                              final Element element) {
+                                              final Element element,
+                                              final String deploymentId) {
 
         pending.logf("Starting JAX-WS deployment for %s.", element.getElementRecord().definition().name());
 
@@ -158,7 +159,7 @@ public class JakartaWebsocketLoader implements Loader {
             throw new InternalError(ex);
         }
 
-        return new JettyDeploymentRecord(element, servletContextHandler);
+        return new JettyDeploymentRecord(deploymentId, element, servletContextHandler);
 
     }
 
@@ -252,7 +253,7 @@ public class JakartaWebsocketLoader implements Loader {
                 final var classes = getEndpointClasses(pending, element);
 
                 if (!classes.isEmpty()) {
-                    final var deploymentRecord = loadClasses(pending, classes, element);
+                    final var deploymentRecord = loadClasses(pending, classes, element, record.deployment().id());
                     activeDeployments.add(deploymentRecord);
                     pending.element(element);
                 }

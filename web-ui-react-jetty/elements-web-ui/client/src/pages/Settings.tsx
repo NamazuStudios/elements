@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Settings as SettingsIcon, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useTheme } from '@/components/ThemeProvider';
+import { TwoFactorAuthCard } from '@/components/TwoFactorAuthCard';
 
 interface VisibilitySettings {
   resources: Record<string, boolean>;
@@ -187,6 +188,8 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        <TwoFactorAuthCard />
 
         <Card>
           <CardHeader>

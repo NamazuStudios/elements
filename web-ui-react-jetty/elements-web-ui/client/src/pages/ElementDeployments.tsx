@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { apiClient, getApiPath } from '@/lib/api-client';
-import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Database, Check, Sparkles, FileText, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, Rocket, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, RefreshCw, RotateCcw, X, Upload, HardDrive, Package, Check, Sparkles, FileText, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ElementArtifactRepository {
@@ -38,6 +38,7 @@ interface ElementPackageDefinition {
 
 interface ElementDeployment {
   id: string;
+  name?: string;
   application?: { id: string; name: string; description?: string } | null;
   elm?: any;
   pathSpiBuiltins?: Record<string, string[]>;
@@ -58,6 +59,7 @@ interface PaginatedResponse {
 
 interface FormData {
   state: string;
+  name: string;
   appNameOrId: string;
   useDefaultRepositories: boolean;
   elements: ElementPathDefinition[];
@@ -69,11 +71,6 @@ interface FormData {
 }
 
 const DEPLOYMENT_STATES_EDIT = ['ENABLED', 'DISABLED'] as const;
-
-interface ElementSpi {
-  id: string;
-  description?: string;
-}
 
 interface ElmInspectorRecord {
   path: string;
@@ -125,6 +122,67 @@ interface PerPathHints {
   inherited: Record<string, string>; // system-provided attributes that don't need user configuration
 }
 
+// Debounced lookup of GET /elm/inspector/artifact/{coordinates} -- lets a package's ELM Artifact
+// coordinate field drive real path/attribute discovery before any deployment attempt exists, instead
+// of only being available after a successful deploy (via /elements/runtime).
+function useElmArtifactInspection(coordinates: string) {
+  const trimmed = coordinates.trim();
+  const [debounced, setDebounced] = useState(trimmed);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(trimmed), 500);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
+
+  return useQuery<ElmInspectorRecord[]>({
+    queryKey: ['/api/rest/elm/inspector/artifact', debounced],
+    queryFn: () => apiClient.request<ElmInspectorRecord[]>(
+      `/api/rest/elm/inspector/artifact/${encodeURIComponent(debounced)}`
+    ),
+    enabled: debounced.length > 0,
+    retry: false,
+    staleTime: 60000,
+  });
+}
+
+// Adds an empty entry for any inspected path not already present. Never overwrites or removes an
+// existing entry, so a user's in-progress edits (or a path added manually) are always preserved.
+// Returns the same object reference when nothing changed, so callers can skip a state update.
+function seedPathAttributesFromInspection(
+  current: Record<string, Record<string, any>>,
+  records: ElmInspectorRecord[] | undefined,
+): Record<string, Record<string, any>> {
+  if (!records || records.length === 0) return current;
+  let changed = false;
+  const result = { ...current };
+  for (const record of records) {
+    if (record.path && !(record.path in result)) {
+      result[record.path] = {};
+      changed = true;
+    }
+  }
+  return changed ? result : current;
+}
+
+// Builds PathKeyValueMapEditor-compatible hints from static ELM inspection records, so a package's
+// paths show their real default attribute values even before any successful deployment.
+function hintsFromInspectionRecords(records: ElmInspectorRecord[] | undefined): Record<string, PerPathHints> {
+  const map: Record<string, PerPathHints> = {};
+  for (const record of records ?? []) {
+    if (!record.path) continue;
+    const hints: Record<string, DefaultAttributeHint> = {};
+    for (const [key, value] of Object.entries(record.attributes ?? {})) {
+      hints[key] = {
+        value: typeof value === 'string' ? value : JSON.stringify(value),
+        description: '',
+        sensitive: false,
+      };
+    }
+    map[record.path] = { hints, required: {}, sensitive: new Set(), inherited: {} };
+  }
+  return map;
+}
+
 function getStateBadgeVariant(state: string): 'default' | 'secondary' | 'outline' | 'destructive' {
   switch (state) {
     case 'ENABLED': return 'default';
@@ -156,6 +214,7 @@ function getStateColor(state: string): string {
 
 const emptyFormData: FormData = {
   state: 'ENABLED',
+  name: '',
   appNameOrId: '',
   useDefaultRepositories: true,
   elements: [],
@@ -169,6 +228,7 @@ const emptyFormData: FormData = {
 function deploymentToFormData(d: ElementDeployment): FormData {
   return {
     state: d.state || 'ENABLED',
+    name: d.name || '',
     appNameOrId: '',
     useDefaultRepositories: d.useDefaultRepositories ?? true,
     elements: (d.elements || []).map(e => ({
@@ -368,6 +428,7 @@ export default function ElementDeployments() {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
+          name: deployment.name,
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
@@ -461,6 +522,7 @@ export default function ElementDeployments() {
       return apiClient.request<ElementDeployment>(`/api/rest/elements/deployment/${id}`, {
         method: 'PUT',
         body: JSON.stringify({
+          name: deployment.name,
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
@@ -486,7 +548,7 @@ export default function ElementDeployments() {
   };
 
   const openCreateDialog = () => {
-    setFormData({ ...emptyFormData, elements: [], packages: [], repositories: [] });
+    setFormData({ ...emptyFormData, packages: [], repositories: [] });
     setWizardStep(0);
     setWizardCreatedDeployment(null);
     setWizardElmFile(null);
@@ -528,6 +590,7 @@ export default function ElementDeployments() {
   const buildBody = () => {
     const body: any = {
       state: formData.state,
+      name: formData.name.trim(),
       useDefaultRepositories: formData.useDefaultRepositories,
     };
     if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
@@ -661,6 +724,11 @@ export default function ElementDeployments() {
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div className="flex-1 min-w-0 space-y-2">
+                      {deployment.name && (
+                        <div className="text-sm font-semibold truncate" data-testid={`text-deployment-name-${deployment.id}`}>
+                          {deployment.name}
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 flex-wrap">
                         <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getRuntimeDotColor(listRuntimeStatuses?.find(r => r.deployment?.id === deployment.id)?.status, deployment.state)}`} />
                         <span className="font-mono text-sm font-medium truncate" data-testid={`text-deployment-id-${deployment.id}`}>
@@ -845,7 +913,7 @@ export default function ElementDeployments() {
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
               {wizardStep === 0 && 'Upload your ELM file and configure the deployment settings.'}
-              {wizardStep === 1 && 'Optionally add element definitions and packages from external sources (e.g. Maven).'}
+              {wizardStep === 1 && 'Optionally add packages from external sources (e.g. Maven).'}
               {wizardStep === 2 && 'Review your deployment configuration before creating.'}
               {wizardStep === 3 && 'Your deployment has been created.'}
             </DialogDescription>
@@ -894,14 +962,14 @@ export default function ElementDeployments() {
           {wizardStep === 2 && (
             <div className="space-y-4" data-testid="wizard-step-review">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {formData.elements.length > 0 && (
-                  <Badge variant="outline">{formData.elements.length} Element Definition{formData.elements.length !== 1 ? 's' : ''}</Badge>
-                )}
                 {formData.packages.length > 0 && (
                   <Badge variant="outline">{formData.packages.length} Package{formData.packages.length !== 1 ? 's' : ''}</Badge>
                 )}
                 {formData.appNameOrId && (
                   <Badge variant="secondary">App: {formData.appNameOrId}</Badge>
+                )}
+                {formData.name.trim() && (
+                  <Badge variant="outline">Name: {formData.name.trim()}</Badge>
                 )}
               </div>
               <ScrollArea className="h-[50vh] w-full rounded-md border">
@@ -1879,217 +1947,6 @@ function PathKeyValueMapEditor({
   );
 }
 
-function SpiBuiltinEditor({
-  value,
-  onChange,
-  available,
-  loading,
-  testIdPrefix,
-}: {
-  value: string[];
-  onChange: (val: string[]) => void;
-  available: ElementSpi[];
-  loading: boolean;
-  testIdPrefix: string;
-}) {
-  const predefinedIds = available.map(s => s.id);
-  const selectedPredefined = value.find(v => predefinedIds.includes(v)) || '';
-  const customEntries = value.filter(v => !predefinedIds.includes(v));
-
-  const onPredefinedChange = (id: string) => {
-    const withoutPredefined = value.filter(v => !predefinedIds.includes(v));
-    if (id) {
-      onChange([id, ...withoutPredefined]);
-    } else {
-      onChange(withoutPredefined);
-    }
-  };
-
-  const onCustomChange = (vals: string[]) => {
-    const predefined = value.filter(v => predefinedIds.includes(v));
-    onChange([...predefined, ...vals]);
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <Label className="text-xs">SPI Builtin</Label>
-        {loading ? (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="w-3 h-3 animate-spin" />
-            Loading available SPIs...
-          </div>
-        ) : available.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic">No builtin SPIs available from the server.</p>
-        ) : (
-          <Select
-            value={selectedPredefined || '__none__'}
-            onValueChange={(v) => onPredefinedChange(v === '__none__' ? '' : v)}
-          >
-            <SelectTrigger data-testid={`${testIdPrefix}-trigger`}>
-              <SelectValue placeholder="Select a builtin SPI" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">None</SelectItem>
-              {available.map((spi) => (
-                <SelectItem key={spi.id} value={spi.id} data-testid={`${testIdPrefix}-option-${spi.id}`}>
-                  {spi.id}{spi.description ? ` — ${spi.description}` : ''}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <p className="text-xs text-muted-foreground">
-          Framework-provided SPI implementation to use for this element path.
-        </p>
-      </div>
-      <ArtifactListEditor
-        label="Additional SPI Builtins (optional)"
-        values={customEntries}
-        onChange={onCustomChange}
-        placeholder="custom-spi-builtin"
-        description="Additional builtin SPI names beyond the predefined selection above."
-        testIdPrefix={`${testIdPrefix}-custom`}
-      />
-    </div>
-  );
-}
-
-function ElementDefinitionEditor({
-  elements,
-  onChange,
-  availableSpis,
-  spisLoading,
-  hintsByPath,
-}: {
-  elements: ElementPathDefinition[];
-  onChange: (els: ElementPathDefinition[]) => void;
-  availableSpis: ElementSpi[];
-  spisLoading: boolean;
-  hintsByPath?: Record<string, PerPathHints>;
-}) {
-  const addElement = () => {
-    onChange([...elements, {
-      path: '',
-      apiArtifacts: [],
-      spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
-      spiArtifacts: [],
-      elementArtifacts: [],
-      attributes: {},
-    }]);
-  };
-
-  const removeElement = (index: number) => {
-    onChange(elements.filter((_, i) => i !== index));
-  };
-
-  const updateElement = (index: number, updated: ElementPathDefinition) => {
-    const copy = [...elements];
-    copy[index] = updated;
-    onChange(copy);
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <Label>Element Definitions</Label>
-        <Button type="button" variant="outline" size="sm" onClick={addElement} data-testid="button-add-element">
-          <Plus className="w-3 h-3 mr-1" />
-          Add Definition
-        </Button>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Each definition specifies the classpath and artifacts for an Element to deploy. Specify Maven artifact coordinates for SPI, Element implementations, and optionally API artifacts.
-      </p>
-      {elements.length === 0 && (
-        <p className="text-xs text-muted-foreground italic">No element definitions. Click "Add Definition" to add one.</p>
-      )}
-      {elements.map((el, i) => (
-        <Card key={i} data-testid={`card-element-def-${i}`}>
-          <CardContent className="p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Definition #{i + 1}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeElement(i)}
-                data-testid={`button-remove-element-${i}`}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor={`el-path-${i}`} className="text-xs">Path (optional)</Label>
-              <Input
-                id={`el-path-${i}`}
-                value={el.path}
-                onChange={(e) => updateElement(i, { ...el, path: e.target.value })}
-                placeholder="my-element"
-                className="font-mono text-xs"
-                data-testid={`input-element-path-${i}`}
-              />
-              <p className="text-xs text-muted-foreground">
-                Single directory name where this element is deployed. Must not contain "/" or "\".
-              </p>
-            </div>
-            <SpiBuiltinEditor
-              value={el.spiBuiltins || []}
-              onChange={(val) => updateElement(i, { ...el, spiBuiltins: val })}
-              available={availableSpis}
-              loading={spisLoading}
-              testIdPrefix={`el-${i}-spi-builtin`}
-            />
-            <ArtifactListEditor
-              label="SPI Artifacts (optional)"
-              values={el.spiArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, spiArtifacts: vals })}
-              placeholder="com.example:spi-artifact:1.0"
-              testIdPrefix={`el-${i}-spi-art`}
-            />
-            <p className="text-xs text-muted-foreground">
-              Custom SPI implementation artifact coordinates, if needed beyond the builtins above.
-            </p>
-            <ArtifactListEditor
-              label="Element Artifacts *"
-              values={el.elementArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, elementArtifacts: vals })}
-              placeholder="com.example:element-artifact:1.0"
-              description="List of Element implementation artifact coordinates. These contain the actual Element code."
-              testIdPrefix={`el-${i}-elem`}
-            />
-            <ArtifactListEditor
-              label="API Artifacts (optional)"
-              values={el.apiArtifacts || []}
-              onChange={(vals) => updateElement(i, { ...el, apiArtifacts: vals })}
-              placeholder="com.example:api-artifact:1.0"
-              testIdPrefix={`el-${i}-api`}
-            />
-            <p className="text-xs text-muted-foreground">
-              API Artifacts are loaded into a shared classloader accessible to all Elements. Only needed to expose methods to other Elements.
-            </p>
-            <KeyValueEditor
-              value={el.attributes || {}}
-              onChange={(attrs) => updateElement(i, { ...el, attributes: attrs })}
-              label="Attributes"
-              testIdPrefix={`el-${i}-attrs`}
-              keyPlaceholder="attribute key"
-              valuePlaceholder="attribute value"
-              hints={hintsByPath?.[el.path]?.hints}
-              requiredHints={hintsByPath?.[el.path]?.required}
-              sensitiveKeys={hintsByPath?.[el.path]?.sensitive}
-              inheritedAttrs={hintsByPath?.[el.path]?.inherited}
-            />
-            <p className="text-xs text-muted-foreground">
-              Custom attributes passed to this Element at load time via the AttributesLoader mechanism.
-            </p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
 function PackageDefinitionEditor({
   packages,
   onChange,
@@ -2129,60 +1986,134 @@ function PackageDefinitionEditor({
         <p className="text-xs text-muted-foreground italic">No packages. Click "Add Package" to add one.</p>
       )}
       {packages.map((pkg, i) => (
-        <Card key={i} data-testid={`card-package-def-${i}`}>
-          <CardContent className="p-3 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Package #{i + 1}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removePackage(i)}
-                data-testid={`button-remove-package-${i}`}
-              >
-                <X className="w-3 h-3" />
-              </Button>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor={`pkg-elm-${i}`} className="text-xs">ELM Artifact *</Label>
-              <Input
-                id={`pkg-elm-${i}`}
-                value={pkg.elmArtifact}
-                onChange={(e) => updatePackage(i, { ...pkg, elmArtifact: e.target.value })}
-                placeholder="com.example:my-elm:1.0"
-                className="font-mono text-xs"
-                data-testid={`input-package-elm-${i}`}
-              />
-              <p className="text-xs text-muted-foreground">
-                The ELM artifact coordinate to resolve and deploy. This ELM file will be downloaded, extracted, and its contents organized into the deployment directory structure.
-              </p>
-            </div>
-            <PathClassPathsEditor
-              value={pkg.pathSpiBuiltins || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathSpiBuiltins: val })}
-              label="SPI Builtin Path Mapping"
-              description="Map of element paths to builtin SPI configurations. This allows for an individual SPI specification for each Element contained within the ELM file."
-              testIdPrefix={`pkg-${i}-spi-builtins`}
-            />
-            <PathClassPathsEditor
-              value={pkg.pathSpiClassPaths || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathSpiClassPaths: val })}
-              label="SPI Classpath Path Mapping"
-              description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
-              testIdPrefix={`pkg-${i}-spi-cp`}
-            />
-            <PathKeyValueMapEditor
-              value={pkg.pathAttributes || {}}
-              onChange={(val) => updatePackage(i, { ...pkg, pathAttributes: val })}
-              label="Path Attributes"
-              description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
-              testIdPrefix={`pkg-${i}-attrs`}
-              perPathHints={hintsByPath}
-            />
-          </CardContent>
-        </Card>
+        <PackageDefinitionCard
+          key={i}
+          index={i}
+          pkg={pkg}
+          onUpdate={(updated) => updatePackage(i, updated)}
+          onRemove={() => removePackage(i)}
+          runtimeHintsByPath={hintsByPath}
+        />
       ))}
     </div>
+  );
+}
+
+// Split out from PackageDefinitionEditor's .map() so each package can independently call the
+// useElmArtifactInspection hook (React hooks can't be called from inside a loop/callback).
+function PackageDefinitionCard({
+  index,
+  pkg,
+  onUpdate,
+  onRemove,
+  runtimeHintsByPath,
+}: {
+  index: number;
+  pkg: ElementPackageDefinition;
+  onUpdate: (pkg: ElementPackageDefinition) => void;
+  onRemove: () => void;
+  runtimeHintsByPath?: Record<string, PerPathHints>;
+}) {
+  const inspection = useElmArtifactInspection(pkg.elmArtifact);
+
+  // Seed real paths from inspection as soon as they're known, so this shows the ELM's actual element
+  // paths instead of requiring the user to already know (or guess, via "Add Path") its structure.
+  // Additive only -- never overwrites paths the user (or a prior successful deploy) already configured.
+  useEffect(() => {
+    if (!inspection.data) return;
+    const seeded = seedPathAttributesFromInspection(pkg.pathAttributes || {}, inspection.data);
+    if (seeded !== pkg.pathAttributes) {
+      onUpdate({ ...pkg, pathAttributes: seeded });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inspection.data]);
+
+  // Runtime hints (from a prior successful deploy) include required-attribute info the static
+  // inspector can't provide, so they take precedence over inspection-derived hints where both exist.
+  const mergedHints = useMemo(() => ({
+    ...hintsFromInspectionRecords(inspection.data),
+    ...runtimeHintsByPath,
+  }), [inspection.data, runtimeHintsByPath]);
+
+  return (
+    <Card data-testid={`card-package-def-${index}`}>
+      <CardContent className="p-3 space-y-3">
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-medium text-muted-foreground">Package #{index + 1}</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onRemove}
+            data-testid={`button-remove-package-${index}`}
+          >
+            <X className="w-3 h-3" />
+          </Button>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor={`pkg-elm-${index}`} className="text-xs">ELM Artifact *</Label>
+          <div className="flex items-center gap-1">
+            <Input
+              id={`pkg-elm-${index}`}
+              value={pkg.elmArtifact}
+              onChange={(e) => onUpdate({ ...pkg, elmArtifact: e.target.value })}
+              placeholder="com.example:my-elm:1.0"
+              className="font-mono text-xs flex-1"
+              data-testid={`input-package-elm-${index}`}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => inspection.refetch()}
+              disabled={!pkg.elmArtifact.trim() || inspection.isFetching}
+              title="Re-inspect this ELM artifact"
+              data-testid={`button-package-inspect-${index}`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${inspection.isFetching ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            The ELM artifact coordinate to resolve and deploy. This ELM file will be downloaded, extracted, and its contents organized into the deployment directory structure.
+          </p>
+          {inspection.isFetching && (
+            <p className="text-xs text-muted-foreground">Inspecting ELM artifact...</p>
+          )}
+          {inspection.isError && (
+            <p className="text-xs text-destructive">
+              Could not inspect this artifact: {(inspection.error as Error)?.message ?? 'unknown error'}. Paths can still be added manually below.
+            </p>
+          )}
+          {inspection.data && !inspection.isFetching && (
+            <p className="text-xs text-muted-foreground">
+              Found {inspection.data.length} element path{inspection.data.length !== 1 ? 's' : ''} in this ELM.
+            </p>
+          )}
+        </div>
+        <PathClassPathsEditor
+          value={pkg.pathSpiBuiltins || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathSpiBuiltins: val })}
+          label="SPI Builtin Path Mapping"
+          description="Map of element paths to builtin SPI configurations. This allows for an individual SPI specification for each Element contained within the ELM file."
+          testIdPrefix={`pkg-${index}-spi-builtins`}
+        />
+        <PathClassPathsEditor
+          value={pkg.pathSpiClassPaths || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathSpiClassPaths: val })}
+          label="SPI Classpath Path Mapping"
+          description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
+          testIdPrefix={`pkg-${index}-spi-cp`}
+        />
+        <PathKeyValueMapEditor
+          value={pkg.pathAttributes || {}}
+          onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
+          label="Path Attributes"
+          description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
+          testIdPrefix={`pkg-${index}-attrs`}
+          perPathHints={mergedHints}
+        />
+      </CardContent>
+    </Card>
   );
 }
 
@@ -2250,102 +2181,6 @@ function RepositoryEditor({
   );
 }
 
-function ElementDefinitionSubDialog({
-  open,
-  onOpenChange,
-  element,
-  onSave,
-  availableSpis,
-  spisLoading,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  element: ElementPathDefinition;
-  onSave: (el: ElementPathDefinition) => void;
-  availableSpis: ElementSpi[];
-  spisLoading: boolean;
-}) {
-  const [draft, setDraft] = useState<ElementPathDefinition>(element);
-  const prevOpenRef = useRef(false);
-  if (open && !prevOpenRef.current) {
-    setDraft({ ...element });
-  }
-  prevOpenRef.current = open;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <DialogHeader>
-          <DialogTitle>Element Definition</DialogTitle>
-          <DialogDescription>
-            Configure the classpath and artifacts for an Element to deploy.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label className="text-xs">Path (optional)</Label>
-            <Input
-              value={draft.path}
-              onChange={(e) => setDraft({ ...draft, path: e.target.value })}
-              placeholder="my-element"
-              className="font-mono text-xs"
-              data-testid="input-subdialog-element-path"
-            />
-            <p className="text-xs text-muted-foreground">
-              Single directory name where this element is deployed. Must not contain "/" or "\".
-            </p>
-          </div>
-          <SpiBuiltinEditor
-            value={draft.spiBuiltins || []}
-            onChange={(val) => setDraft({ ...draft, spiBuiltins: val })}
-            available={availableSpis}
-            loading={spisLoading}
-            testIdPrefix="subdialog-el-spi-builtin"
-          />
-          <ArtifactListEditor
-            label="SPI Artifacts (optional)"
-            values={draft.spiArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, spiArtifacts: vals })}
-            placeholder="com.example:spi-artifact:1.0"
-            testIdPrefix="subdialog-el-spi-art"
-          />
-          <ArtifactListEditor
-            label="Element Artifacts *"
-            values={draft.elementArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, elementArtifacts: vals })}
-            placeholder="com.example:element-artifact:1.0"
-            description="Element implementation artifact coordinates."
-            testIdPrefix="subdialog-el-elem"
-          />
-          <ArtifactListEditor
-            label="API Artifacts (optional)"
-            values={draft.apiArtifacts || []}
-            onChange={(vals) => setDraft({ ...draft, apiArtifacts: vals })}
-            placeholder="com.example:api-artifact:1.0"
-            testIdPrefix="subdialog-el-api"
-          />
-          <KeyValueEditor
-            value={draft.attributes || {}}
-            onChange={(attrs) => setDraft({ ...draft, attributes: attrs })}
-            label="Attributes"
-            testIdPrefix="subdialog-el-attrs"
-            keyPlaceholder="attribute key"
-            valuePlaceholder="attribute value"
-          />
-        </div>
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-element">
-            Cancel
-          </Button>
-          <Button onClick={() => { onSave(draft); onOpenChange(false); }} data-testid="button-subdialog-save-element">
-            Save
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 function PackageDefinitionSubDialog({
   open,
   onOpenChange,
@@ -2364,6 +2199,19 @@ function PackageDefinitionSubDialog({
   }
   prevOpenRef.current = open;
 
+  const inspection = useElmArtifactInspection(draft.elmArtifact);
+
+  // Seed real paths from inspection as soon as they're known, so the editor below shows the ELM's
+  // actual element paths instead of requiring the user to already know (or guess, via "Add Path")
+  // its internal structure. Additive only -- never overwrites paths the user already configured.
+  useEffect(() => {
+    if (!inspection.data) return;
+    setDraft(d => {
+      const seeded = seedPathAttributesFromInspection(d.pathAttributes || {}, inspection.data);
+      return seeded === d.pathAttributes ? d : { ...d, pathAttributes: seeded };
+    });
+  }, [inspection.data]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -2376,16 +2224,42 @@ function PackageDefinitionSubDialog({
         <div className="space-y-4">
           <div className="space-y-1">
             <Label className="text-xs">ELM Artifact *</Label>
-            <Input
-              value={draft.elmArtifact}
-              onChange={(e) => setDraft({ ...draft, elmArtifact: e.target.value })}
-              placeholder="com.example:my-elm:1.0"
-              className="font-mono text-xs"
-              data-testid="input-subdialog-package-elm"
-            />
+            <div className="flex items-center gap-1">
+              <Input
+                value={draft.elmArtifact}
+                onChange={(e) => setDraft({ ...draft, elmArtifact: e.target.value })}
+                placeholder="com.example:my-elm:1.0"
+                className="font-mono text-xs flex-1"
+                data-testid="input-subdialog-package-elm"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => inspection.refetch()}
+                disabled={!draft.elmArtifact.trim() || inspection.isFetching}
+                title="Re-inspect this ELM artifact"
+                data-testid="button-subdialog-package-inspect"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${inspection.isFetching ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
               The ELM artifact coordinate to resolve and deploy.
             </p>
+            {inspection.isFetching && (
+              <p className="text-xs text-muted-foreground">Inspecting ELM artifact...</p>
+            )}
+            {inspection.isError && (
+              <p className="text-xs text-destructive">
+                Could not inspect this artifact: {(inspection.error as Error)?.message ?? 'unknown error'}. Paths can still be added manually below.
+              </p>
+            )}
+            {inspection.data && !inspection.isFetching && (
+              <p className="text-xs text-muted-foreground">
+                Found {inspection.data.length} element path{inspection.data.length !== 1 ? 's' : ''} in this ELM.
+              </p>
+            )}
           </div>
           <PathClassPathsEditor
             value={draft.pathSpiBuiltins || {}}
@@ -2407,6 +2281,7 @@ function PackageDefinitionSubDialog({
             label="Path Attributes"
             description="Map of element paths to their custom attributes."
             testIdPrefix="subdialog-pkg-attrs"
+            perPathHints={hintsFromInspectionRecords(inspection.data)}
           />
         </div>
         <DialogFooter className="gap-2">
@@ -2543,6 +2418,21 @@ function WizardConfigStep({
         </Collapsible>
       )}
 
+      <div className="space-y-2">
+        <Label htmlFor="wizard-name">Name</Label>
+        <Input
+          id="wizard-name"
+          value={formData.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder="Optional deployment name"
+          className="font-mono text-xs"
+          data-testid="input-wizard-name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional human-readable name. Used to qualify this deployment's menus and plugin entries in the admin UI.
+        </p>
+      </div>
+
       <div className="space-y-2 border-t pt-4">
         <Label>Application</Label>
         <Select
@@ -2623,37 +2513,8 @@ function WizardAdditionalElementsStep({
 }) {
   const update = (partial: Partial<FormData>) => setFormData({ ...formData, ...partial });
 
-  const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
-    queryKey: ['/api/rest/elements/builtin_spi'],
-    queryFn: async () => {
-      const data = await apiClient.request<any>('/api/rest/elements/builtin_spi');
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object') {
-        const keys = Object.keys(data);
-        if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
-          return keys.sort((a, b) => Number(a) - Number(b)).map(k => data[k]);
-        }
-        if (data.objects) return data.objects;
-        if (data.content) return data.content;
-      }
-      return [];
-    },
-    staleTime: 60000,
-  });
-
-  const [elementDialogOpen, setElementDialogOpen] = useState(false);
   const [packageDialogOpen, setPackageDialogOpen] = useState(false);
-  const [editingElementIndex, setEditingElementIndex] = useState<number | null>(null);
   const [editingPackageIndex, setEditingPackageIndex] = useState<number | null>(null);
-
-  const newElementDefault = (): ElementPathDefinition => ({
-    path: '',
-    apiArtifacts: [],
-    spiBuiltins: availableSpis.some(s => s.id === 'DEFAULT') ? ['DEFAULT'] : [],
-    spiArtifacts: [],
-    elementArtifacts: [],
-    attributes: {},
-  });
 
   const newPackageDefault = (): ElementPackageDefinition => ({
     elmArtifact: '',
@@ -2662,34 +2523,7 @@ function WizardAdditionalElementsStep({
     pathAttributes: {},
   });
 
-  const [editingElement, setEditingElement] = useState<ElementPathDefinition>(newElementDefault());
   const [editingPackage, setEditingPackage] = useState<ElementPackageDefinition>(newPackageDefault());
-
-  const openAddElement = () => {
-    setEditingElementIndex(null);
-    setEditingElement(newElementDefault());
-    setElementDialogOpen(true);
-  };
-
-  const openEditElement = (index: number) => {
-    setEditingElementIndex(index);
-    setEditingElement({ ...formData.elements[index] });
-    setElementDialogOpen(true);
-  };
-
-  const saveElement = (el: ElementPathDefinition) => {
-    if (editingElementIndex !== null) {
-      const copy = [...formData.elements];
-      copy[editingElementIndex] = el;
-      update({ elements: copy });
-    } else {
-      update({ elements: [...formData.elements, el] });
-    }
-  };
-
-  const removeElement = (index: number) => {
-    update({ elements: formData.elements.filter((_, i) => i !== index) });
-  };
 
   const openAddPackage = () => {
     setEditingPackageIndex(null);
@@ -2717,15 +2551,7 @@ function WizardAdditionalElementsStep({
     update({ packages: formData.packages.filter((_, i) => i !== index) });
   };
 
-  const hasItems = formData.elements.length > 0 || formData.packages.length > 0;
-
-  const getElementLabel = (el: ElementPathDefinition, index: number) => {
-    if (el.path && el.path.trim()) return el.path;
-    if (el.elementArtifacts && el.elementArtifacts.length > 0 && el.elementArtifacts[0].trim()) {
-      return el.elementArtifacts[0];
-    }
-    return `Element Definition ${index + 1}`;
-  };
+  const hasItems = formData.packages.length > 0;
 
   const getPackageLabel = (pkg: ElementPackageDefinition, index: number) => {
     if (pkg.elmArtifact && pkg.elmArtifact.trim()) return pkg.elmArtifact;
@@ -2736,18 +2562,9 @@ function WizardAdditionalElementsStep({
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">
-          Optionally add element definitions or package configurations from external sources such as Maven.
+          Optionally add package configurations from external sources such as Maven by specifying an ELM artifact.
         </p>
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={openAddElement}
-            data-testid="button-add-element-config"
-          >
-            <Database className="w-4 h-4 mr-2" />
-            Add Element Definition
-          </Button>
           <Button
             type="button"
             variant="outline"
@@ -2763,35 +2580,12 @@ function WizardAdditionalElementsStep({
       {!hasItems && (
         <div className="py-8 text-center border-2 border-dashed rounded-md">
           <p className="text-sm text-muted-foreground">No additional configurations added.</p>
-          <p className="text-xs text-muted-foreground mt-1">Use the buttons above to add element definitions or packages from external sources.</p>
+          <p className="text-xs text-muted-foreground mt-1">Use the button above to add packages from external sources.</p>
         </div>
       )}
 
       {hasItems && (
         <div className="space-y-2">
-          {formData.elements.map((el, i) => (
-            <div
-              key={`el-${i}`}
-              className="flex items-center justify-between gap-3 p-3 border rounded-md"
-              data-testid={`config-item-element-${i}`}
-            >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <Database className="w-4 h-4 text-muted-foreground shrink-0" />
-                <span className="font-mono text-sm truncate" data-testid={`text-element-label-${i}`}>
-                  {getElementLabel(el, i)}
-                </span>
-                <Badge variant="secondary" className="shrink-0">Element</Badge>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button size="icon" variant="ghost" onClick={() => openEditElement(i)} data-testid={`button-edit-element-${i}`}>
-                  <Pencil className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="icon" variant="ghost" onClick={() => removeElement(i)} data-testid={`button-remove-element-${i}`}>
-                  <Trash2 className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
           {formData.packages.map((pkg, i) => (
             <div
               key={`pkg-${i}`}
@@ -2843,14 +2637,6 @@ function WizardAdditionalElementsStep({
         </div>
       </div>
 
-      <ElementDefinitionSubDialog
-        open={elementDialogOpen}
-        onOpenChange={setElementDialogOpen}
-        element={editingElement}
-        onSave={saveElement}
-        availableSpis={availableSpis}
-        spisLoading={spisLoading}
-      />
       <PackageDefinitionSubDialog
         open={packageDialogOpen}
         onOpenChange={setPackageDialogOpen}
@@ -3096,26 +2882,24 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
     staleTime: 30000,
   });
 
-  const { data: availableSpis = [], isLoading: spisLoading } = useQuery<ElementSpi[]>({
-    queryKey: ['/api/rest/elements/builtin_spi'],
-    queryFn: async () => {
-      const data = await apiClient.request<any>('/api/rest/elements/builtin_spi');
-      if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object') {
-        const keys = Object.keys(data);
-        if (keys.length > 0 && keys.every(k => !isNaN(Number(k)))) {
-          return keys.sort((a, b) => Number(a) - Number(b)).map(k => data[k]);
-        }
-        if (data.objects) return data.objects;
-        if (data.content) return data.content;
-      }
-      return [];
-    },
-    staleTime: 60000,
-  });
-
   return (
     <div className="space-y-5">
+
+      {/* ── Name ── */}
+      <div className="space-y-2">
+        <Label htmlFor="deployment-name">Name</Label>
+        <Input
+          id="deployment-name"
+          value={formData.name}
+          onChange={(e) => update({ name: e.target.value })}
+          placeholder="Optional deployment name"
+          className="font-mono text-xs"
+          data-testid="input-deployment-name"
+        />
+        <p className="text-xs text-muted-foreground">
+          Optional human-readable name. Used to qualify this deployment's menus and plugin entries in the admin UI.
+        </p>
+      </div>
 
       {/* ── Deployment State (edit only) ── */}
       {mode === 'edit' && (
@@ -3249,7 +3033,7 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
           {attributesOpen && (
             <div className="space-y-3 pt-2">
               <p className="text-xs text-muted-foreground">
-                Per-path attribute overrides for Elements in the uploaded ELM file. The key is the element path (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time. Elements from packages or element definitions are configured in the Additional Elements section.
+                Per-path attribute overrides for Elements in the uploaded ELM file. The key is the element path (e.g. <code className="font-mono">com.example.my-element</code>), and each attribute overrides a value at load time. Elements from packages are configured in the Additional Elements section.
                 {(() => {
                   const runtime = runtimeStatuses?.find(r => r.deployment?.id === deployment?.id);
                   const elmFailed = (runtime?.failedElements ?? []).filter(el => {
@@ -3377,7 +3161,7 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-yellow-600 dark:text-yellow-400" />
                   <div className="space-y-1">
                     <p className="font-medium">Elements require configuration</p>
-                    <p>The following elements failed to load. Open the package or element definition that contains them and fill in the required attributes (highlighted in red).</p>
+                    <p>The following elements failed to load. Open the package that contains them and fill in the required attributes (highlighted in red).</p>
                     <ul className="mt-1 space-y-0.5 font-mono">
                       {unresolved.map((el, i) => (
                         <li key={i} className="truncate">{el.elementPath ?? el.definition?.name}</li>
@@ -3387,13 +3171,6 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                 </div>
               );
             })()}
-            <ElementDefinitionEditor
-              elements={formData.elements}
-              onChange={(elements) => update({ elements })}
-              availableSpis={availableSpis}
-              spisLoading={spisLoading}
-              hintsByPath={hintsByPath}
-            />
             <div className="border-t pt-4">
               <PackageDefinitionEditor
                 packages={formData.packages}

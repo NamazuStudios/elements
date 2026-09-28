@@ -10,7 +10,8 @@ import java.util.Map;
 /**
  * Request to update a new Element with specified artifacts and their repositories.
  *
- * @param elements list of element path definitions
+ * @param name the optional human-readable name for the deployment
+ * @param elements list of element path definitions (deprecated; use ELM packages)
  * @param packages list of element package definitions
  * @param useDefaultRepositories whether to use default artifact repositories
  * @param repositories list of artifact repositories
@@ -27,12 +28,16 @@ import java.util.Map;
 )
 public record UpdateElementDeploymentRequest(
 
-        @Valid
         @Schema(description =
-                "List of Element definitions specifying the classpaths and artifacts for each Element to deploy. " +
-                "Each definition can specify either Maven artifact coordinates (API, SPI, Element lists) or a " +
-                "single ELM artifact coordinate."
+                "An optional human-readable name for the deployment. Used to qualify plugin/menu entries from " +
+                "this deployment so that elements from different deployments never collide, even when their plugin " +
+                "routes match. If null, the existing name is preserved."
         )
+        String name,
+
+        @Deprecated
+        @Valid
+        @Schema(hidden = true)
         List<ElementPathDefinition> elements,
 
         @Valid

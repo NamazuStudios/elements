@@ -120,7 +120,8 @@ public class JakartaRsLoader implements Loader {
      */
     private MountContext deploy(final PendingDeployment pending,
                                 final Element element,
-                                final Application application) {
+                                final Application application,
+                                final String deploymentId) {
 
         pending.logf(
                 "Starting REST deployment for %s.",
@@ -223,7 +224,7 @@ public class JakartaRsLoader implements Loader {
         getSequence().addHandler(classLoaderHandler);
 
         return new MountContext(
-                new JettyDeploymentRecord(element, classLoaderHandler),
+                new JettyDeploymentRecord(deploymentId, element, classLoaderHandler),
                 elementClassLoader,
                 application,
                 openApiCtxId
@@ -528,7 +529,7 @@ public class JakartaRsLoader implements Loader {
                         .filter(a -> Application.class != a.getClass())
                         .filter(a -> !a.getClasses().isEmpty() || !a.getSingletons().isEmpty())
                         .ifPresent(application -> {
-                            final var ctx = deploy(pending, element, application);
+                            final var ctx = deploy(pending, element, application, record.deployment().id());
 
                             // Add to activeDeployments BEFORE submitting the background task so
                             // that runMountTask's activeDeployments check correctly reflects the

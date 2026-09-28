@@ -80,6 +80,7 @@ public class ElementDeploymentResourceIntegrationTest {
 
         final var request = new CreateElementDeploymentRequest(
                 null, // global deployment
+                null, // name
                 List.of(elementDefinition),
                 packages,
                 true,
@@ -131,7 +132,8 @@ public class ElementDeploymentResourceIntegrationTest {
         );
 
         final var request = new CreateElementDeploymentRequest(
-                null,
+                null, // global deployment
+                null, // name
                 List.of(elementDefinition),
                 null, // packages
                 false,
@@ -277,6 +279,7 @@ public class ElementDeploymentResourceIntegrationTest {
         ));
 
         final var request = new UpdateElementDeploymentRequest(
+                null, // name
                 List.of(elementDefinition),
                 updatedPackages,
                 true,
@@ -328,6 +331,7 @@ public class ElementDeploymentResourceIntegrationTest {
         );
 
         final var request = new UpdateElementDeploymentRequest(
+                null, // name
                 List.of(elementDefinition),
                 null, // packages
                 false,
@@ -407,7 +411,8 @@ public class ElementDeploymentResourceIntegrationTest {
         );
 
         final var request = new CreateElementDeploymentRequest(
-                null,
+                null, // global deployment
+                null, // name
                 List.of(elementDefinition),
                 null, // packages
                 true,

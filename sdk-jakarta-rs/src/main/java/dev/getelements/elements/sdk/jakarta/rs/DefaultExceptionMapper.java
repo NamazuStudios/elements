@@ -2,7 +2,9 @@ package dev.getelements.elements.sdk.jakarta.rs;
 
 import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.ValidationErrorResponse;
+import dev.getelements.elements.sdk.model.auth.MfaChallengeErrorResponse;
 import dev.getelements.elements.sdk.model.exception.*;
+import dev.getelements.elements.sdk.model.exception.auth.MfaChallengeRequiredException;
 import dev.getelements.elements.sdk.model.health.HealthErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +31,18 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
-    public static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Map.of(
-        ErrorCode.DUPLICATE, Response.Status.CONFLICT,
-        ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED,
-        ErrorCode.CONFLICT, Response.Status.CONFLICT,
-        ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN,
-        ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST,
-        ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST,
-        ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND,
-        ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE,
-        ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR,
-        ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED
+    public static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Map.ofEntries(
+        Map.entry(ErrorCode.DUPLICATE, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED),
+        Map.entry(ErrorCode.CONFLICT, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN),
+        Map.entry(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST),
+        Map.entry(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST),
+        Map.entry(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND),
+        Map.entry(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE),
+        Map.entry(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR),
+        Map.entry(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED),
+        Map.entry(ErrorCode.MFA_REQUIRED, Response.Status.UNAUTHORIZED)
     );
 
     public static final Response.Status getStatusForCode(final Object code) {
@@ -62,7 +65,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
             final List<ConstraintViolation<Object>> violationList = ex.getConstraintViolations();
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             final List<String> messages = violationList
                 .stream()
@@ -82,7 +85,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ValidationErrorResponse errorResponse = new ValidationErrorResponse();
 
-            LOG.info("Caught constraint violation exception while processing request.", ex);
+            LOG.debug("Caught constraint violation exception while processing request.", ex);
 
             final List<String> messages = ex.getConstraintViolations()
                 .stream()
@@ -100,7 +103,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
         } catch (UnhealthyException ex) {
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             final var errorResponse = new HealthErrorResponse();
             errorResponse.setHealthStatus(ex.getHealthStatus());
@@ -112,11 +115,26 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
                 .type(MediaType.APPLICATION_JSON)
                 .build();
 
+        } catch (MfaChallengeRequiredException ex) {
+
+            LOG.info("Caught MFA challenge required exception while processing request.", ex);
+
+            final var errorResponse = new MfaChallengeErrorResponse();
+            errorResponse.setChallengeId(ex.getChallengeId());
+            errorResponse.setExpiresAt(ex.getExpiresAt());
+            errorResponse.setCode(ex.getCode().toString());
+            errorResponse.setMessage(ex.getMessage());
+
+            return Response.status(getStatusForCode(ex.getCode()))
+                    .entity(errorResponse)
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+
         } catch (UnauthorizedException ex) {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
-            LOG.info("Caught validation failure exception while processing request.", ex);
+            LOG.debug("Caught validation failure exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
@@ -131,7 +149,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
-            LOG.info("Caught expected exception while processing request.", ex);
+            LOG.debug("Caught expected exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());

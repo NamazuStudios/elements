@@ -66,6 +66,7 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
 
             final var elementDeployment = new ElementDeployment(
                     null,
+                    request.name(),
                     application,
                     largeObjectReference,
                     request.pathSpiBuiltins(),
@@ -117,8 +118,11 @@ public class SuperUserElementDeploymentService implements ElementDeploymentServi
             final var existing = elementDeploymentDao.getElementDeployment(deploymentId);
             final var largeObjectReference = refreshElmReferenceIfNecessary(txn, existing);
 
+            final var name = request.name() != null ? request.name() : existing.name();
+
             final var elementDeployment = new ElementDeployment(
                     existing.id(),
+                    name,
                     existing.application(),
                     largeObjectReference,
                     request.pathSpiBuiltins(),

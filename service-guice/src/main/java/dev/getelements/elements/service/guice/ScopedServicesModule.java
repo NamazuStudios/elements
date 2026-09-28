@@ -61,8 +61,10 @@ import dev.getelements.elements.service.appleiap.AppleIapReceiptServiceProvider;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
 import dev.getelements.elements.service.application.*;
 import dev.getelements.elements.service.auth.*;
+import dev.getelements.elements.service.auth.captcha.*;
 import dev.getelements.elements.service.auth.oauth2.*;
 import dev.getelements.elements.service.auth.oidc.*;
+import dev.getelements.elements.service.auth.totp.*;
 import dev.getelements.elements.service.blockchain.crypto.evm.EvmSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
 import dev.getelements.elements.service.blockchain.crypto.flow.FlowSmartContractInvocationServiceProvider;
@@ -358,8 +360,36 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(OidcProviderConfigurationServiceProvider.class)
                 .in(scope);
 
+        bind(CaptchaConfigurationService.class)
+                .toProvider(CaptchaConfigurationServiceProvider.class)
+                .in(scope);
+
+        // Behavior does not vary by caller identity, so these are bound directly for all access levels
+        // rather than switched by a level-based Provider (mirrors HealthStatusService).
+        bind(CaptchaService.class)
+                .to(DefaultCaptchaService.class)
+                .in(scope);
+
         bind(OidcAdminLoginService.class)
                 .to(DefaultOidcAdminLoginService.class)
+                .in(scope);
+
+        bind(TotpConfigurationService.class)
+                .toProvider(TotpConfigurationServiceProvider.class)
+                .in(scope);
+
+        bind(TotpEnrollmentService.class)
+                .toProvider(TotpEnrollmentServiceProvider.class)
+                .in(scope);
+
+        bind(TotpAdminService.class)
+                .toProvider(TotpAdminServiceProvider.class)
+                .in(scope);
+
+        // Behavior does not vary by caller identity, so this is bound directly for all access levels rather
+        // than switched by a level-based Provider (mirrors HealthStatusService).
+        bind(TotpVerificationService.class)
+                .to(DefaultTotpVerificationService.class)
                 .in(scope);
 
         bind(OAuth2AuthSchemeService.class)
@@ -870,6 +900,18 @@ public class ScopedServicesModule extends AbstractModule {
         bind(OidcProviderConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserOidcProviderConfigurationService.class);
+
+        bind(CaptchaConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserCaptchaConfigurationService.class);
+
+        bind(TotpConfigurationService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserTotpConfigurationService.class);
+
+        bind(TotpAdminService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserTotpAdminService.class);
 
         bind(ProfileOverrideService.class)
                 .annotatedWith(named(SUPERUSER))

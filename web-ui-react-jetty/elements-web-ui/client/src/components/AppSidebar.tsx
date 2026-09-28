@@ -21,6 +21,7 @@ import { InstalledElementsSidebar } from './InstalledElementsSidebar';
 
 const iconMap: Record<string, any> = {
   Shield: Icons.Shield,
+  ShieldCheck: Icons.ShieldCheck,
   Users: Icons.Users,
   User: Icons.User,
   Package: Icons.Package,
@@ -37,6 +38,7 @@ const iconMap: Record<string, any> = {
   KeyRound: Icons.KeyRound,
   Lock: Icons.Lock,
   Globe: Icons.Globe,
+  Fingerprint: Icons.Fingerprint,
   FileCode: Icons.FileCode,
   Vault: Icons.Vault,
   Boxes: Icons.Boxes,

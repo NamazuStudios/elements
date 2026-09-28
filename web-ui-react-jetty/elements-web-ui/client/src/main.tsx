@@ -14,10 +14,30 @@ import { apiClient } from "@/lib/api-client";
     return parseInt(localStorage.getItem('admin-results-per-page') ?? '20', 10);
   },
 };
+// Registrations are namespaced by the loader's active namespace (set right
+// before each plugin bundle is injected) so that plugins from different
+// deployments can reuse the same `route` value without colliding.
+const pluginRegistry: Record<string, Record<string, React.ComponentType>> = {};
+let activeNamespace: string | null = null;
 (window as any).__elementsPlugins = {
-  _registry: {} as Record<string, React.ComponentType>,
+  get _registry() {
+    return pluginRegistry;
+  },
+  get _activeNamespace() {
+    return activeNamespace;
+  },
+  set _activeNamespace(value: string | null) {
+    activeNamespace = value;
+  },
   register(route: string, component: React.ComponentType) {
-    (window as any).__elementsPlugins._registry[route] = component;
+    const bucket: Record<string, React.ComponentType> =
+      (pluginRegistry[activeNamespace ?? ''] ??= {});
+    if (bucket[route]) {
+      console.warn(
+        `[Elements] Plugin route collision: "${route}" is already registered${activeNamespace ? ` under namespace "${activeNamespace}"` : ''}. The last registration wins.`
+      );
+    }
+    bucket[route] = component;
   },
 };
 

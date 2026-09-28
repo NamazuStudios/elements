@@ -63,6 +63,11 @@ public enum  ErrorCode {
     UNHEALTHY,
 
     /**
+     * A second authentication factor (e.g. a TOTP code) is required to complete the request.
+     */
+    MFA_REQUIRED,
+
+    /**
      * Some other exception.
      */
     UNKNOWN

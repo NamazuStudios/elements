@@ -38,6 +38,7 @@ interface ElementMetadata {
 
 interface ElementDeployment {
   id: string;
+  name?: string;
   state: string;
   version: number;
   pathSpiBuiltins?: Record<string, string[]> | null;
@@ -205,6 +206,11 @@ export default function Runtimes() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div className="flex-1 min-w-0 space-y-2">
+                    {runtime.deployment?.name && (
+                      <div className="text-sm font-semibold truncate" data-testid={`text-runtime-name-${idx}`}>
+                        {runtime.deployment.name}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${getRuntimeDotColor(runtime, containerStatus)} ${containerStatus === 'LOADING' ? 'animate-pulse' : ''}`} />
                       <span className="font-mono text-sm font-medium" data-testid={`text-runtime-deployment-${idx}`}>
@@ -224,6 +230,9 @@ export default function Runtimes() {
                         <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-500 font-medium">
                           <AlertTriangle className="w-3 h-3" />{runtime.warnings.length} warning{runtime.warnings.length !== 1 ? 's' : ''}
                         </span>
+                      )}
+                      {runtime.deployment?.application && (
+                        <span className="text-muted-foreground">App: <span className="font-medium text-foreground">{runtime.deployment.application.name || runtime.deployment.application.id}</span></span>
                       )}
                       {runtime.elements && runtime.elements.length > 0 && (
                         <span className="text-muted-foreground">{runtime.elements.length} element{runtime.elements.length !== 1 ? 's' : ''}</span>
@@ -257,6 +266,12 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
           <span className="font-mono text-sm font-medium">
             {runtime.deployment?.id || 'Runtime'}
           </span>
+          {runtime.deployment?.name && (
+            <Badge variant="secondary" className="text-xs">{runtime.deployment.name}</Badge>
+          )}
+          {runtime.deployment?.application && (
+            <Badge variant="outline" className="text-xs">App: {runtime.deployment.application.name || runtime.deployment.application.id}</Badge>
+          )}
           <Badge variant={getStatusVariant(runtime.status)}>
             {runtime.status}
           </Badge>
@@ -474,7 +489,7 @@ function RuntimeDetail({ runtime }: { runtime: ElementRuntimeStatus }) {
 
 function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }) {
   const [extraOpen, setExtraOpen] = useState(false);
-  const { id, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, pathSpiBuiltins, pathSpiClassPaths, pathAttributes, ...rest } = deployment;
+  const { id, name, state, version, application, useDefaultRepositories, elements, packages, repositories, elm, pathSpiBuiltins, pathSpiClassPaths, pathAttributes, ...rest } = deployment;
   const extraKeys = Object.keys(rest);
 
   const attrOverrideCount = pathAttributes
@@ -493,6 +508,12 @@ function DeploymentInfoSection({ deployment }: { deployment: ElementDeployment }
             <>
               <span className="text-xs text-muted-foreground">ID</span>
               <span className="font-mono text-xs break-all">{id}</span>
+            </>
+          )}
+          {name && (
+            <>
+              <span className="text-xs text-muted-foreground">Name</span>
+              <span className="text-xs font-medium">{name}</span>
             </>
           )}
           {state && (

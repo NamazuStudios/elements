@@ -27,8 +27,19 @@ import java.util.concurrent.ConcurrentSkipListSet;
  * {@code ClassLoaderSwitchHandler} during HTTP request dispatch, or by {@code JakartaRsLoader}
  * during element startup (Jersey initialization).
  *
- * <p>All other behaviour — including the {@code discriminatorClassMap} cache, duplicate-discriminator
- * detection, and {@link #searchPackages} fallback — is identical to the Morphia original.
+ * <p>A second, unrelated behavioral change exists in {@link #lookup}: the
+ * {@code discriminatorClassMap} cache is generation-aware.  The Morphia original returns the
+ * cached {@link Class} unconditionally, which silently pins the class of a superseded
+ * classloader generation after an element reload (both generations share the same
+ * fully-qualified name but differ by classloader, producing {@link ClassCastException}s in
+ * freshly reloaded element code).  {@link #lookup} now re-resolves through the <em>current</em>
+ * thread context classloader whenever the cached entry was defined by a different loader, and
+ * swaps in the current generation's class.  If the current context cannot see the class at all,
+ * the cached entry is retained so calls from platform/decoder threads never regress into hard
+ * failures.
+ *
+ * <p>All other behaviour — including duplicate-discriminator detection and
+ * {@link #searchPackages} fallback — is identical to the Morphia original.
  */
 public final class DiscriminatorLookup {
 
@@ -52,8 +63,11 @@ public final class DiscriminatorLookup {
     }
 
     public Class<?> lookup(final String discriminator) {
-        if (discriminatorClassMap.containsKey(discriminator)) {
-            return discriminatorClassMap.get(discriminator);
+        final var cached = (Class<?>) discriminatorClassMap.get(discriminator);
+        if (cached != null) {
+            return isCurrentGeneration(cached)
+                    ? cached
+                    : resolveAndSwap(discriminator, cached);
         }
         var clazz = getClassForName(discriminator);
         if (clazz == null) {
@@ -65,6 +79,30 @@ public final class DiscriminatorLookup {
         }
         discriminatorClassMap.put(discriminator, clazz);
         return clazz;
+    }
+
+    /**
+     * Returns {@code true} if the cached {@link Class} was defined by the current thread context
+     * classloader (or by the platform classloader on a platform thread), so it is not a superseded
+     * element generation.
+     */
+    private boolean isCurrentGeneration(final Class<?> cached) {
+        final ClassLoader tccl = Thread.currentThread().getContextClassLoader();
+        return tccl == cached.getClassLoader() || (tccl == classLoader && cached.getClassLoader() == classLoader);
+    }
+
+    /**
+     * Re-resolves the discriminator through the current thread context classloader and swaps in the
+     * current generation's {@link Class}, falling back to (and retaining) the cached entry when the
+     * current context cannot see the class.
+     */
+    private Class<?> resolveAndSwap(final String discriminator, final Class<?> cached) {
+        final var resolved = getClassForName(discriminator);
+        if (resolved == null) {
+            return cached;
+        }
+        discriminatorClassMap.put(discriminator, resolved);
+        return resolved;
     }
 
     private Class<?> getClassForName(final String className) {
