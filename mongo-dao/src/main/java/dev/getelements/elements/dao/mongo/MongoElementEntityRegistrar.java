@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import com.mongodb.client.MongoClient;
 import dev.getelements.elements.dao.mongo.migration.PreDatastoreMigrationRunner;
+import dev.getelements.elements.dao.mongo.provider.SelfHealingIndexApplier;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.dao.EntityRegistry;
@@ -60,6 +61,8 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     private Provider<MorphiaConfig> morphiaConfigProvider;
 
     private Provider<PreDatastoreMigrationRunner> preDatastoreMigrationRunnerProvider;
+
+    private SelfHealingIndexApplier selfHealingIndexApplier;
 
     private AtomicReference<Datastore> datastoreAtomicReference;
 
@@ -205,7 +208,16 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
         getPreDatastoreMigrationRunnerProvider().get().run(mongoClient, morphiaConfig);
 
-        return Morphia.createDatastore(mongoClient, morphiaConfig);
+        final var datastore = Morphia.createDatastore(mongoClient, morphiaConfig);
+
+        // Index creation historically happened inside Morphia.createDatastore via
+        // MorphiaConfig.applyIndexes(true). On the self-healing path that option is disabled so a stale
+        // on-disk index can't abort construction; apply indexes here with the self-healing applier.
+        // Contexts that keep applyIndexes(true) apply indexes inside createDatastore and are unaffected.
+        getSelfHealingIndexApplier().applyIndexes(datastore);
+
+        return datastore;
+
     }
 
     private void applyChanges(final Element element,
@@ -262,6 +274,15 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     public void setPreDatastoreMigrationRunnerProvider(
             Provider<PreDatastoreMigrationRunner> preDatastoreMigrationRunnerProvider) {
         this.preDatastoreMigrationRunnerProvider = preDatastoreMigrationRunnerProvider;
+    }
+
+    public SelfHealingIndexApplier getSelfHealingIndexApplier() {
+        return selfHealingIndexApplier;
+    }
+
+    @Inject
+    public void setSelfHealingIndexApplier(final SelfHealingIndexApplier selfHealingIndexApplier) {
+        this.selfHealingIndexApplier = selfHealingIndexApplier;
     }
 
     public AtomicReference<Datastore> getDatastoreAtomicReference() {

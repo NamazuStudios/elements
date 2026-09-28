@@ -28,10 +28,10 @@ public class MongoDatastoreBootstrapModule extends AbstractModule {
     protected void configure() {
 
         bind(MorphiaConfig.class)
-                .toProvider(MorphiaConfigProvider.class);
+                .toProvider(SelfHealingMorphiaConfigProvider.class);
 
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
-                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
+                .toProvider(SelfHealingAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
 
         install(new PreDatastoreMigrationModule());
