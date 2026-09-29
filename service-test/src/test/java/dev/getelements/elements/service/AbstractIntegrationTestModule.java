@@ -7,8 +7,12 @@ import dev.getelements.elements.config.FacebookBuiltinPermissionsSupplier;
 import dev.getelements.elements.dao.mongo.guice.MongoDaoModule;
 import dev.getelements.elements.dao.mongo.guice.MongoGridFSLargeObjectBucketModule;
 import dev.getelements.elements.dao.mongo.guice.PreDatastoreMigrationModule;
+import dev.getelements.elements.dao.mongo.provider.IndexConflictResolver;
 import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
+import dev.getelements.elements.dao.mongo.provider.MongoIndexConflictResolver;
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
+import dev.getelements.elements.dao.mongo.provider.MorphiaSelfHealingIndexApplier;
+import dev.getelements.elements.dao.mongo.provider.SelfHealingIndexApplier;
 import dev.getelements.elements.sdk.mongo.test.DockerMongoTestInstance;
 import dev.getelements.elements.sdk.mongo.test.MongoTestInstance;
 import dev.getelements.elements.guice.ConfigurationModule;
@@ -90,6 +94,8 @@ public abstract class AbstractIntegrationTestModule extends AbstractModule {
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
                 .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
+        bind(IndexConflictResolver.class).to(MongoIndexConflictResolver.class);
+        bind(SelfHealingIndexApplier.class).to(MorphiaSelfHealingIndexApplier.class);
         install(new PreDatastoreMigrationModule());
         install(new MongoDaoModule());
 
