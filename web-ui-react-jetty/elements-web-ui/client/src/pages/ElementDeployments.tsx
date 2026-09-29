@@ -1400,7 +1400,7 @@ function KeyValueEditor({
     const prefix = sensitiveKeys !== undefined ? 'com.example.attribute' : 'key';
     let newKey = `${prefix}${counter}`;
     while (newKey in value) newKey = `${prefix}${++counter}`;
-    onChange({ ...value, [newKey]: '' });
+    onChange({ [newKey]: '', ...value });
   };
 
   const removeEntry = (key: string) => {
@@ -1814,7 +1814,7 @@ function PathKeyValueMapEditor({
     let counter = entries.length + 1;
     let newKey = `path${counter}`;
     while (newKey in value) newKey = `path${++counter}`;
-    onChange({ ...value, [newKey]: {} });
+    onChange({ [newKey]: {}, ...value });
     setCollapsed(c => ({ ...c, [newKey]: false }));
   };
 
