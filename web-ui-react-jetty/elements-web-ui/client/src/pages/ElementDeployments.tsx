@@ -908,7 +908,7 @@ export default function ElementDeployments() {
           setWizardStep(0);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
@@ -1083,7 +1083,7 @@ export default function ElementDeployments() {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Element Deployment</DialogTitle>
             <DialogDescription>
@@ -2232,7 +2232,7 @@ function PackageDefinitionSubDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>Package Configuration</DialogTitle>
           <DialogDescription>
