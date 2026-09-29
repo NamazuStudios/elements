@@ -2035,6 +2035,12 @@ function PackageDefinitionCard({
     ...runtimeHintsByPath,
   }), [inspection.data, runtimeHintsByPath]);
 
+  // Don't show the Path Attributes editor until the ELM has actually been inspected (or already has
+  // configured paths from a prior deploy), so it never invites placeholder entries before real data is
+  // available. On inspection error the editor is still shown so paths can be added manually.
+  const hasConfiguredAttributes = Object.keys(pkg.pathAttributes ?? {}).length > 0;
+  const showPathAttributes = inspection.isError || hasConfiguredAttributes || Boolean(inspection.data);
+
   return (
     <Card data-testid={`card-package-def-${index}`}>
       <CardContent className="p-3 space-y-3">
@@ -2104,14 +2110,20 @@ function PackageDefinitionCard({
           description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
           testIdPrefix={`pkg-${index}-spi-cp`}
         />
-        <PathKeyValueMapEditor
-          value={pkg.pathAttributes || {}}
-          onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
-          label="Path Attributes"
-          description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
-          testIdPrefix={`pkg-${index}-attrs`}
-          perPathHints={mergedHints}
-        />
+        {showPathAttributes ? (
+          <PathKeyValueMapEditor
+            value={pkg.pathAttributes || {}}
+            onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
+            label="Path Attributes"
+            description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
+            testIdPrefix={`pkg-${index}-attrs`}
+            perPathHints={mergedHints}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            Path Attributes will appear once this ELM artifact has been inspected.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -2212,6 +2224,12 @@ function PackageDefinitionSubDialog({
     });
   }, [inspection.data]);
 
+  // Don't show the Path Attributes editor until the ELM has actually been inspected (or already has
+  // configured paths from an existing package), so it never invites placeholder entries before real
+  // data is available. On inspection error the editor is still shown so paths can be added manually.
+  const hasConfiguredAttributes = Object.keys(draft.pathAttributes ?? {}).length > 0;
+  const showPathAttributes = inspection.isError || hasConfiguredAttributes || Boolean(inspection.data);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -2275,14 +2293,20 @@ function PackageDefinitionSubDialog({
             description="Map of element paths to custom SPI class paths."
             testIdPrefix="subdialog-pkg-spi-cp"
           />
-          <PathKeyValueMapEditor
-            value={draft.pathAttributes || {}}
-            onChange={(val) => setDraft({ ...draft, pathAttributes: val })}
-            label="Path Attributes"
-            description="Map of element paths to their custom attributes."
-            testIdPrefix="subdialog-pkg-attrs"
-            perPathHints={hintsFromInspectionRecords(inspection.data)}
-          />
+          {showPathAttributes ? (
+            <PathKeyValueMapEditor
+              value={draft.pathAttributes || {}}
+              onChange={(val) => setDraft({ ...draft, pathAttributes: val })}
+              label="Path Attributes"
+              description="Map of element paths to their custom attributes."
+              testIdPrefix="subdialog-pkg-attrs"
+              perPathHints={hintsFromInspectionRecords(inspection.data)}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Path Attributes will appear once this ELM artifact has been inspected.
+            </p>
+          )}
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-package">
