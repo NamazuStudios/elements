@@ -106,6 +106,7 @@ public class MongoElementDeploymentDaoTest {
                 List.of(elementDefinition),
                 packages,
                 true,
+                true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 ElementDeploymentState.ENABLED,
                 0L
@@ -122,6 +123,7 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.elements().get(0).elementArtifacts(), elementDefinition.elementArtifacts());
         assertNull(created.elm());
         assertTrue(created.useDefaultRepositories());
+        assertTrue(created.missionCritical(), "missionCritical should round-trip correctly after create");
         assertEquals(created.repositories().size(), 1);
         assertEquals(created.state(), ElementDeploymentState.ENABLED);
         assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
@@ -161,6 +163,7 @@ public class MongoElementDeploymentDaoTest {
                 List.of(elementDefinition),
                 null,
                 false,
+                false,
                 List.of(),
                 ElementDeploymentState.UNLOADED,
                 0L
@@ -174,6 +177,7 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
         assertFalse(created.useDefaultRepositories());
+        assertFalse(created.missionCritical());
         assertEquals(created.state(), ElementDeploymentState.UNLOADED);
 
         // Verify event was fired
@@ -306,6 +310,7 @@ public class MongoElementDeploymentDaoTest {
                 List.of(updatedDefinition),
                 updatedPackages,
                 deployment.useDefaultRepositories(),
+                true,
                 deployment.repositories(),
                 ElementDeploymentState.DISABLED,
                 deployment.version()
@@ -318,6 +323,7 @@ public class MongoElementDeploymentDaoTest {
         assertEquals(result.elements().get(0).apiArtifacts(), List.of("com.example:api-updated:2.0"));
         assertEquals(result.elements().get(0).spiArtifacts(), List.of("com.example:spi-updated:2.0"));
         assertEquals(result.state(), ElementDeploymentState.DISABLED);
+        assertTrue(result.missionCritical(), "missionCritical should be updated correctly");
         assertEquals(result.version(), deployment.version() + 1, "Version should be incremented on update");
         assertEquals(result.pathSpiBuiltins(), updatedPathSpiBuiltins,
                 "pathSpiBuiltins should be updated correctly");

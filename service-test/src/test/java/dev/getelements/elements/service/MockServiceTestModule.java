@@ -116,6 +116,9 @@ public class MockServiceTestModule extends AbstractModule {
         final var databaseHealthStatusDaos = newSetBinder(binder(), DatabaseHealthStatusDao.class);
         databaseHealthStatusDaos.addBinding().toInstance(mock(DatabaseHealthStatusDao.class));
 
+        final var deploymentHealthStatusDaos = newSetBinder(binder(), DeploymentHealthStatusDao.class);
+        deploymentHealthStatusDaos.addBinding().toInstance(mock(DeploymentHealthStatusDao.class));
+
         final var userSpy = spy(User.class);
         userSpy.setLevel(UNPRIVILEGED);
         bind(User.class).toInstance(userSpy);
