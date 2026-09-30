@@ -15,8 +15,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useResources } from '@/contexts/ResourceContext';
 import { useLocation } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
 import logoPath from '@assets/elements-logo-square (1)_1760052619243.png';
+import {
+  CORE_ELEMENTS_GROUP_KEY,
+  categoryGroupKey,
+} from '@/lib/adminUiState';
 import { InstalledElementsSidebar } from './InstalledElementsSidebar';
 
 const iconMap: Record<string, any> = {
@@ -89,6 +92,19 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
 
   const categoryOrder = ['Accounts', 'Commerce', 'Game', 'Auth', 'Metadata', 'Web3', 'Other'];
 
+  // A group is "open" if the user explicitly toggled it (stored) or the current route
+  // lives inside it as an ancestor, so the restored page is always surfaced.
+  const isResourceRoute = location.startsWith('/resource/');
+  const coreElementsOpen = openGroups[CORE_ELEMENTS_GROUP_KEY] ?? isResourceRoute;
+
+  const activeResourceCategory = (() => {
+    for (const category of categoryOrder) {
+      const items = groupedResources[category];
+      if (items?.some(item => location === item.path)) return category;
+    }
+    return null;
+  })();
+
   return (
     <Sidebar>
       <SidebarHeader className="border-b border-sidebar-border p-4">
@@ -131,7 +147,11 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
         </SidebarGroup>
 
         {/* Core Elements - collapsible group */}
-        <Collapsible defaultOpen className="group/collapsible">
+        <Collapsible
+          open={coreElementsOpen}
+          onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [CORE_ELEMENTS_GROUP_KEY]: isOpen }))}
+          className="group/collapsible"
+        >
           <SidebarGroup>
             <SidebarGroupLabel asChild>
               <CollapsibleTrigger className="text-xs uppercase tracking-wider hover-elevate">
@@ -143,7 +163,11 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
               <SidebarGroupContent>
                 {/* Accounts items - directly in Core Elements */}
                 {groupedResources['Accounts'] && (
-                  <Collapsible defaultOpen={false} className="group/subcollapsible mt-2">
+                  <Collapsible
+                    open={openGroups[categoryGroupKey('Accounts')] ?? activeResourceCategory === 'Accounts'}
+                    onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [categoryGroupKey('Accounts')]: isOpen }))}
+                    className="group/subcollapsible mt-2"
+                  >
                     <div className="px-2">
                       <CollapsibleTrigger className="flex w-full items-center justify-between text-xs uppercase tracking-wider text-sidebar-foreground/70 hover-elevate rounded-md px-2 py-1">
                         Accounts
@@ -180,8 +204,8 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
                   return (
                     <Collapsible 
                       key={category} 
-                      open={openGroups[category] ?? false}
-                      onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [category]: isOpen }))}
+                      open={openGroups[categoryGroupKey(category)] ?? activeResourceCategory === category}
+                      onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [categoryGroupKey(category)]: isOpen }))}
                       className="group/subcollapsible mt-4">
                       <div className="px-2">
                         <CollapsibleTrigger className="flex w-full items-center justify-between text-xs uppercase tracking-wider text-sidebar-foreground/70 hover-elevate rounded-md px-2 py-1">
@@ -217,7 +241,12 @@ export function AppSidebar({ openGroups, setOpenGroups }: AppSidebarProps) {
         </Collapsible>
 
         {/* API Explorer - collapsible group */}
-        <InstalledElementsSidebar location={location} setLocation={setLocation} />
+        <InstalledElementsSidebar
+          location={location}
+          setLocation={setLocation}
+          openGroups={openGroups}
+          setOpenGroups={setOpenGroups}
+        />
       </SidebarContent>
 
     </Sidebar>
