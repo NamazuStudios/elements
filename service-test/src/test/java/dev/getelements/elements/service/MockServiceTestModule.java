@@ -99,7 +99,6 @@ public class MockServiceTestModule extends AbstractModule {
         bind(DatabaseHealthStatusDao.class).toInstance(mock(DatabaseHealthStatusDao.class));
         bind(MetadataSpecDao.class).toInstance(mock(MetadataSpecDao.class));
         bind(SaveDataDocumentDao.class).toInstance(mock(SaveDataDocumentDao.class));
-        bind(AuthSchemeDao.class).toInstance(mock(AuthSchemeDao.class));
         bind(OidcAuthSchemeDao.class).toInstance(mock(OidcAuthSchemeDao.class));
         bind(OAuth2AuthSchemeDao.class).toInstance(mock(OAuth2AuthSchemeDao.class));
         bind(DistinctInventoryItemDao.class).toInstance(mock(DistinctInventoryItemDao.class));

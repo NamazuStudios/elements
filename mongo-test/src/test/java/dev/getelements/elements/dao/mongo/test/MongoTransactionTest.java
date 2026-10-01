@@ -63,7 +63,6 @@ public class MongoTransactionTest {
                 new Object[] {MetadataDao.class},
                 new Object[] {MetadataSpecDao.class},
                 new Object[] {SaveDataDocumentDao.class},
-                new Object[] {AuthSchemeDao.class},
                 new Object[] {OidcAuthSchemeDao.class},
                 new Object[] {OAuth2AuthSchemeDao.class},
                 new Object[] {DistinctInventoryItemDao.class},

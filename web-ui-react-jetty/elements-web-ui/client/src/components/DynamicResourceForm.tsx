@@ -227,23 +227,6 @@ export function DynamicResourceForm({
         continue; // Skip the rest of the logic for this field
       }
 
-      // Special case: CustomAuthScheme publicKey field - optional but must be valid Base64 if provided
-      if (resourceName === 'Custom' && field.name === 'publicKey') {
-        shape[field.name] = z.string()
-          .optional()
-          .or(z.literal(''))
-          .refine(
-            (val) => {
-              if (!val || val === '') return true; // Empty is allowed (optional field)
-              // Base64 regex pattern
-              const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
-              return base64Regex.test(val);
-            },
-            { message: 'Public key must be valid Base64 format (or leave empty to auto-generate)' }
-          );
-        continue; // Skip the rest of the logic for this field
-      }
-      
       // Build base schema based on type
       if (field.enumValues) {
         fieldSchema = z.enum(field.enumValues as [string, ...string[]]);
