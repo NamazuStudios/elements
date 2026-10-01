@@ -260,10 +260,6 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserEmailTemplateService.class);
 
-        bind(AuthSchemeService.class)
-                .annotatedWith(named(UNSCOPED))
-                .to(SuperUserAuthSchemeService.class);
-
         bind(OidcAuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserOidcAuthSchemeService.class);
@@ -303,10 +299,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(SaveDataDocumentService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserSaveDataDocumentService.class);
-
-        bind(CustomAuthSessionService.class)
-                .annotatedWith(named(UNSCOPED))
-                .to(StandardCustomAuthSessionService.class);
 
         bind(DistinctInventoryItemService.class)
                 .annotatedWith(named(UNSCOPED))
