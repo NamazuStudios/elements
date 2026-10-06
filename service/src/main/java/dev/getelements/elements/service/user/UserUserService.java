@@ -3,7 +3,7 @@ package dev.getelements.elements.service.user;
 import com.google.common.collect.Lists;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.session.Session;
@@ -27,7 +27,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public class UserUserService extends AnonUserService implements UserService {
 
-    private SessionDao sessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private long sessionTimeoutSeconds;
 
@@ -122,7 +122,7 @@ public class UserUserService extends AnonUserService implements UserService {
                 .named(USER_UPDATED_EVENT)
                 .build());
 
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
 
     }
 
@@ -138,13 +138,13 @@ public class UserUserService extends AnonUserService implements UserService {
                 .build());
     }
 
-    public SessionDao getSessionDao() {
-        return sessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao sessionDao) {
-        this.sessionDao = sessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public long getSessionTimeoutSeconds() {

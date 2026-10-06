@@ -5,6 +5,7 @@ import com.google.inject.name.Names;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.TotpLoginChallengeDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -59,6 +60,7 @@ public class AnonUsernamePasswordAuthServiceTest {
     @Inject private ProfileDao profileDao;
     @Inject private ApplicationDao applicationDao;
     @Inject private SessionDao sessionDao;
+    @Inject private SessionTokenIssuer sessionTokenIssuer;
     @Inject private ValidationHelper validationHelper;
     @Inject @Named(UNSCOPED) private CaptchaService captchaService;
     @Inject @Named(UNSCOPED) private TotpVerificationService totpVerificationService;
@@ -67,7 +69,12 @@ public class AnonUsernamePasswordAuthServiceTest {
     @BeforeMethod
     public void setup() {
         createInjector(new TestModule()).injectMembers(this);
-        when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(sessionTokenIssuer.issue(any(Session.class))).thenAnswer(invocation -> {
+            final var sessionCreation = new SessionCreation();
+            sessionCreation.setSessionSecret("session-secret");
+            sessionCreation.setSession(invocation.getArgument(0));
+            return sessionCreation;
+        });
 
         final var captchaDisabled = new CaptchaPublicConfiguration();
         captchaDisabled.setEnabled(false);
@@ -92,7 +99,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         request.setPassword("password");
 
         assertThrows(ForbiddenException.class, () -> service.createSession(request));
-        verify(sessionDao, never()).create(any());
+        verify(sessionTokenIssuer, never()).issue(any());
 
     }
 
@@ -116,7 +123,7 @@ public class AnonUsernamePasswordAuthServiceTest {
             assertEquals(e.getChallengeId(), "challenge-1");
         }
 
-        verify(sessionDao, never()).create(any());
+        verify(sessionTokenIssuer, never()).issue(any());
 
     }
 
@@ -141,7 +148,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         request.setCaptchaToken("bad-token");
 
         assertThrows(ForbiddenException.class, () -> service.createSession(request));
-        verify(sessionDao, never()).create(any());
+        verify(sessionTokenIssuer, never()).issue(any());
 
     }
 
@@ -170,7 +177,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         final var captor = org.mockito.ArgumentCaptor.forClass(CaptchaVerifyRequest.class);
         verify(captchaService).verify(captor.capture());
         assertEquals(captor.getValue().getToken(), "good-token");
-        verify(sessionDao).create(any());
+        verify(sessionTokenIssuer).issue(any());
 
     }
 
@@ -192,7 +199,7 @@ public class AnonUsernamePasswordAuthServiceTest {
 
         service.completeMfaChallenge(request);
 
-        verify(sessionDao).create(any());
+        verify(sessionTokenIssuer).issue(any());
 
     }
 
@@ -213,7 +220,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         request.setCode("000000");
 
         assertThrows(ForbiddenException.class, () -> service.completeMfaChallenge(request));
-        verify(sessionDao, never()).create(any());
+        verify(sessionTokenIssuer, never()).issue(any());
 
         // A wrong guess must not burn the challenge -- the DAO's consume() must never be called on failure,
         // so a legitimate follow-up attempt (e.g. falling back to a recovery code) can still use it.
@@ -239,7 +246,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         service.createSession(request);
 
         verify(captchaService, never()).verify(any());
-        verify(sessionDao).create(any());
+        verify(sessionTokenIssuer).issue(any());
 
     }
 
@@ -267,7 +274,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         retryAttempt.setCode("recovery-code-1");
         service.completeMfaChallenge(retryAttempt);
 
-        verify(sessionDao).create(any());
+        verify(sessionTokenIssuer).issue(any());
         verify(totpLoginChallengeDao).consume("challenge-1");
 
     }
@@ -282,7 +289,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         request.setCode("123456");
 
         assertThrows(NotFoundException.class, () -> service.completeMfaChallenge(request));
-        verify(sessionDao, never()).create(any());
+        verify(sessionTokenIssuer, never()).issue(any());
 
     }
 
@@ -306,7 +313,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         service.createSession(request);
 
         final var sessionCaptor = org.mockito.ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile().getId(), primaryProfile.getId());
     }
 
@@ -325,7 +332,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         service.createSession(request);
 
         final var sessionCaptor = org.mockito.ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertNull(sessionCaptor.getValue().getProfile());
 
         verify(profileDao, never()).findPrimaryProfile(any(), any());
@@ -350,7 +357,7 @@ public class AnonUsernamePasswordAuthServiceTest {
         service.createSession(request);
 
         final var sessionCaptor = org.mockito.ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile().getId(), "explicit-profile-id");
 
         verify(applicationDao, never()).findApplication(any());
@@ -386,6 +393,7 @@ public class AnonUsernamePasswordAuthServiceTest {
             bind(ProfileDao.class).toInstance(mock(ProfileDao.class));
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bind(Validator.class).toInstance(mock(Validator.class));
             bind(ValidationHelper.class).toInstance(mock(ValidationHelper.class));
             bind(CaptchaService.class).annotatedWith(Names.named(UNSCOPED)).toInstance(mock(CaptchaService.class));

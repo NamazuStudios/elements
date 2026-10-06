@@ -234,6 +234,14 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(DefaultSessionService.class);
 
+        bind(SessionTokenIssuer.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardSessionTokenIssuer.class);
+
+        bind(SessionTokenVerifier.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardSessionTokenVerifier.class);
+
         bind(AdvancementService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardAdvancementService.class);

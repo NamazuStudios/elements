@@ -4,6 +4,7 @@ import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
@@ -245,6 +246,7 @@ public class AnonOidcAuthServiceTest {
             bind(UserUidDao.class).toInstance(mock(UserUidDao.class));
             bind(UserDao.class).toInstance(mock(UserDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bind(ProfileDao.class).toInstance(mock(ProfileDao.class));
             bind(NameService.class).toInstance(mock(NameService.class));
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));

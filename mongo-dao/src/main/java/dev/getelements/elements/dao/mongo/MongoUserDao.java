@@ -3,6 +3,7 @@ package dev.getelements.elements.dao.mongo;
 import com.mongodb.DuplicateKeyException;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.model.Constants;
+import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserCreation;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
@@ -74,6 +75,8 @@ public class MongoUserDao implements UserDao {
     private MongoProfileDao mongoProfileDao;
 
     private MongoUserUidDao mongoUserUidDao;
+
+    private SessionDao sessionDao;
 
     private Consumer<Event> eventPublisher;
 
@@ -783,6 +786,8 @@ public class MongoUserDao implements UserDao {
             log.warn("Failed to clear UIDs for user {}", deletedUser.getId());
         }
 
+        getSessionDao().deleteSessionsForUser(deletedUser.getId());
+
         getEventPublisher().accept(Event.builder()
                 .argument(deletedUser)
                 .named(USER_DELETED)
@@ -829,6 +834,8 @@ public class MongoUserDao implements UserDao {
         if (mongoUser == null) throw new NotFoundException("User not found: " + userId);
 
         final var updatedUser = getDozerMapper().map(mongoUser, User.class);
+
+        getSessionDao().deleteSessionsForUser(userId);
 
         getEventPublisher().accept(Event.builder()
                 .argument(updatedUser)
@@ -1002,6 +1009,15 @@ public class MongoUserDao implements UserDao {
     @Inject
     public void setMongoUserUidDao(MongoUserUidDao mongoUserUidDao) {
         this.mongoUserUidDao = mongoUserUidDao;
+    }
+
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
     }
 
     public Consumer<Event> getEventPublisher() {

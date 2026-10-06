@@ -72,7 +72,10 @@ public class LinkUsernamePasswordApiTest {
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .post(Entity.entity(request, APPLICATION_JSON));
 
-        assertEquals(response.getStatus(), 403);
+        // Linking rotates the user's credentials and revokes existing sessions, so the current
+        // session no longer authenticates (401) before the mismatched-name check can run.
+
+        assertEquals(response.getStatus(), 401);
     }
 
     @Test

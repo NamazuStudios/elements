@@ -15,6 +15,7 @@ import dev.getelements.elements.dao.mongo.goods.MongoProductSkuSchemaDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoCaptchaConfigurationDao;
+import dev.getelements.elements.dao.mongo.auth.MongoJwtSigningKeyDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOAuth2AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpDao;
@@ -100,6 +101,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(MultiMatchDao.class).to(MongoMultiMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
+        bind(JwtSigningKeyDao.class).to(MongoJwtSigningKeyDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
         bind(ScoreDao.class).to(MongoScoreDao.class);
@@ -193,6 +195,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MultiMatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
+        expose(JwtSigningKeyDao.class);
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
         expose(RankDao.class);
