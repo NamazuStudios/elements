@@ -31,7 +31,8 @@ public class DropCustomAuthSchemeCollectionMigration implements Migration {
 
     @Override
     public void apply(final Datastore datastore) {
-        final List<String> collectionNames = datastore.getDatabase().listCollectionNames().into(List.of());
+        final List<String> collectionNames = new java.util.ArrayList<>();
+        datastore.getDatabase().listCollectionNames().into(collectionNames);
         if (collectionNames.contains("auth_scheme")) {
             datastore.getDatabase().getCollection("auth_scheme").drop();
             logger.info("Dropped legacy auth_scheme collection.");
