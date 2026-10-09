@@ -12,9 +12,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import static dev.morphia.Morphia.createDatastore;
 
 /**
- * Builds the {@link Datastore} used by the server and the migration tool, applying indexes itself via
+ * Builds the {@link Datastore} used by the migration tool, applying indexes itself via
  * {@link SelfHealingIndexApplier} rather than relying on {@code MorphiaConfig.applyIndexes(true)}, so a stale
- * on-disk index left over from a prior index-option change doesn't abort datastore construction.
+ * on-disk index left over from a prior index-option change is healed here -- as an explicit ops step via the
+ * {@code migrate} command -- instead of aborting datastore construction.
+ *
+ * <p>Deliberately <b>not</b> bound on the server boot path ({@code MongoDaoElementModule}): the server keeps
+ * {@code applyIndexes(true)} so boot stays fast and predictable (health checks during scaling do not wait on
+ * index builds). Deployments are expected to run {@code migrate} before starting the server; the migrate tool's
+ * bootstrap ({@code MongoDatastoreBootstrapModule}) routes through this provider and resolves any conflicts.
+ * A boot on an unmigrated database fails fast with the underlying Mongo error rather than stalling.</p>
  */
 public class SelfHealingAtomicReferenceDataStoreProvider implements Provider<AtomicReference<Datastore>> {
 

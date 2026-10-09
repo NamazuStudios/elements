@@ -1,12 +1,8 @@
 package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.TypeLiteral;
-import dev.getelements.elements.dao.mongo.provider.IndexConflictResolver;
-import dev.getelements.elements.dao.mongo.provider.MongoIndexConflictResolver;
-import dev.getelements.elements.dao.mongo.provider.MorphiaSelfHealingIndexApplier;
-import dev.getelements.elements.dao.mongo.provider.SelfHealingAtomicReferenceDataStoreProvider;
-import dev.getelements.elements.dao.mongo.provider.SelfHealingIndexApplier;
-import dev.getelements.elements.dao.mongo.provider.SelfHealingMorphiaConfigProvider;
+import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
+import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 import dev.morphia.Datastore;
@@ -26,12 +22,10 @@ public class MongoDaoElementModule extends SharedElementModule {
         // sees a direct binding — Guice's PrivateModule.expose() does not accept forwarding
         // bindings propagated up from child private modules.
         bind(MorphiaConfig.class)
-                .toProvider(SelfHealingMorphiaConfigProvider.class);
+                .toProvider(MorphiaConfigProvider.class);
         bind(new TypeLiteral<AtomicReference<Datastore>>(){})
-                .toProvider(SelfHealingAtomicReferenceDataStoreProvider.class)
+                .toProvider(MongoAtomicReferenceDataStoreProvider.class)
                 .asEagerSingleton();
-        bind(IndexConflictResolver.class).to(MongoIndexConflictResolver.class);
-        bind(SelfHealingIndexApplier.class).to(MorphiaSelfHealingIndexApplier.class);
         install(new PreDatastoreMigrationModule());
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());

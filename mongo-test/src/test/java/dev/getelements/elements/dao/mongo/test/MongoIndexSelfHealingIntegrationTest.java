@@ -61,16 +61,18 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 /**
- * Verifies end-to-end that a server boot applies core entity indexes through
+ * Verifies end-to-end that the migration tool's datastore bootstrap applies core entity indexes through
  * {@link SelfHealingAtomicReferenceDataStoreProvider}, healing the exact class of conflict reported in
- * {@code #/issues/132} instead of aborting injector construction.
+ * {@code #/issues/132} instead of aborting datastore construction. The server boot path binds the plain
+ * {@code MorphiaConfigProvider}/{@code MongoAtomicReferenceDataStoreProvider} pair and does not heal; running
+ * {@code migrate} before deploying is what resolves conflicts.
  *
  * <p>The auth-scheme entities ({@code MongoOAuth2AuthScheme}/{@code MongoOidcAuthScheme}) explicitly pin their
  * {@code {name: 1}} unique-sparse index as {@code name_1_sparse}. Prior Elements versions created the same spec
- * under the default {@code name_1}, so a boot on such a database used to fail those collections with Mongo
- * error 85 ({@code IndexOptionsConflict}). The bootstrap module seeds that legacy {@code name_1} on the
+ * under the default {@code name_1}, so applying indexes on such a database used to fail those collections with
+ * Mongo error 85 ({@code IndexOptionsConflict}). The bootstrap module seeds that legacy {@code name_1} on the
  * {@code oauth2_auth_scheme} and {@code oidc_auth_scheme} collections before the eager datastore realizes, and
- * asserts the boot drops it and creates {@code name_1_sparse}.</p>
+ * asserts the bootstrap drops it and creates {@code name_1_sparse}.</p>
  *
  * <p>It also asserts the healing is surgical: the remaining {@code {name: 1}} unique-sparse entities
  * ({@code MongoApplication}, {@code MongoSmartContract}, and the Style-B {@code @Indexed} entities) auto-name
@@ -89,17 +91,17 @@ public class MongoIndexSelfHealingIntegrationTest {
     private Datastore datastore;
 
     @Test
-    public void testBootHealsLegacyIndexConflicts() {
+    public void testMigrateToolHealsLegacyIndexConflicts() {
         // Seeded with legacy "name_1", these collections' entities pin "name_1_sparse" for the same
-        // {name:1} unique-sparse spec; boot must heal instead of aborting.
+        // {name:1} unique-sparse spec; the migrate tool's bootstrap must heal instead of aborting.
         assertIndexState(MongoOAuth2AuthScheme.class, SPARSE_INDEX_NAME, true);
         assertIndexState(MongoOidcAuthScheme.class, SPARSE_INDEX_NAME, true);
     }
 
     @Test
-    public void testBootLeavesUnchangedIndexesAlone() {
+    public void testMigrateToolLeavesUnchangedIndexesAlone() {
         // These entities auto-name the {name:1} unique-sparse spec the plain "name_1" (no "_sparse"
-        // suffix), which is exactly the legacy name seeded below; boot must leave them as-is.
+        // suffix), which is exactly the legacy name seeded below; the bootstrap must leave them as-is.
         assertIndexState(MongoApplication.class, LEGACY_INDEX_NAME, false);
         assertIndexState(MongoSmartContract.class, LEGACY_INDEX_NAME, false);
         assertIndexState(MongoMetadata.class, LEGACY_INDEX_NAME, false);
