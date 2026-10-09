@@ -16,6 +16,7 @@ import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oidc.OidcAuthServiceOperations;
 import jakarta.inject.Inject;
@@ -69,6 +70,9 @@ public class OidcAuthServiceOperationsProfileTest {
     @Inject
     private SessionDao sessionDao;
 
+    @Inject
+    private SessionTokenIssuer sessionTokenIssuer;
+
     private RSAPublicKey publicKey;
 
     private Algorithm algorithm;
@@ -78,6 +82,7 @@ public class OidcAuthServiceOperationsProfileTest {
 
         createInjector(new TestModule()).injectMembers(this);
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(sessionTokenIssuer.issue(any(Session.class))).thenReturn(new SessionCreation());
 
         final var kpg = KeyPairGenerator.getInstance("RSA");
         kpg.initialize(2048);
@@ -158,7 +163,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createOrRefreshProfile(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
         assertEquals(sessionCaptor.getValue().getApplication(), application);
     }
@@ -189,7 +194,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createOrRefreshProfile(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertNull(sessionCaptor.getValue().getProfile());
         assertNull(sessionCaptor.getValue().getApplication());
     }
@@ -223,7 +228,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createSlottedProfile(any(), anyMap());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
     }
 
@@ -254,7 +259,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createOrRefreshProfile(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
         assertEquals(sessionCaptor.getValue().getApplication(), application);
 
@@ -313,7 +318,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createOrRefreshProfile(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), existingProfile);
         assertEquals(sessionCaptor.getValue().getApplication(), application);
 
@@ -343,7 +348,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verify(profileDao, never()).createOrRefreshProfile(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
 
     }
@@ -386,7 +391,7 @@ public class OidcAuthServiceOperationsProfileTest {
         verifyNoInteractions(profileDao);
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertNull(sessionCaptor.getValue().getProfile());
         assertNull(sessionCaptor.getValue().getApplication());
 
@@ -402,6 +407,7 @@ public class OidcAuthServiceOperationsProfileTest {
             bind(NameService.class).toInstance(mock(NameService.class));
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(Client.class).toInstance(mock(Client.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bindConstant().annotatedWith(Names.named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bindConstant().annotatedWith(Names.named(OIDC_JWKS_REFRESH_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");

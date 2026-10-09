@@ -13,6 +13,8 @@ import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.user.UserUid;
 import dev.getelements.elements.sdk.model.user.VerificationStatus;
 import dev.getelements.elements.sdk.service.auth.OidcAuthSchemeService;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
+import dev.getelements.elements.sdk.service.auth.SessionTokenVerifier;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.util.CryptoKeyPairUtility;
 import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
@@ -76,6 +78,9 @@ public class OidcAccountLinkingTest {
     @Inject
     private OidcAuthSchemeDao oidcAuthSchemeDao;
 
+    @Inject
+    private SessionTokenIssuer sessionTokenIssuer;
+
     private UserCreation userCreation;
 
     @BeforeClass
@@ -104,6 +109,12 @@ public class OidcAccountLinkingTest {
         reset(sessionDao, userDao, userUidDao);
         when(userUidDao.createUserUidStrict(any(UserUid.class))).then(i -> i.getArgument(0));
         when(sessionDao.create(any())).then(i -> {
+            final var sc = new SessionCreation();
+            sc.setSession(i.getArgument(0));
+            sc.setSessionSecret("secret");
+            return sc;
+        });
+        when(sessionTokenIssuer.issue(any())).then(i -> {
             final var sc = new SessionCreation();
             sc.setSession(i.getArgument(0));
             sc.setSessionSecret("secret");
@@ -534,8 +545,8 @@ public class OidcAccountLinkingTest {
             bind(CryptoKeyPairUtility.class).toInstance(mock(CryptoKeyPairUtility.class));
             bind(OidcAuthSchemeService.class).toInstance(mock(OidcAuthSchemeService.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
-            bind(dev.getelements.elements.sdk.service.auth.SessionTokenIssuer.class).toInstance(org.mockito.Mockito.mock(dev.getelements.elements.sdk.service.auth.SessionTokenIssuer.class));
-            bind(dev.getelements.elements.sdk.service.auth.SessionTokenVerifier.class).toInstance(org.mockito.Mockito.mock(dev.getelements.elements.sdk.service.auth.SessionTokenVerifier.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
+            bind(SessionTokenVerifier.class).toInstance(mock(SessionTokenVerifier.class));
 
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
             bind(long.class)  .annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300L);
