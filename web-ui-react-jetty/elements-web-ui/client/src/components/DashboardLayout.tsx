@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import * as Icons from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { loadAdminUiState, saveAdminUiState } from '@/lib/adminUiState';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -20,8 +21,33 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { username, logout } = useAuth();
   const [location, setLocation] = useLocation();
 
-  // Track which category groups are open - lifted to persist across navigation
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+  // Track which sidebar groups are open - lifted here so state is shared across the
+  // sidebar sections and persisted per-user in localStorage.
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(
+    () => loadAdminUiState(username).openGroups
+  );
+
+  // On mount, restore the last page (if any) before persisting state again, so the
+  // freshly-loaded location never overwrites the stored one. Fires once the location
+  // settles on a real page (after the login redirect), and only from a default landing
+  // spot, so explicit deep links into the UI are never overridden.
+  const [restored, setRestored] = useState(false);
+
+  useEffect(() => {
+    if (restored) return;
+    if (location === '/login' || location === '/forgot-password' || location === '/reset-password') return;
+    const stored = loadAdminUiState(username);
+    const isLanding = location === '/' || location === '/dashboard';
+    if (isLanding && stored.location && stored.location !== '/dashboard' && stored.location !== location) {
+      setLocation(stored.location);
+    }
+    setRestored(true);
+  }, [location, restored]);
+
+  useEffect(() => {
+    if (!restored) return;
+    saveAdminUiState(username, { location, openGroups });
+  }, [location, openGroups, username, restored]);
 
   // Nudge badge: shown on the Settings icon when TOTP is available system-wide but this account hasn't
   // enrolled yet. Dismissed (for this account) the first time they visit Settings, regardless of whether
