@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.health;
 
 import dev.getelements.elements.sdk.dao.DatabaseHealthStatusDao;
+import dev.getelements.elements.sdk.dao.DeploymentHealthStatusDao;
 import dev.getelements.elements.sdk.model.health.*;
 import dev.getelements.elements.rt.exception.InternalException;
 import dev.getelements.elements.rt.remote.*;
@@ -35,10 +36,13 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
     private Set<DatabaseHealthStatusDao> databaseHealthStatusDaos;
 
+    private Set<DeploymentHealthStatusDao> deploymentHealthStatusDaos;
+
     @Override
     public HealthStatus checkHealthStatus() {
         return new HealthChecklist()
                 .with(this::checkDatabaseStatus)
+                .with(this::checkElementDeploymentStatus)
                 .with(this::checkDiscoveryStatus)
                 //TODO: EL-193 Restore these with app node
 //                .with(this::checkInstanceConnectionStatus)
@@ -55,6 +59,19 @@ public class DefaultHealthStatusService implements HealthStatusService {
             .collect(toList());
 
         healthChecklist.getHealthStatus().setDatabaseStatus(databaseHealthStatus);
+
+    }
+
+    private void checkElementDeploymentStatus(final HealthChecklist healthChecklist) {
+
+        final var unhealthy = getDeploymentHealthStatusDaos()
+            .stream()
+            .flatMap(dao -> dao.getUnhealthyMissionCriticalDeployments().stream())
+            .collect(toList());
+
+        if (!unhealthy.isEmpty()) {
+            throw new InternalException("Mission critical deployment(s) are unhealthy: " + join(", ", unhealthy));
+        }
 
     }
 
@@ -182,6 +199,15 @@ public class DefaultHealthStatusService implements HealthStatusService {
     @Inject
     public void setDatabaseHealthStatusDaos(Set<DatabaseHealthStatusDao> databaseHealthStatusDaos) {
         this.databaseHealthStatusDaos = databaseHealthStatusDaos;
+    }
+
+    public Set<DeploymentHealthStatusDao> getDeploymentHealthStatusDaos() {
+        return deploymentHealthStatusDaos;
+    }
+
+    @Inject
+    public void setDeploymentHealthStatusDaos(Set<DeploymentHealthStatusDao> deploymentHealthStatusDaos) {
+        this.deploymentHealthStatusDaos = deploymentHealthStatusDaos;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {

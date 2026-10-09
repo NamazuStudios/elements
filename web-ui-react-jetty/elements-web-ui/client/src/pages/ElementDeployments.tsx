@@ -47,6 +47,7 @@ interface ElementDeployment {
   elements?: ElementPathDefinition[];
   packages?: ElementPackageDefinition[];
   useDefaultRepositories: boolean;
+  missionCritical?: boolean;
   repositories?: ElementArtifactRepository[];
   state: 'UNLOADED' | 'ENABLED' | 'DISABLED';
   version: number;
@@ -62,6 +63,7 @@ interface FormData {
   name: string;
   appNameOrId: string;
   useDefaultRepositories: boolean;
+  missionCritical: boolean;
   elements: ElementPathDefinition[];
   packages: ElementPackageDefinition[];
   repositories: ElementArtifactRepository[];
@@ -217,6 +219,7 @@ const emptyFormData: FormData = {
   name: '',
   appNameOrId: '',
   useDefaultRepositories: true,
+  missionCritical: false,
   elements: [],
   packages: [],
   repositories: [],
@@ -231,6 +234,7 @@ function deploymentToFormData(d: ElementDeployment): FormData {
     name: d.name || '',
     appNameOrId: '',
     useDefaultRepositories: d.useDefaultRepositories ?? true,
+    missionCritical: d.missionCritical ?? false,
     elements: (d.elements || []).map(e => ({
       path: e.path || '',
       apiArtifacts: e.apiArtifacts || [],
@@ -432,6 +436,7 @@ export default function ElementDeployments() {
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
+          missionCritical: deployment.missionCritical,
           repositories: deployment.repositories,
           pathAttributes: deployment.pathAttributes,
           pathSpiBuiltins: deployment.pathSpiBuiltins,
@@ -526,6 +531,7 @@ export default function ElementDeployments() {
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
+          missionCritical: deployment.missionCritical,
           repositories: deployment.repositories,
           pathAttributes: deployment.pathAttributes,
           pathSpiBuiltins: deployment.pathSpiBuiltins,
@@ -592,6 +598,7 @@ export default function ElementDeployments() {
       state: formData.state,
       name: formData.name.trim(),
       useDefaultRepositories: formData.useDefaultRepositories,
+      missionCritical: formData.missionCritical,
     };
     if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
     if (formData.packages.length > 0) body.packages = mapPackages(formData.packages);
@@ -813,6 +820,11 @@ export default function ElementDeployments() {
                         )}
                         {deployment.useDefaultRepositories && (
                           <Badge variant="outline" className="text-[10px]">default repos</Badge>
+                        )}
+                        {deployment.missionCritical && (
+                          <Badge variant="outline" className="text-[10px] border-destructive/50 text-destructive">
+                            mission critical
+                          </Badge>
                         )}
                         {deployment.elm && (
                           <Badge variant="outline" className="text-[10px]">ELM</Badge>
@@ -2653,6 +2665,23 @@ function WizardAdditionalElementsStep({
             Recommended: this should generally always be checked unless you have a specific reason to disable it.
           </p>
         </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="wizardMissionCritical"
+              checked={formData.missionCritical}
+              onCheckedChange={(checked) => update({ missionCritical: !!checked })}
+              data-testid="checkbox-mission-critical"
+            />
+            <Label htmlFor="wizardMissionCritical" className="cursor-pointer">
+              Mission critical deployment
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-6">
+            If this deployment fails to load, the whole instance reports itself unhealthy so that it is taken offline
+            rather than silently serving a partial feature set.
+          </p>
+        </div>
         <div className="border-t pt-4">
           <RepositoryEditor
             repositories={formData.repositories}
@@ -3217,6 +3246,23 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                 </div>
                 <p className="text-xs text-muted-foreground ml-6">
                   Recommended: this should generally always be checked unless you have a specific reason to disable it.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="missionCritical"
+                    checked={formData.missionCritical}
+                    onCheckedChange={(checked) => update({ missionCritical: !!checked })}
+                    data-testid="checkbox-mission-critical"
+                  />
+                  <Label htmlFor="missionCritical" className="cursor-pointer">
+                    Mission critical deployment
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground ml-6">
+                  If this deployment fails to load, the whole instance reports itself unhealthy so that it is taken
+                  offline rather than silently serving a partial feature set.
                 </p>
               </div>
               <div className="border-t pt-4">
