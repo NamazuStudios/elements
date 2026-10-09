@@ -39,6 +39,21 @@ docker-compose up --build -d
 
 No additional configuration is needed; services default to localhost on standard ports.
 
+## Ticket and PR Workflow
+
+**Repro-first for bug fixes:** write a failing regression test that reproduces the issue, confirm it fails against current code, implement the fix, then confirm it passes.
+
+**Before starting any ticket, confirm it is not already in flight:**
+
+1. Read the ticket: linked PRs, assignee, recent comments, milestone.
+2. Scan open PRs for the ticket number: `gh pr list --search "<number> in:title"`. One PR may fix several tickets (e.g. a branch named `fix/97-98-...`).
+3. Scan branches for WIP work not yet PR'd: `git branch -a | rg -i <number-or-keyword>`.
+4. If already covered, do not duplicate the work — comment on the ticket noting the covering PR.
+
+**Claim early and stay discoverable:** create the branch with `gh issue develop <number>` (from the default base, it creates `fix/<number>-<slug>`/`feature/<number>-<slug>` and links the issue to the branch), or name the branch `fix/<issue>-<slug>` manually. Open the PR promptly so others can see the ticket is taken.
+
+**Link tickets so they auto-close:** every PR that resolves an issue must reference it with a GitHub closing keyword in the body or title (`Fixes #N`, `Closes #N`, `Resolves #N`). These keywords are case-insensitive and create a permanent issue↔PR link on merge. `Implements #N` and `Addresses #N` do NOT close anything. After merging, spot-check open issues for ones whose fix merged without a keyword, and close them manually.
+
 ## Documentation
 
 The user-facing manual lives in the [NamazuStudios/elements-manual](https://github.com/NamazuStudios/elements-manual) repository and is published at namazustudios.com/docs. It is a bi-directional mirror: edits on the live site sync back to that repository, and PRs merged there sync out to the live site.
