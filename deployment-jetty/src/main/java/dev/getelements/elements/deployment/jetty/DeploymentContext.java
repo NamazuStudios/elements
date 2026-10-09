@@ -10,16 +10,21 @@ import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.zip.ZipInputStream;
 
 import static java.nio.file.Files.copy;
 import static java.util.Objects.requireNonNull;
@@ -259,6 +264,88 @@ record DeploymentContext(
         final var file = temporaryFiles.createTempFile(prefix, suffix);
         deploymentFiles.add(file);
         return file;
+    }
+
+    /**
+     * Copies a resolved ELM artifact to a unique per-package temporary file and mounts it as a zip
+     * {@link FileSystem}, returning the mounted root and tracking it for cleanup.
+     * <p>
+     * The artifact loader returns the same real cache path for identical coordinates every time. Zip filesystem
+     * providers key mounts by backing path, so staging two packages that reference the same artifact against the
+     * shared path couples them and is provider-dependent at best. Copying the ELM to a fresh per-package temp file
+     * first gives every package an independent mount (issue #103). This mirrors the temp-copy staging already used
+     * by the LargeObject path.
+     *
+     * @param elmSourcePath  the resolved ELM artifact path
+     * @param sourceArtifact the Maven coordinate the path was resolved from, recorded for diagnostics
+     * @return the mounted file system root
+     */
+    public Path stageElmPackage(final Path elmSourcePath, final String sourceArtifact) {
+
+        final var tempPath = createTempFile(
+                "deployment-%s-package-".formatted(deployment.id()),
+                elmSourcePath.getFileName().toString()
+        );
+
+        log("Copied package ELM to temporary file: " + tempPath);
+
+        final FileSystem fileSystem;
+
+        try {
+            copy(elmSourcePath, tempPath, StandardCopyOption.REPLACE_EXISTING);
+            // Validate the ELM file
+            validateElmFile(tempPath);
+            fileSystem = FileSystems.newFileSystem(tempPath);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
+        fileSystems().add(fileSystem);
+
+        final var fileSystemRoot = fileSystem
+                .getRootDirectories()
+                .iterator()
+                .next()
+                .toAbsolutePath();
+
+        elementPaths().add(fileSystemRoot);
+        elementPathSources().put(fileSystemRoot, sourceArtifact);
+
+        return fileSystemRoot;
+
+    }
+
+    /**
+     * Validates that a file is a proper ELM file.
+     * Checks both the file extension and ZIP format validity.
+     *
+     * @param elmPath the path to validate
+     * @throws IllegalArgumentException if validation fails
+     */
+    void validateElmFile(final Path elmPath) {
+
+        // Check extension
+        if (!elmPath.toString().endsWith(".elm")) {
+            final var msg = "Artifact is not an ELM file: " + elmPath;
+            warn(msg);
+            final var ex = new InternalException(msg);
+            errors().add(ex);
+            throw ex;
+        }
+
+        // Verify it's a valid ZIP
+        try (final var zis = new ZipInputStream(Files.newInputStream(elmPath))) {
+            if (zis.getNextEntry() == null) {
+                throw new InternalException("ELM file is empty or corrupted");
+            }
+        } catch (IOException ex) {
+            final var msg = "ELM file is not a valid ZIP: " + elmPath;
+            warn(msg);
+            final var wrappedEx = new InternalException(msg, ex);
+            errors().add(wrappedEx);
+            throw wrappedEx;
+        }
+
     }
 
     /**

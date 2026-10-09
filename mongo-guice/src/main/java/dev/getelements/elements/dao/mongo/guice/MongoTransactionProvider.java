@@ -5,6 +5,7 @@ import com.mongodb.client.MongoDatabase;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.Transaction;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
@@ -45,7 +46,7 @@ public class MongoTransactionProvider implements Provider<Transaction> {
         morphiaSession.startTransaction();
 
         final var transactionInjector = Guice.createInjector(
-                Stage.PRODUCTION,
+                GuiceStages.get(),
                 new ConfigurationModule(() -> properties),
                 new AbstractModule() {
                     @Override

@@ -14,6 +14,7 @@ import java.util.Map;
  * @param elements the Element path definitions (deprecated; use ELM packages)
  * @param packages the Element package definitions
  * @param useDefaultRepositories true to include default artifact repositories
+ * @param missionCritical true if a failure to load the deployment should fail the system health check
  * @param repositories the artifact repositories for dependency resolution
  * @param pathAttributes per-path custom attribute maps
  * @param pathSpiBuiltins per-path builtin SPI configurations
@@ -60,6 +61,13 @@ public record CreateElementDeploymentRequest(
                 "deployment time."
         )
         boolean useDefaultRepositories,
+
+        @Schema(description =
+                "Flag indicating whether this deployment is mission critical. When true, a failure to load this " +
+                "deployment (or a load that completes with errors) is treated as a system health check failure, " +
+                "causing the health endpoint to report the instance as unhealthy. Defaults to false."
+        )
+        boolean missionCritical,
 
         @Valid
         @Schema(description =

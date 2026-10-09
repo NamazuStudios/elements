@@ -47,6 +47,7 @@ interface ElementDeployment {
   elements?: ElementPathDefinition[];
   packages?: ElementPackageDefinition[];
   useDefaultRepositories: boolean;
+  missionCritical?: boolean;
   repositories?: ElementArtifactRepository[];
   state: 'UNLOADED' | 'ENABLED' | 'DISABLED';
   version: number;
@@ -62,6 +63,7 @@ interface FormData {
   name: string;
   appNameOrId: string;
   useDefaultRepositories: boolean;
+  missionCritical: boolean;
   elements: ElementPathDefinition[];
   packages: ElementPackageDefinition[];
   repositories: ElementArtifactRepository[];
@@ -217,6 +219,7 @@ const emptyFormData: FormData = {
   name: '',
   appNameOrId: '',
   useDefaultRepositories: true,
+  missionCritical: false,
   elements: [],
   packages: [],
   repositories: [],
@@ -231,6 +234,7 @@ function deploymentToFormData(d: ElementDeployment): FormData {
     name: d.name || '',
     appNameOrId: '',
     useDefaultRepositories: d.useDefaultRepositories ?? true,
+    missionCritical: d.missionCritical ?? false,
     elements: (d.elements || []).map(e => ({
       path: e.path || '',
       apiArtifacts: e.apiArtifacts || [],
@@ -432,6 +436,7 @@ export default function ElementDeployments() {
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
+          missionCritical: deployment.missionCritical,
           repositories: deployment.repositories,
           pathAttributes: deployment.pathAttributes,
           pathSpiBuiltins: deployment.pathSpiBuiltins,
@@ -526,6 +531,7 @@ export default function ElementDeployments() {
           elements: deployment.elements,
           packages: deployment.packages,
           useDefaultRepositories: deployment.useDefaultRepositories,
+          missionCritical: deployment.missionCritical,
           repositories: deployment.repositories,
           pathAttributes: deployment.pathAttributes,
           pathSpiBuiltins: deployment.pathSpiBuiltins,
@@ -592,6 +598,7 @@ export default function ElementDeployments() {
       state: formData.state,
       name: formData.name.trim(),
       useDefaultRepositories: formData.useDefaultRepositories,
+      missionCritical: formData.missionCritical,
     };
     if (formData.elements.length > 0) body.elements = mapElements(formData.elements);
     if (formData.packages.length > 0) body.packages = mapPackages(formData.packages);
@@ -814,6 +821,11 @@ export default function ElementDeployments() {
                         {deployment.useDefaultRepositories && (
                           <Badge variant="outline" className="text-[10px]">default repos</Badge>
                         )}
+                        {deployment.missionCritical && (
+                          <Badge variant="outline" className="text-[10px] border-destructive/50 text-destructive">
+                            mission critical
+                          </Badge>
+                        )}
                         {deployment.elm && (
                           <Badge variant="outline" className="text-[10px]">ELM</Badge>
                         )}
@@ -908,7 +920,7 @@ export default function ElementDeployments() {
           setWizardStep(0);
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Element Deployment</DialogTitle>
             <DialogDescription>
@@ -1083,7 +1095,7 @@ export default function ElementDeployments() {
       </Dialog>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Element Deployment</DialogTitle>
             <DialogDescription>
@@ -1400,7 +1412,7 @@ function KeyValueEditor({
     const prefix = sensitiveKeys !== undefined ? 'com.example.attribute' : 'key';
     let newKey = `${prefix}${counter}`;
     while (newKey in value) newKey = `${prefix}${++counter}`;
-    onChange({ ...value, [newKey]: '' });
+    onChange({ [newKey]: '', ...value });
   };
 
   const removeEntry = (key: string) => {
@@ -1814,7 +1826,7 @@ function PathKeyValueMapEditor({
     let counter = entries.length + 1;
     let newKey = `path${counter}`;
     while (newKey in value) newKey = `path${++counter}`;
-    onChange({ ...value, [newKey]: {} });
+    onChange({ [newKey]: {}, ...value });
     setCollapsed(c => ({ ...c, [newKey]: false }));
   };
 
@@ -2035,6 +2047,12 @@ function PackageDefinitionCard({
     ...runtimeHintsByPath,
   }), [inspection.data, runtimeHintsByPath]);
 
+  // Don't show the Path Attributes editor until the ELM has actually been inspected (or already has
+  // configured paths from a prior deploy), so it never invites placeholder entries before real data is
+  // available. On inspection error the editor is still shown so paths can be added manually.
+  const hasConfiguredAttributes = Object.keys(pkg.pathAttributes ?? {}).length > 0;
+  const showPathAttributes = inspection.isError || hasConfiguredAttributes || Boolean(inspection.data);
+
   return (
     <Card data-testid={`card-package-def-${index}`}>
       <CardContent className="p-3 space-y-3">
@@ -2104,14 +2122,20 @@ function PackageDefinitionCard({
           description="Map of element paths to custom SPI class paths. This allows for an individual SPI specification for each Element contained within the ELM file in the specified ELM artifact."
           testIdPrefix={`pkg-${index}-spi-cp`}
         />
-        <PathKeyValueMapEditor
-          value={pkg.pathAttributes || {}}
-          onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
-          label="Path Attributes"
-          description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
-          testIdPrefix={`pkg-${index}-attrs`}
-          perPathHints={mergedHints}
-        />
+        {showPathAttributes ? (
+          <PathKeyValueMapEditor
+            value={pkg.pathAttributes || {}}
+            onChange={(val) => onUpdate({ ...pkg, pathAttributes: val })}
+            label="Path Attributes"
+            description="Map of element paths to their custom attributes. The key is the path inside the ELM for each Element, and the value is a map of custom attributes to pass to that specific element at load time via the AttributesLoader mechanism."
+            testIdPrefix={`pkg-${index}-attrs`}
+            perPathHints={mergedHints}
+          />
+        ) : (
+          <p className="text-xs text-muted-foreground italic">
+            Path Attributes will appear once this ELM artifact has been inspected.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -2212,9 +2236,15 @@ function PackageDefinitionSubDialog({
     });
   }, [inspection.data]);
 
+  // Don't show the Path Attributes editor until the ELM has actually been inspected (or already has
+  // configured paths from an existing package), so it never invites placeholder entries before real
+  // data is available. On inspection error the editor is still shown so paths can be added manually.
+  const hasConfiguredAttributes = Object.keys(draft.pathAttributes ?? {}).length > 0;
+  const showPathAttributes = inspection.isError || hasConfiguredAttributes || Boolean(inspection.data);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
           <DialogTitle>Package Configuration</DialogTitle>
           <DialogDescription>
@@ -2275,14 +2305,20 @@ function PackageDefinitionSubDialog({
             description="Map of element paths to custom SPI class paths."
             testIdPrefix="subdialog-pkg-spi-cp"
           />
-          <PathKeyValueMapEditor
-            value={draft.pathAttributes || {}}
-            onChange={(val) => setDraft({ ...draft, pathAttributes: val })}
-            label="Path Attributes"
-            description="Map of element paths to their custom attributes."
-            testIdPrefix="subdialog-pkg-attrs"
-            perPathHints={hintsFromInspectionRecords(inspection.data)}
-          />
+          {showPathAttributes ? (
+            <PathKeyValueMapEditor
+              value={draft.pathAttributes || {}}
+              onChange={(val) => setDraft({ ...draft, pathAttributes: val })}
+              label="Path Attributes"
+              description="Map of element paths to their custom attributes."
+              testIdPrefix="subdialog-pkg-attrs"
+              perPathHints={hintsFromInspectionRecords(inspection.data)}
+            />
+          ) : (
+            <p className="text-xs text-muted-foreground italic">
+              Path Attributes will appear once this ELM artifact has been inspected.
+            </p>
+          )}
         </div>
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} data-testid="button-subdialog-cancel-package">
@@ -2627,6 +2663,23 @@ function WizardAdditionalElementsStep({
           </div>
           <p className="text-xs text-muted-foreground ml-6">
             Recommended: this should generally always be checked unless you have a specific reason to disable it.
+          </p>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="wizardMissionCritical"
+              checked={formData.missionCritical}
+              onCheckedChange={(checked) => update({ missionCritical: !!checked })}
+              data-testid="checkbox-mission-critical"
+            />
+            <Label htmlFor="wizardMissionCritical" className="cursor-pointer">
+              Mission critical deployment
+            </Label>
+          </div>
+          <p className="text-xs text-muted-foreground ml-6">
+            If this deployment fails to load, the whole instance reports itself unhealthy so that it is taken offline
+            rather than silently serving a partial feature set.
           </p>
         </div>
         <div className="border-t pt-4">
@@ -3193,6 +3246,23 @@ function DeploymentForm({ mode, formData, setFormData, deployment }: DeploymentF
                 </div>
                 <p className="text-xs text-muted-foreground ml-6">
                   Recommended: this should generally always be checked unless you have a specific reason to disable it.
+                </p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="missionCritical"
+                    checked={formData.missionCritical}
+                    onCheckedChange={(checked) => update({ missionCritical: !!checked })}
+                    data-testid="checkbox-mission-critical"
+                  />
+                  <Label htmlFor="missionCritical" className="cursor-pointer">
+                    Mission critical deployment
+                  </Label>
+                </div>
+                <p className="text-xs text-muted-foreground ml-6">
+                  If this deployment fails to load, the whole instance reports itself unhealthy so that it is taken
+                  offline rather than silently serving a partial feature set.
                 </p>
               </div>
               <div className="border-t pt-4">

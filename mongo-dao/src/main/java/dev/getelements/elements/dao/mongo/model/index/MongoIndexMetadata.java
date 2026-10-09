@@ -5,13 +5,14 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 import org.bson.Document;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Entity
 public class MongoIndexMetadata implements IndexMetadata<Document> {
 
     @Property
-    private Document keys;
+    private Map<String, Object> keys;
 
     @Override
     public Document getIdentifier() {
@@ -19,7 +20,7 @@ public class MongoIndexMetadata implements IndexMetadata<Document> {
     }
 
     public Document getKeys() {
-        return keys;
+        return keys == null ? null : new Document(keys);
     }
 
     public void setKeys(Document keys) {
