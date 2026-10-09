@@ -534,6 +534,8 @@ public class OidcAccountLinkingTest {
             bind(CryptoKeyPairUtility.class).toInstance(mock(CryptoKeyPairUtility.class));
             bind(OidcAuthSchemeService.class).toInstance(mock(OidcAuthSchemeService.class));
             bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
+            bind(dev.getelements.elements.sdk.service.auth.SessionTokenIssuer.class).toInstance(org.mockito.Mockito.mock(dev.getelements.elements.sdk.service.auth.SessionTokenIssuer.class));
+            bind(dev.getelements.elements.sdk.service.auth.SessionTokenVerifier.class).toInstance(org.mockito.Mockito.mock(dev.getelements.elements.sdk.service.auth.SessionTokenVerifier.class));
 
             bind(MapperRegistry.class).toProvider(ServicesMapperRegistryProvider.class);
             bind(long.class)  .annotatedWith(named(SESSION_TIMEOUT_SECONDS)).toInstance(300L);
