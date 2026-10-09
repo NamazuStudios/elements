@@ -6,6 +6,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Objects;
 
 @Entity(value = "receipt", useDiscriminator = false)
@@ -31,7 +32,7 @@ public class MongoReceipt {
     private Date purchaseTime;
 
     @Property
-    private Document body;
+    private Map<String, Object> body;
 
     public ObjectId getId() {
         return id;
@@ -74,7 +75,7 @@ public class MongoReceipt {
     }
 
     public Document getBody() {
-        return body;
+        return body == null ? null : new Document(body);
     }
 
     public void setBody(Document rawReceipt) {
