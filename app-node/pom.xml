@@ -8,12 +8,12 @@
     <parent>
         <groupId>dev.getelements.elements</groupId>
         <artifactId>eci-elements</artifactId>
-        <version>${revision}</version>
+        <version>3.9.0</version>
     </parent>
 
     <artifactId>app-node</artifactId>
     <name>${project.artifactId}</name>
-    <version>${revision}</version>
+    <version>3.9.0</version>
     <url>https://namazustudios.com</url>
 
     <dependencies>
