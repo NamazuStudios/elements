@@ -108,7 +108,25 @@ jobs:
         # to already be installed before the real (tests-enabled) pass runs.
         run: make install_no_tests
 
-      - name: Build, test, and publish to Central + GitHub Packages
+      - name: Assume AWS role for S3 publishing
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::308044622771:role/github-oidc
+          aws-region: us-east-1
+
+      - name: Build, test, and publish to maven.namazustudios.com
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          make deploy_maven_s3
+          aws s3 sync --no-progress staging/ s3://namazu-maven-repo/
+          GROUP_PATH=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout | tr '.' '/')
+          aws cloudfront create-invalidation \
+            --distribution-id E1GZC3BATLVXG0 \
+            --paths "/${GROUP_PATH}/*"
+
+      - name: Build, test, and publish to Central + GitHub Packages (optional)
+        continue-on-error: true
         env:
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
