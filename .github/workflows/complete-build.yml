@@ -58,12 +58,12 @@ jobs:
         # exists.
         run: make install_no_tests
 
-      - name: Build, test, and attempt snapshot deploy to Central (no-op)
+      - name: Build, test, and deploy to local staging
         env:
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: make deploy
+        run: make deploy_maven_s3
 
       - name: Upload surefire reports/dumps on failure
         if: failure()
