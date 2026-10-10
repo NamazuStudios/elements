@@ -12,21 +12,11 @@ name: Complete Build
 # part of its build/test step, even though Central rejects/ignores
 # -SNAPSHOT uploads and nothing actually ends up published there -- running
 # the real sign+deploy pipeline (not just `install`) catches signing/
-# packaging failures a plain install wouldn't. Publishing to the GitHub
-# Packages snapshot repo is a real publish (unlike the Central no-op) and
-# is opt-in via publish-packages, deliberately NOT the default: every
-# branch shares the same reactor version, so publishing packages from every
-# branch would just have them fight over the same GitHub Packages
-# coordinates. Only main sets this true.
+# packaging failures a plain install wouldn't.
 
 on:
   workflow_call:
-    inputs:
-      publish-packages:
-        description: Whether to publish Maven artifacts to the GitHub Packages snapshot repo
-        required: false
-        type: boolean
-        default: false
+    inputs: {}
 
 permissions:
   contents: read
@@ -68,18 +58,7 @@ jobs:
         # exists.
         run: make install_no_tests
 
-      - name: Build, test, and publish snapshot to Central (no-op) + GitHub Packages
-        if: inputs.publish-packages
-        env:
-          SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-          GITHUB_USERNAME: ${{ github.actor }}
-          GITHUB_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-        run: make deploy_central
-
       - name: Build, test, and attempt snapshot deploy to Central (no-op)
-        if: ${{ !inputs.publish-packages }}
         env:
           SONATYPE_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
