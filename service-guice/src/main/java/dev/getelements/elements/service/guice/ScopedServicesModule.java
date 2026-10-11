@@ -348,10 +348,6 @@ public class ScopedServicesModule extends AbstractModule {
                 .toProvider(ProfileOverrideServiceProvider.class)
                 .in(scope);
 
-        bind(AuthSchemeService.class)
-                .toProvider(AuthSchemeServiceProvider.class)
-                .in(scope);
-
         bind(OidcAuthSchemeService.class)
                 .toProvider(OidcAuthSchemeServiceProvider.class)
                 .in(scope);
@@ -772,10 +768,6 @@ public class ScopedServicesModule extends AbstractModule {
         bind(ApplicationConfigurationService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserApplicationConfigurationService.class);
-
-        bind(AuthSchemeService.class)
-                .annotatedWith(named(SUPERUSER))
-                .to(SuperUserAuthSchemeService.class);
 
         bind(CdnDeploymentService.class)
                 .annotatedWith(named(SUPERUSER))

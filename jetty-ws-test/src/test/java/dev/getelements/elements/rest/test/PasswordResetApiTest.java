@@ -240,8 +240,8 @@ public class PasswordResetApiTest {
     }
 
     /**
-     * After a successful reset, all pre-existing sessions are invalidated because the
-     * passwordHash (from which session secrets are derived) has changed.
+     * After a successful reset, all pre-existing sessions are explicitly revoked. The old session
+     * token no longer authenticates.
      */
     @Test(dependsOnMethods = "completeReset_validToken_returns204")
     public void completeReset_oldSessionInvalidatedAfterReset() {
@@ -251,7 +251,7 @@ public class PasswordResetApiTest {
                 .header(SESSION_SECRET, sessionSecretBeforeReset)
                 .get();
 
-        assertEquals(response.getStatus(), 403);
+        assertEquals(response.getStatus(), 401);
     }
 
 }

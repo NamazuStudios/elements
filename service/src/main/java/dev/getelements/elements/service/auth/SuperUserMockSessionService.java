@@ -1,7 +1,7 @@
 package dev.getelements.elements.service.auth;
 
 import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.profile.Profile;
@@ -32,7 +32,7 @@ public class SuperUserMockSessionService implements MockSessionService {
 
     private ProfileDao profileDao;
 
-    private SessionDao sessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private int mockSessionTimeoutSeconds;
 
@@ -59,7 +59,7 @@ public class SuperUserMockSessionService implements MockSessionService {
         }
 
         final MockSessionCreation mockSessionCreation = new MockSessionCreation();
-        final SessionCreation sessionCreation = getSessionDao().create(session);
+        final SessionCreation sessionCreation = getSessionTokenIssuer().issue(session);
 
         mockSessionCreation.setSession(sessionCreation.getSession());
         mockSessionCreation.setSessionSecret(sessionCreation.getSessionSecret());
@@ -93,13 +93,13 @@ public class SuperUserMockSessionService implements MockSessionService {
         return getProfileDao().createOrReactivateProfile(profile);
     }
 
-    public SessionDao getSessionDao() {
-        return sessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao sessionDao) {
-        this.sessionDao = sessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public UserDao getUserDao() {
