@@ -2,7 +2,6 @@ package dev.getelements.elements.dao.mongo.mapper;
 
 
 import dev.getelements.elements.dao.mongo.model.*;
-import dev.getelements.elements.dao.mongo.model.auth.MongoAuthScheme;
 import dev.getelements.elements.dao.mongo.model.blockchain.*;
 import dev.getelements.elements.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import dev.getelements.elements.dao.mongo.model.goods.MongoInventoryItem;
@@ -19,7 +18,6 @@ import dev.getelements.elements.dao.mongo.model.schema.MongoMetadataSpec;
 import dev.getelements.elements.dao.mongo.model.score.MongoScore;
 import dev.getelements.elements.sdk.model.Deployment;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
-import dev.getelements.elements.sdk.model.auth.AuthScheme;
 import dev.getelements.elements.sdk.model.blockchain.BlockchainNetwork;
 import dev.getelements.elements.sdk.model.blockchain.ElementsSmartContract;
 import dev.getelements.elements.sdk.model.blockchain.contract.SmartContract;
@@ -316,11 +314,6 @@ public interface MongoDBMapper {
     Session toSession(MongoSession source);
 
     MongoSession toMongoSession(Session source);
-
-    AuthScheme toAuthScheme(MongoAuthScheme source);
-
-    @InheritInverseConfiguration
-    MongoAuthScheme toMongoAuthScheme(AuthScheme source);
 
     // Custom Conversions
 

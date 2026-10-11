@@ -3,14 +3,12 @@ package dev.getelements.elements.service.guice;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.service.Constants;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
-import dev.getelements.elements.sdk.service.auth.CustomAuthSessionService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.service.auth.DefaultSessionService;
-import dev.getelements.elements.service.auth.StandardCustomAuthSessionService;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
 import dev.getelements.elements.service.notification.StandardNotificationService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
@@ -30,9 +28,6 @@ public class StandardServicesModule extends AbstractModule {
         bind(NameService.class)
                 .to(SimpleAdjectiveAnimalNameService.class)
                 .asEagerSingleton();
-
-        bind(CustomAuthSessionService.class)
-                .to(StandardCustomAuthSessionService.class);
 
         bind(AdvancementService.class)
                 .to(StandardAdvancementService.class);

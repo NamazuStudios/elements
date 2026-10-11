@@ -1,9 +1,7 @@
 package dev.getelements.elements.sdk.model.crypto;
 
-import dev.getelements.elements.sdk.model.auth.AuthScheme;
-
 /**
- * Represents the signing algorithm for the {@link AuthScheme}.
+ * Represents the signing algorithm for a vault key pair.
  */
 public enum PrivateKeyCrytpoAlgorithm {
 

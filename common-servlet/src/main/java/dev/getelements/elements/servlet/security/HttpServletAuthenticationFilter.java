@@ -8,11 +8,9 @@ import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.auth.CustomAuthSessionService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
 import dev.getelements.elements.sdk.util.ElementScopes;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
-import dev.getelements.elements.security.JWTCredentials;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.Filter;
@@ -45,8 +43,6 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     private ObjectMapper objectMapper;
 
     private SessionService sessionService;
-
-    private CustomAuthSessionService customAuthSessionService;
 
     @Override
     public void doFilter(final ServletRequest _request,
@@ -103,9 +99,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
 
     private ElementScope.Handle enterAuthScope(final String sessionId, final HttpServletRequest request) {
 
-        final var session = JWTCredentials.isJwt(sessionId) ?
-                getCustomAuthSessionService().getSession(sessionId) :
-                getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
+        final var session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 
         final var user = session.getUser();
         final var profile = session.getProfile();
@@ -174,15 +168,6 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
     @Inject
     public void setSessionService(SessionService sessionService) {
         this.sessionService = sessionService;
-    }
-
-    public CustomAuthSessionService getCustomAuthSessionService() {
-        return customAuthSessionService;
-    }
-
-    @Inject
-    public void setCustomAuthSessionService(CustomAuthSessionService customAuthSessionService) {
-        this.customAuthSessionService = customAuthSessionService;
     }
 
 }
