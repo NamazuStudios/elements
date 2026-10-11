@@ -26,6 +26,10 @@ public class PreDatastoreMigrationModule extends AbstractModule {
 
         bind(PreDatastoreMigrationRunner.class);
 
+        final var migrations = Multibinder.newSetBinder(binder(), PreDatastoreMigration.class);
+        //Leaving this here as an example
+//        migrations.addBinding().to(DropLegacyAuthSchemeIndexesMigration.class);
+
     }
 
 }
