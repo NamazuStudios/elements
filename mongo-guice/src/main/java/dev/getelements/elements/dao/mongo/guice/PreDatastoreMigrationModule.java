@@ -26,9 +26,10 @@ public class PreDatastoreMigrationModule extends AbstractModule {
 
         bind(PreDatastoreMigrationRunner.class);
 
-        final var migrations = Multibinder.newSetBinder(binder(), PreDatastoreMigration.class);
-        //Leaving this here as an example
-//        migrations.addBinding().to(DropLegacyAuthSchemeIndexesMigration.class);
+        // The set binder must be present even when no migrations are registered: the runner injects
+        // Set<PreDatastoreMigration>, which does not resolve without a multibinding.
+
+        Multibinder.newSetBinder(binder(), PreDatastoreMigration.class);
 
     }
 

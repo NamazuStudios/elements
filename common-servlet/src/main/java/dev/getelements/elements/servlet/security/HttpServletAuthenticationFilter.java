@@ -7,12 +7,12 @@ import dev.getelements.elements.sdk.model.ErrorResponse;
 import dev.getelements.elements.sdk.model.exception.BaseException;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
+import dev.getelements.elements.sdk.service.auth.SessionTokenVerifier;
+import dev.getelements.elements.sdk.model.exception.security.BadSessionSecretException;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.service.auth.CustomAuthSessionService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
 import dev.getelements.elements.sdk.util.ElementScopes;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
-import dev.getelements.elements.security.JWTCredentials;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.servlet.Filter;
@@ -46,7 +46,7 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
 
     private SessionService sessionService;
 
-    private CustomAuthSessionService customAuthSessionService;
+    private SessionTokenVerifier sessionTokenVerifier;
 
     @Override
     public void doFilter(final ServletRequest _request,
@@ -62,10 +62,16 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
                     .orElseGet(() -> () -> {})) {
                 chain.doFilter(request, response);
             }
+        } catch (UnauthorizedException ex) {
+            response.setStatus(SC_UNAUTHORIZED);
+            response.setHeader(WWW_AUTHENTICATE, BEARER);
+            fail(response, ex);
         } catch (ForbiddenException ex) {
             response.setStatus(SC_FORBIDDEN);
             fail(response, ex);
-        } catch (UnauthorizedException ex) {
+        } catch (BadSessionSecretException ex) {
+            // A malformed legacy secret is an authentication failure, not a client error: return 401
+            // rather than letting it fall through to the generic handler as a 500.
             response.setStatus(SC_UNAUTHORIZED);
             response.setHeader(WWW_AUTHENTICATE, BEARER);
             fail(response, ex);
@@ -101,10 +107,18 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         getObjectMapper().writeValue(response.getOutputStream(), error);
     }
 
+    private boolean isSessionToken(final String credentials) {
+        return getSessionTokenVerifier() != null && getSessionTokenVerifier().isSessionToken(credentials);
+    }
+
     private ElementScope.Handle enterAuthScope(final String sessionId, final HttpServletRequest request) {
 
-        final var session = JWTCredentials.isJwt(sessionId) ?
-                getCustomAuthSessionService().getSession(sessionId) :
+        // Signed session tokens verify locally (signature, expiry, issuer, and audience) and resolve
+        // directly to their server-side record. Legacy opaque secrets retain the original
+        // check-and-refresh behavior during the migration window.
+
+        final var session = isSessionToken(sessionId) ?
+                getSessionService().getSessionIfValid(sessionId) :
                 getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 
         final var user = session.getUser();
@@ -176,13 +190,13 @@ public abstract class HttpServletAuthenticationFilter implements Filter {
         this.sessionService = sessionService;
     }
 
-    public CustomAuthSessionService getCustomAuthSessionService() {
-        return customAuthSessionService;
+    public SessionTokenVerifier getSessionTokenVerifier() {
+        return sessionTokenVerifier;
     }
 
     @Inject
-    public void setCustomAuthSessionService(CustomAuthSessionService customAuthSessionService) {
-        this.customAuthSessionService = customAuthSessionService;
+    public void setSessionTokenVerifier(SessionTokenVerifier sessionTokenVerifier) {
+        this.sessionTokenVerifier = sessionTokenVerifier;
     }
 
 }

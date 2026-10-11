@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.auth.BodyType;
 import dev.getelements.elements.sdk.model.auth.HttpMethod;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
@@ -50,6 +51,7 @@ public class AnonOAuth2AuthServiceTest {
     @Inject private OAuth2AuthSchemeDao schemeDao;
     @Inject private OAuth2AuthServiceRequestInvoker invoker;
     @Inject private SessionDao sessionDao;
+    @Inject private SessionTokenIssuer sessionTokenIssuer;
 
     @BeforeMethod
     public void setup() {
@@ -106,7 +108,7 @@ public class AnonOAuth2AuthServiceTest {
         verify(userUidDao, never()).createUserUidStrict(any(UserUid.class));
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getUser().getId(), "existing-user-id");
     }
 
@@ -196,6 +198,7 @@ public class AnonOAuth2AuthServiceTest {
             bind(UserDao.class).toInstance(mock(UserDao.class));
             bind(OAuth2AuthSchemeDao.class).toInstance(mock(OAuth2AuthSchemeDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bind(ProfileDao.class).toInstance(mock(ProfileDao.class));
             bind(NameService.class).toInstance(mock(NameService.class));
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));

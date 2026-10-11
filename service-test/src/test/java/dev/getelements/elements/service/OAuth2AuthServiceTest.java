@@ -19,6 +19,7 @@ import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.service.auth.oauth2.OAuth2AuthServiceOperations;
 import dev.getelements.elements.service.auth.oauth2.OAuth2AuthServiceRequestInvoker;
@@ -68,6 +69,9 @@ public class OAuth2AuthServiceTest {
     @Inject
     private NameService nameService;
 
+    @Inject
+    private SessionTokenIssuer sessionTokenIssuer;
+
     @BeforeMethod
     public void setup() {
 
@@ -75,6 +79,7 @@ public class OAuth2AuthServiceTest {
         injector.injectMembers(this);
 
         when(sessionDao.create(any(Session.class))).thenReturn(new SessionCreation());
+        when(sessionTokenIssuer.issue(any(Session.class))).thenReturn(new SessionCreation());
     }
 
     private record Case(String name, OAuth2AuthScheme scheme, OAuth2SessionRequest req, int status, String responseBody,
@@ -127,7 +132,7 @@ public class OAuth2AuthServiceTest {
             verify(userMapper).apply(eq(testCase.scheme.getName()), eq(testCase.expectedExternalUserId));
 
             // verify session created
-            verify(sessionDao).create(any(Session.class));
+            verify(sessionTokenIssuer).issue(any(Session.class));
 
             // verify resolved request mapping into query/body passed to invoker
             final var rrCap = ArgumentCaptor.forClass(ResolvedRequest.class);
@@ -143,7 +148,7 @@ public class OAuth2AuthServiceTest {
                     ops.createOrUpdateUserWithToken(testCase.req, userMapper));
 
             // should not create session on failure
-            verify(sessionDao, never()).create(any(Session.class));
+            verify(sessionTokenIssuer, never()).issue(any(Session.class));
         }
     }
 
@@ -193,7 +198,7 @@ public class OAuth2AuthServiceTest {
         assertEquals(profileCaptor.getValue().getDisplayName(), "brave-otter");
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getProfile(), createdProfile);
         assertEquals(sessionCaptor.getValue().getApplication(), application);
     }
@@ -235,7 +240,7 @@ public class OAuth2AuthServiceTest {
         verify(profileDao, never()).createSlottedProfile(any(Profile.class), anyMap());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertNull(sessionCaptor.getValue().getProfile());
         assertNull(sessionCaptor.getValue().getApplication());
     }
@@ -504,6 +509,7 @@ public class OAuth2AuthServiceTest {
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(Client.class).toInstance(mock(Client.class));
             bind(OAuth2AuthServiceRequestInvoker.class).toInstance(mock(OAuth2AuthServiceRequestInvoker.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bindConstant().annotatedWith(Names.named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
         }

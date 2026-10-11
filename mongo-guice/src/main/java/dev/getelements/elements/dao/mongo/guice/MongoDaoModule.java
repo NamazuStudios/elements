@@ -14,8 +14,8 @@ import dev.getelements.elements.dao.mongo.goods.MongoProductBundleDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductSkuSchemaDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
-import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoCaptchaConfigurationDao;
+import dev.getelements.elements.dao.mongo.auth.MongoJwtSigningKeyDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOAuth2AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpDao;
@@ -101,6 +101,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(MultiMatchDao.class).to(MongoMultiMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
+        bind(JwtSigningKeyDao.class).to(MongoJwtSigningKeyDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
         bind(ScoreDao.class).to(MongoScoreDao.class);
@@ -122,7 +123,6 @@ public class MongoDaoModule extends PrivateModule {
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
         bind(EmailTemplateDao.class).to(MongoEmailTemplateDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
-        bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(OidcAuthSchemeDao.class).to(MongoOidcAuthSchemeDao.class);
         bind(OidcProviderConfigurationDao.class).to(MongoOidcProviderConfigurationDao.class);
         bind(OidcLoginAttemptDao.class).to(MongoOidcLoginAttemptDao.class);
@@ -195,6 +195,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MultiMatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
+        expose(JwtSigningKeyDao.class);
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
         expose(RankDao.class);
@@ -214,7 +215,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(MetadataSpecDao.class);
         expose(EmailTemplateDao.class);
         expose(SaveDataDocumentDao.class);
-        expose(AuthSchemeDao.class);
         expose(OidcAuthSchemeDao.class);
         expose(OidcProviderConfigurationDao.class);
         expose(OidcLoginAttemptDao.class);

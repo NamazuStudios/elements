@@ -49,52 +49,52 @@ public interface OidcAuthSchemeDao {
     String OIDC_AUTH_SCHEME_DELETED = "dev.getelements.elements.sdk.model.dao.oidc.auth.scheme.deleted";
 
     /**
-     * Lists all {@link AuthScheme} instances
+     * Lists all {@link OidcAuthScheme} instances
      *
      * @param offset
      * @param count
      * @param tags
-     * @return a {@link Pagination} of {@link AuthScheme} instances
+     * @return a {@link Pagination} of {@link OidcAuthScheme} instances
      */
     Pagination<OidcAuthScheme> getAuthSchemes(int offset, int count, List<String> tags);
 
     /**
-     * Finds an {@link AuthScheme}, returning an {@link Optional}.
+     * Finds an {@link OidcAuthScheme}, returning an {@link Optional}.
      *
      * @param authSchemeIssuerNameOrId the auth scheme id
-     * @return an {@link Optional<AuthScheme>}
+     * @return an {@link Optional<OidcAuthScheme>}
      */
     Optional<OidcAuthScheme> findAuthScheme(String authSchemeIssuerNameOrId);
 
     /**
-     * Fetches a specific {@link AuthScheme} instance based on ID.  If not found, an
+     * Fetches a specific {@link OidcAuthScheme} instance based on ID.  If not found, an
      * exception is raised.
      *
      * @param authSchemeId the auth scheme ID
-     * @return the {@link AuthScheme}, never null
+     * @return the {@link OidcAuthScheme}, never null
      */
     default OidcAuthScheme getAuthScheme(final String authSchemeId) {
         return findAuthScheme(authSchemeId).orElseThrow(AuthSchemeNotFoundException::new);
     }
 
     /**
-     * Updates the supplied {@link AuthScheme}
+     * Updates the supplied {@link OidcAuthScheme}
      *
-     * @param authScheme the {@link UpdateAuthSchemeRequest} with the information to update the authScheme
-     * @return a {@link UpdateAuthSchemeResponse} as it was created
+     * @param authScheme the {@link OidcAuthScheme} with the information to update the authScheme
+     * @return the updated {@link OidcAuthScheme} as it was persisted
      */
     OidcAuthScheme updateAuthScheme(OidcAuthScheme authScheme);
 
     /**
-     * Creates an {@link AuthScheme}
+     * Creates an {@link OidcAuthScheme}
      *
-     * @param authScheme the {@link CreateAuthSchemeRequest} with the information to create the authScheme
-     * @return a {@link CreateAuthSchemeResponse} as it was created
+     * @param authScheme the {@link OidcAuthScheme} with the information to create the authScheme
+     * @return the created {@link OidcAuthScheme} as it was persisted
      */
     OidcAuthScheme createAuthScheme(OidcAuthScheme authScheme);
 
     /**
-     * Deletes the {@link AuthScheme} with the supplied auth scheme ID.
+     * Deletes the {@link OidcAuthScheme} with the supplied auth scheme ID.
      *
      * @param authSchemeId the auth scheme ID.
      */

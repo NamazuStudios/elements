@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.dao.OidcLoginAttemptDao;
 import dev.getelements.elements.sdk.dao.OidcProviderConfigurationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -122,14 +123,14 @@ public class OidcLoginAttemptOperationsTest {
         profileDao = mock(ProfileDao.class);
         oidcAuthServiceOperations.setProfileDao(profileDao);
         oidcAuthServiceOperations.setNameService(mock(NameService.class));
-        final var sessionDao = mock(SessionDao.class);
-        when(sessionDao.create(any())).thenAnswer(invocation -> {
+        final var sessionTokenIssuer = mock(SessionTokenIssuer.class);
+        when(sessionTokenIssuer.issue(any())).thenAnswer(invocation -> {
             final var sessionCreation = new SessionCreation();
             sessionCreation.setSessionSecret("secret");
             sessionCreation.setSession(invocation.getArgument(0));
             return sessionCreation;
         });
-        oidcAuthServiceOperations.setSessionDao(sessionDao);
+        oidcAuthServiceOperations.setSessionTokenIssuer(sessionTokenIssuer);
         oidcAuthServiceOperations.setSessionTimeoutSeconds(300L);
 
         operations = new OidcLoginAttemptOperations();

@@ -3,14 +3,16 @@ package dev.getelements.elements.service.guice;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.service.Constants;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
-import dev.getelements.elements.sdk.service.auth.CustomAuthSessionService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
+import dev.getelements.elements.sdk.service.auth.SessionTokenVerifier;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.service.auth.DefaultSessionService;
-import dev.getelements.elements.service.auth.StandardCustomAuthSessionService;
+import dev.getelements.elements.service.auth.StandardSessionTokenIssuer;
+import dev.getelements.elements.service.auth.StandardSessionTokenVerifier;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
 import dev.getelements.elements.service.notification.StandardNotificationService;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
@@ -31,14 +33,17 @@ public class StandardServicesModule extends AbstractModule {
                 .to(SimpleAdjectiveAnimalNameService.class)
                 .asEagerSingleton();
 
-        bind(CustomAuthSessionService.class)
-                .to(StandardCustomAuthSessionService.class);
-
         bind(AdvancementService.class)
                 .to(StandardAdvancementService.class);
 
         bind(SessionService.class)
                 .to(DefaultSessionService.class);
+
+        bind(SessionTokenIssuer.class)
+                .to(StandardSessionTokenIssuer.class);
+
+        bind(SessionTokenVerifier.class)
+                .to(StandardSessionTokenVerifier.class);
 
         bind(VersionService.class)
                 .to(BuildPropertiesVersionService.class)
