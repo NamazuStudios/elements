@@ -88,6 +88,7 @@ public class MockServiceTestModule extends AbstractModule {
         bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
         bind(SessionTokenVerifier.class).toInstance(mock(SessionTokenVerifier.class));
         bind(JwtSigningKeyDao.class).toInstance(mock(JwtSigningKeyDao.class));
+        bind(OidcProviderDao.class).toInstance(mock(OidcProviderDao.class));
         bind(FCMRegistrationDao.class).toInstance(mock(FCMRegistrationDao.class));
         bind(LeaderboardDao.class).toInstance(mock(LeaderboardDao.class));
         bind(ScoreDao.class).toInstance(mock(ScoreDao.class));

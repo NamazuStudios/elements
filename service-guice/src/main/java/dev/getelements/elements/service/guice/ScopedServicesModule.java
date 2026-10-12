@@ -64,6 +64,13 @@ import dev.getelements.elements.service.auth.*;
 import dev.getelements.elements.service.auth.captcha.*;
 import dev.getelements.elements.service.auth.oauth2.*;
 import dev.getelements.elements.service.auth.oidc.*;
+import dev.getelements.elements.service.auth.oidc.provider.OidcClientServiceProvider;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderAuthorizationService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderDiscoveryService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderJwksService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderTokenService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderUserService;
+import dev.getelements.elements.service.auth.oidc.provider.SuperUserOidcClientService;
 import dev.getelements.elements.service.auth.totp.*;
 import dev.getelements.elements.service.blockchain.crypto.evm.EvmSmartContractServiceProvider;
 import dev.getelements.elements.service.blockchain.crypto.evm.SuperUserEvmSmartContractInvocationService;
@@ -386,6 +393,33 @@ public class ScopedServicesModule extends AbstractModule {
         // than switched by a level-based Provider (mirrors HealthStatusService).
         bind(TotpVerificationService.class)
                 .to(DefaultTotpVerificationService.class)
+                .in(scope);
+
+        // The OIDC provider's endpoints authenticate via OIDC client credentials or the hosted login page,
+        // never via the Elements request scope, so behavior cannot vary by caller identity either.
+
+        bind(OidcProviderDiscoveryService.class)
+                .to(StandardOidcProviderDiscoveryService.class)
+                .in(scope);
+
+        bind(OidcProviderJwksService.class)
+                .to(StandardOidcProviderJwksService.class)
+                .in(scope);
+
+        bind(OidcProviderAuthorizationService.class)
+                .to(StandardOidcProviderAuthorizationService.class)
+                .in(scope);
+
+        bind(OidcProviderTokenService.class)
+                .to(StandardOidcProviderTokenService.class)
+                .in(scope);
+
+        bind(OidcProviderUserService.class)
+                .to(StandardOidcProviderUserService.class)
+                .in(scope);
+
+        bind(OidcClientService.class)
+                .toProvider(OidcClientServiceProvider.class)
                 .in(scope);
 
         bind(OAuth2AuthSchemeService.class)
@@ -904,6 +938,10 @@ public class ScopedServicesModule extends AbstractModule {
         bind(TotpAdminService.class)
                 .annotatedWith(named(SUPERUSER))
                 .to(SuperUserTotpAdminService.class);
+
+        bind(OidcClientService.class)
+                .annotatedWith(named(SUPERUSER))
+                .to(SuperUserOidcClientService.class);
 
         bind(ProfileOverrideService.class)
                 .annotatedWith(named(SUPERUSER))
