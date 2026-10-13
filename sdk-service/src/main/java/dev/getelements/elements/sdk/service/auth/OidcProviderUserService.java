@@ -1,6 +1,7 @@
 package dev.getelements.elements.sdk.service.auth;
 
 import dev.getelements.elements.sdk.model.oidc.OidcProviderUserInfo;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Resolves the claims served by the Elements OIDC provider's userinfo endpoint. Claims are gated by the
@@ -8,6 +9,7 @@ import dev.getelements.elements.sdk.model.oidc.OidcProviderUserInfo;
  * {@code preferred_username} under {@code profile}, {@code email} and {@code email_verified} under
  * {@code email}.
  */
+@ElementServiceExport
 public interface OidcProviderUserService {
 
     /**

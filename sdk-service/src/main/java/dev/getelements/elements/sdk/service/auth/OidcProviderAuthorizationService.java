@@ -3,6 +3,7 @@ package dev.getelements.elements.sdk.service.auth;
 import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Orchestrates the authorization-code flow's front half: validating the authorize request and producing the
@@ -12,6 +13,7 @@ import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
  * already-authenticated Elements session (skipping the login page entirely). In both cases the returned
  * redirect URI carries the {@code code} and the client's {@code state}.</p>
  */
+@ElementServiceExport
 public interface OidcProviderAuthorizationService {
 
     /**

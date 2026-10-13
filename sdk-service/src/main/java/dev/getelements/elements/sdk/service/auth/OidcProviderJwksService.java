@@ -1,12 +1,14 @@
 package dev.getelements.elements.sdk.service.auth;
 
 import dev.getelements.elements.sdk.model.auth.JWKSet;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Publishes the public halves of the Elements OIDC provider's signing keys as a {@link JWKSet}. The keys
  * are the same keys the #134 session-token issuer signs with, so key rotation is reflected here without
  * redeploy and downstream verifiers cannot drift from the session-token infrastructure.
  */
+@ElementServiceExport
 public interface OidcProviderJwksService {
 
     /**

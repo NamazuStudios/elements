@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.model.oidc;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -12,18 +13,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class OidcProviderUserInfo {
 
     @Schema(description = "The subject: the Elements user id.")
+    @JsonProperty("sub")
     private String sub;
 
     @Schema(description = "The user's display name. Requires the profile scope.")
+    @JsonProperty("name")
     private String name;
 
     @Schema(description = "The user's Elements username. Requires the profile scope.")
+    @JsonProperty("preferred_username")
     private String preferredUsername;
 
     @Schema(description = "The user's email address. Requires the email scope.")
+    @JsonProperty("email")
     private String email;
 
     @Schema(description = "Whether the email address is verified. Requires the email scope.")
+    @JsonProperty("email_verified")
     private Boolean emailVerified;
 
     public String getSub() {

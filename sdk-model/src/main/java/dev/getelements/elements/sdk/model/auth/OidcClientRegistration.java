@@ -22,8 +22,8 @@ public class OidcClientRegistration {
     /** The default (and for 135a, only) token endpoint authentication method. */
     public static final String TOKEN_ENDPOINT_AUTH_METHOD_BASIC = "client_secret_basic";
 
-    @Schema(description = "The unique client identifier presented by the relying party.")
-    @NotBlank
+    @Schema(description = "The unique client identifier presented by the relying party. Server-generated " +
+            "when omitted on create; required on update.")
     private String clientId;
 
     @Schema(description = "The client secret. Accepted on write only; stored hashed and never returned.")

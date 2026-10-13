@@ -3,11 +3,13 @@ package dev.getelements.elements.sdk.service.auth;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 
 import java.util.List;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * Admin-facing management of the Elements OIDC provider's downstream client registrations. Secrets are
  * generated server-side when not supplied, are accepted on write only, and are never returned by any read.
  */
+@ElementServiceExport
 public interface OidcClientService {
 
     /**

@@ -2,6 +2,7 @@ package dev.getelements.elements.sdk.service.auth;
 
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenResponse;
+import dev.getelements.elements.sdk.annotation.ElementServiceExport;
 
 /**
  * The Elements OIDC provider's token endpoint: redeems authorization codes and refresh tokens for token
@@ -13,6 +14,7 @@ import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenResponse;
  * {@code aud}, {@code azp}, {@code exp}, {@code iat}, {@code auth_time}, and (when the authorize request
  * supplied one) {@code nonce}.</p>
  */
+@ElementServiceExport
 public interface OidcProviderTokenService {
 
     /**

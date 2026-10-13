@@ -1,5 +1,6 @@
 package dev.getelements.elements.sdk.model.oidc;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.Set;
@@ -13,36 +14,47 @@ import java.util.Set;
 public class OidcProviderDiscoveryDocument {
 
     @Schema(description = "The base issuer URL. Also the value of the iss claim in issued id_tokens.")
+    @JsonProperty("issuer")
     private String issuer;
 
     @Schema(description = "The authorization endpoint URL.")
+    @JsonProperty("authorization_endpoint")
     private String authorizationEndpoint;
 
     @Schema(description = "The token endpoint URL.")
+    @JsonProperty("token_endpoint")
     private String tokenEndpoint;
 
     @Schema(description = "The userinfo endpoint URL.")
+    @JsonProperty("userinfo_endpoint")
     private String userinfoEndpoint;
 
     @Schema(description = "The end-session (logout) endpoint URL.")
+    @JsonProperty("end_session_endpoint")
     private String endSessionEndpoint;
 
     @Schema(description = "The JWKS URL publishing this deployment's public signing keys.")
+    @JsonProperty("jwks_uri")
     private String jwksUri;
 
     @Schema(description = "The grant types the provider supports.")
+    @JsonProperty("grant_types_supported")
     private Set<String> grantTypesSupported;
 
     @Schema(description = "The scopes the provider supports.")
+    @JsonProperty("scopes_supported")
     private Set<String> scopesSupported;
 
     @Schema(description = "The id_token signing algorithms the provider supports.")
+    @JsonProperty("id_token_signing_alg_values_supported")
     private Set<String> idTokenSigningAlgValuesSupported;
 
     @Schema(description = "The response types the provider supports.")
+    @JsonProperty("response_types_supported")
     private Set<String> responseTypesSupported;
 
     @Schema(description = "The PKCE code challenge methods the provider supports.")
+    @JsonProperty("code_challenge_methods_supported")
     private Set<String> codeChallengeMethodsSupported;
 
     public String getIssuer() {
