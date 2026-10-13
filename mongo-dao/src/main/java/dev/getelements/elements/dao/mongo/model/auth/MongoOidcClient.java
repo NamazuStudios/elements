@@ -41,6 +41,9 @@ public class MongoOidcClient {
     private Set<String> scopes;
 
     @Property
+    private Set<String> audiences;
+
+    @Property
     private OidcClientRegistration.Status status;
 
     @Property
@@ -111,6 +114,14 @@ public class MongoOidcClient {
 
     public void setScopes(Set<String> scopes) {
         this.scopes = scopes;
+    }
+
+    public Set<String> getAudiences() {
+        return audiences;
+    }
+
+    public void setAudiences(Set<String> audiences) {
+        this.audiences = audiences;
     }
 
     public OidcClientRegistration.Status getStatus() {

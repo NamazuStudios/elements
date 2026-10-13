@@ -18,9 +18,8 @@ import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.auth.OidcProviderGrant;
 import dev.getelements.elements.sdk.model.auth.OidcRefreshToken;
-import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
-import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenResponse;
 import dev.getelements.elements.sdk.model.profile.Profile;
@@ -46,12 +45,19 @@ import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.HexFormat;
+import java.util.Set;
+import java.util.UUID;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CLAIM_AZP;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
-import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.GRANT_TYPE_AUTHORIZATION_CODE;
-import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.GRANT_TYPE_REFRESH_TOKEN;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_CLIENT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_GRANT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_REQUEST;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_TARGET;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_ID_TOKEN_TTL_SECONDS;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_MACHINE_TOKEN_TTL_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_PROVIDER_ISSUER;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_REFRESH_GRANT_TTL_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
@@ -81,6 +87,8 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
 
     private StandardSessionTokenKeySupport sessionTokenKeySupport;
 
+    private OidcProviderRateLimiter rateLimiter;
+
     @Named(OIDC_PROVIDER_ISSUER)
     @Inject
     private String issuer;
@@ -93,6 +101,10 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
     @Inject
     private long refreshGrantTtlSeconds;
 
+    @Named(OIDC_MACHINE_TOKEN_TTL_SECONDS)
+    @Inject
+    private long machineTokenTtlSeconds;
+
     @Named(SESSION_TIMEOUT_SECONDS)
     @Inject
     private long sessionTimeoutSeconds;
@@ -100,21 +112,23 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
     @Override
     public OidcProviderTokenResponse exchangeCode(final OidcProviderTokenRequest request) {
 
+        getRateLimiter().checkTokenEndpoint(request.getClientId());
+
         final var registration = authenticateClient(request, OidcClientRegistration.GrantType.AUTHORIZATION_CODE);
 
         if (request.getCode() == null || request.getRedirectUri() == null || request.getCodeVerifier() == null) {
-            throw new InvalidDataException("code, redirect_uri, and code_verifier are required.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "code, redirect_uri, and code_verifier are required.");
         }
 
         final var code = getOidcProviderDao().redeemAuthorizationCode(request.getCode())
-                .orElseThrow(() -> new InvalidDataException("Invalid authorization code."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_GRANT, "Invalid authorization code."));
 
         validateCode(request, registration, code);
 
         final var user = getUserDao().getUser(code.getUserId());
 
         if (user == null) {
-            throw new InvalidDataException("User for authorization code no longer exists.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "User for authorization code no longer exists.");
         }
 
         final var sessionCreation = issueSession(user, code.getApplicationId());
@@ -153,31 +167,33 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
     @Override
     public OidcProviderTokenResponse refresh(final OidcProviderTokenRequest request) {
 
+        getRateLimiter().checkTokenEndpoint(request.getClientId());
+
         final var registration = authenticateClient(request, OidcClientRegistration.GrantType.REFRESH_TOKEN);
 
         if (request.getRefreshToken() == null) {
-            throw new InvalidDataException("refresh_token is required.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "refresh_token is required.");
         }
 
         // Consume first, atomically: a replayed refresh token fails closed regardless of what happens after.
         final var consumed = getOidcProviderDao().consumeRefreshToken(sha256Hex(request.getRefreshToken()))
-                .orElseThrow(() -> new InvalidDataException("Invalid refresh token."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_GRANT, "Invalid refresh token."));
 
         if (!consumed.getClientId().equals(registration.getClientId())) {
-            throw new InvalidDataException("Refresh token was not issued to this client.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "Refresh token was not issued to this client.");
         }
 
         final var grant = getOidcProviderDao().getGrant(consumed.getGrantId())
-                .orElseThrow(() -> new InvalidDataException("Grant for refresh token has expired."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_GRANT, "Grant for refresh token has expired."));
 
         if (!grant.getClientId().equals(registration.getClientId())) {
-            throw new InvalidDataException("Refresh token was not issued to this client.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "Refresh token was not issued to this client.");
         }
 
         final var user = getUserDao().getUser(grant.getUserId());
 
         if (user == null) {
-            throw new InvalidDataException("User for grant no longer exists.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "User for grant no longer exists.");
         }
 
         final var oldSessionId = grant.getSessionId();
@@ -191,7 +207,7 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
 
             getSessionDao().deleteSessionBySessionId(newSessionId);
             logger.warn("Lost refresh rotation race for grant {}.", grant.getId());
-            throw new InvalidDataException("Refresh token already used.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "Refresh token already used.");
 
         }
 
@@ -219,10 +235,111 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
     }
 
     @Override
+    public OidcProviderTokenResponse clientCredentials(final OidcProviderTokenRequest request) {
+
+        getRateLimiter().checkTokenEndpoint(request.getClientId());
+
+        final var registration = authenticateClient(request, OidcClientRegistration.GrantType.CLIENT_CREDENTIALS);
+
+        final var now = currentTimeMillis();
+        final var audience = resolveAudience(request.getAudience(), registration);
+        final var scope = resolveMachineScope(request.getScope(), registration);
+
+        final var claims = new JWTClaimsSet.Builder()
+                .subject(registration.getClientId())
+                .issuer(getIssuer())
+                .audience(audience)
+                .claim(CLAIM_AZP, registration.getClientId())
+                .issueTime(new Date(now))
+                .expirationTime(new Date(now + getMachineTokenTtlSeconds() * 1000))
+                .jwtID(UUID.randomUUID().toString());
+
+        if (scope != null) {
+            claims.claim("scope", scope);
+        }
+
+        final var response = new OidcProviderTokenResponse();
+        response.setAccessToken(signToken(claims.build()));
+        response.setExpiresIn(Math.max(1, getMachineTokenTtlSeconds()));
+        response.setScope(scope);
+
+        logger.info("Issued client_credentials token to client {} (audience {}, scope {}).",
+                registration.getClientId(), audience, scope);
+
+        return response;
+
+    }
+
+    /**
+     * Resolves the audience for a machine token. A requested audience must be permitted: in the client's
+     * registered audience allow-list, or the client's own id when none is registered. When omitted, the sole
+     * registered audience is used; with several registered (or none registered) the default is the client's
+     * application id, or its client id when no application is linked.
+     */
+    private String resolveAudience(final String requested, final OidcClientRegistration registration) {
+
+        final var allowed = registration.getAudiences();
+
+        if (requested != null && !requested.isBlank()) {
+
+            final var candidate = requested.trim();
+            final var permitted = allowed == null || allowed.isEmpty()
+                    ? Set.of(registration.getClientId())
+                    : allowed;
+
+            if (!permitted.contains(candidate)) {
+                throw new OAuth2Exception(ERROR_INVALID_TARGET,
+                        "Requested audience is not permitted for this client.");
+            }
+
+            return candidate;
+
+        }
+
+        // Never guess: silently issuing aud=<client id> to a proxy expecting a registered audience would
+        // hand the operator a token that verifies but is useless — an explicit error is easier to debug.
+        if (allowed != null && !allowed.isEmpty()) {
+            if (allowed.size() == 1) {
+                return allowed.iterator().next();
+            }
+            throw new OAuth2Exception(ERROR_INVALID_TARGET,
+                    "audience is required when the client's registration lists multiple audiences.");
+        }
+
+        return registration.getApplicationId() != null
+                ? registration.getApplicationId()
+                : registration.getClientId();
+
+    }
+
+    /**
+     * Resolves the scope for a machine token: a requested scope must be a subset of the client's registered
+     * scopes; when omitted, the client's full registered scope set is granted.
+     */
+    private String resolveMachineScope(final String requested, final OidcClientRegistration registration) {
+
+        if (requested == null || requested.isBlank()) {
+            return registration.getScopes() == null || registration.getScopes().isEmpty()
+                    ? null
+                    : registration.getScopes().stream().sorted().collect(java.util.stream.Collectors.joining(" "));
+        }
+
+        final var requestedScopes = Set.of(requested.trim().split("\\s+"));
+
+        if (registration.getScopes() == null || !registration.getScopes().containsAll(requestedScopes)) {
+            throw new OAuth2Exception(ERROR_INVALID_SCOPE, "Requested scope exceeds the client's allowed scopes.");
+        }
+
+        // Sorted so the issued scope string is stable regardless of the registration set's iteration order.
+        return requestedScopes.stream().sorted().collect(java.util.stream.Collectors.joining(" "));
+
+    }
+
+    @Override
     public void endSession(final String idTokenHint) {
 
         if (idTokenHint == null) {
-            throw new InvalidDataException("id_token_hint is required.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "id_token_hint is required.");
         }
 
         final var subAndAzp = verifyIdTokenHint(idTokenHint);
@@ -252,13 +369,13 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
 
             final var kid = signedJwt.getHeader().getKeyID();
             if (kid == null) {
-                throw new InvalidDataException("id_token_hint carries no kid.");
+                throw new OAuth2Exception(ERROR_INVALID_REQUEST, "id_token_hint carries no kid.");
             }
 
             final var publicKey = getSessionTokenKeySupport().getPublicKey(kid);
 
             if (!signedJwt.verify(new RSASSAVerifier(publicKey))) {
-                throw new InvalidDataException("id_token_hint signature is invalid.");
+                throw new OAuth2Exception(ERROR_INVALID_REQUEST, "id_token_hint signature is invalid.");
             }
 
             final var claims = signedJwt.getJWTClaimsSet();
@@ -268,13 +385,13 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
                     : claims.getAudience().isEmpty() ? null : claims.getAudience().get(0);
 
             if (sub == null || azp == null) {
-                throw new InvalidDataException("id_token_hint carries no sub/azp.");
+                throw new OAuth2Exception(ERROR_INVALID_REQUEST, "id_token_hint carries no sub/azp.");
             }
 
             return new String[]{sub, azp};
 
         } catch (ParseException | JOSEException ex) {
-            throw new InvalidDataException("id_token_hint is not a verifiable id_token.", ex);
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "id_token_hint is not a verifiable id_token.", ex);
         }
 
     }
@@ -283,22 +400,22 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
                                                       final OidcClientRegistration.GrantType grantType) {
 
         if (request.getClientId() == null || request.getClientSecret() == null) {
-            throw new UnauthorizedException("Client authentication required.");
+            throw new OAuth2Exception(ERROR_INVALID_CLIENT, "Client authentication required.");
         }
 
         if (!getOidcProviderDao().verifyClientSecret(request.getClientId(), request.getClientSecret())) {
-            throw new UnauthorizedException("Invalid client credentials.");
+            throw new OAuth2Exception(ERROR_INVALID_CLIENT, "Invalid client credentials.");
         }
 
         final var registration = getOidcProviderDao().getClient(request.getClientId())
-                .orElseThrow(() -> new InvalidDataException("Unknown client."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_CLIENT, "Unknown client."));
 
         if (registration.getStatus() != OidcClientRegistration.Status.ACTIVE) {
-            throw new InvalidDataException("Client registration is not active.");
+            throw new OAuth2Exception(ERROR_UNAUTHORIZED_CLIENT, "Client registration is not active.");
         }
 
         if (!registration.getGrantTypes().contains(grantType)) {
-            throw new InvalidDataException("Grant type not allowed for this client.");
+            throw new OAuth2Exception(ERROR_UNAUTHORIZED_CLIENT, "Grant type not allowed for this client.");
         }
 
         return registration;
@@ -310,15 +427,16 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
                               final OidcAuthorizationCode code) {
 
         if (!code.getClientId().equals(registration.getClientId())) {
-            throw new InvalidDataException("Authorization code was not issued to this client.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "Authorization code was not issued to this client.");
         }
 
         if (!code.getRedirectUri().equals(request.getRedirectUri())) {
-            throw new InvalidDataException("redirect_uri does not match the authorization request.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT,
+                    "redirect_uri does not match the authorization request.");
         }
 
         if (code.getUserId() == null) {
-            throw new InvalidDataException("Authorization code was never completed.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "Authorization code was never completed.");
         }
 
         // PKCE is mandatory: every issued code carries an S256 challenge.
@@ -329,14 +447,14 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
     private void verifyPkce(final String method, final String challenge, final String verifier) {
 
         if (!CODE_CHALLENGE_METHOD_S256.equals(method) || challenge == null || verifier == null) {
-            throw new InvalidDataException("PKCE verification failed.");
+            throw new OAuth2Exception(ERROR_INVALID_GRANT, "PKCE verification failed.");
         }
 
         try {
             final var digest = MessageDigest.getInstance("SHA-256").digest(verifier.getBytes(StandardCharsets.US_ASCII));
             final var computed = Base64URL.encode(digest).toString();
             if (!computed.equals(challenge)) {
-                throw new InvalidDataException("PKCE verification failed.");
+                throw new OAuth2Exception(ERROR_INVALID_GRANT, "PKCE verification failed.");
             }
         } catch (NoSuchAlgorithmException ex) {
             throw new InternalException(ex);
@@ -382,33 +500,43 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
 
     private String signIdToken(final String clientId, final User user, final String nonce, final long authTime) {
 
+        final var now = currentTimeMillis();
+        final var expiry = now + getIdTokenTtlSeconds() * 1000;
+
+        final var claimsBuilder = new JWTClaimsSet.Builder()
+                .subject(user.getId())
+                .issuer(getIssuer())
+                .audience(clientId)
+                .claim(CLAIM_AZP, clientId)
+                .issueTime(new Date(now))
+                .expirationTime(new Date(expiry));
+
+        if (nonce != null) {
+            claimsBuilder.claim("nonce", nonce);
+        }
+
+        if (authTime > 0) {
+            claimsBuilder.claim("auth_time", authTime / 1000);
+        }
+
+        return signToken(claimsBuilder.build());
+
+    }
+
+    /**
+     * Signs the supplied claim set with this deployment's active signing key, producing a compact RS256
+     * JWS with the key's {@code kid} in the header.
+     */
+    private String signToken(final JWTClaimsSet claims) {
+
         try {
 
             final var signingKey = getSessionTokenKeySupport().getActiveSigningKey();
             final var privateKey = (RSAPrivateKey) getSessionTokenKeySupport().getPrivateKey(signingKey);
 
-            final var now = currentTimeMillis();
-            final var expiry = now + getIdTokenTtlSeconds() * 1000;
-
-            final var claimsBuilder = new JWTClaimsSet.Builder()
-                    .subject(user.getId())
-                    .issuer(getIssuer())
-                    .audience(clientId)
-                    .claim(CLAIM_AZP, clientId)
-                    .issueTime(new Date(now))
-                    .expirationTime(new Date(expiry));
-
-            if (nonce != null) {
-                claimsBuilder.claim("nonce", nonce);
-            }
-
-            if (authTime > 0) {
-                claimsBuilder.claim("auth_time", authTime / 1000);
-            }
-
             final var signedJwt = new SignedJWT(
                     new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(signingKey.getKid()).build(),
-                    claimsBuilder.build());
+                    claims);
 
             signedJwt.sign(new RSASSASigner(privateKey));
 
@@ -505,6 +633,15 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
         this.sessionTokenKeySupport = sessionTokenKeySupport;
     }
 
+    public OidcProviderRateLimiter getRateLimiter() {
+        return rateLimiter;
+    }
+
+    @Inject
+    public void setRateLimiter(OidcProviderRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
+
     public String getIssuer() {
         return issuer;
     }
@@ -527,6 +664,14 @@ public class StandardOidcProviderTokenService implements OidcProviderTokenServic
 
     public void setRefreshGrantTtlSeconds(long refreshGrantTtlSeconds) {
         this.refreshGrantTtlSeconds = refreshGrantTtlSeconds;
+    }
+
+    public long getMachineTokenTtlSeconds() {
+        return machineTokenTtlSeconds;
+    }
+
+    public void setMachineTokenTtlSeconds(long machineTokenTtlSeconds) {
+        this.machineTokenTtlSeconds = machineTokenTtlSeconds;
     }
 
     public long getSessionTimeoutSeconds() {

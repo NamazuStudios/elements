@@ -10,6 +10,7 @@ import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.GRANT_TYPE_AUTHORIZATION_CODE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.GRANT_TYPE_CLIENT_CREDENTIALS;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.GRANT_TYPE_REFRESH_TOKEN;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.RESPONSE_TYPE_CODE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.SCOPE_EMAIL;
@@ -40,7 +41,8 @@ public class StandardOidcProviderDiscoveryService implements OidcProviderDiscove
         document.setEndSessionEndpoint(base + "/oidc/end-session");
         document.setJwksUri(base + "/.well-known/jwks.json");
 
-        document.setGrantTypesSupported(Set.of(GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_REFRESH_TOKEN));
+        document.setGrantTypesSupported(Set.of(
+                GRANT_TYPE_AUTHORIZATION_CODE, GRANT_TYPE_REFRESH_TOKEN, GRANT_TYPE_CLIENT_CREDENTIALS));
         document.setScopesSupported(Set.of(SCOPE_OPENID, SCOPE_PROFILE, SCOPE_EMAIL));
         document.setIdTokenSigningAlgValuesSupported(Set.of("RS256"));
         document.setResponseTypesSupported(Set.of(RESPONSE_TYPE_CODE));

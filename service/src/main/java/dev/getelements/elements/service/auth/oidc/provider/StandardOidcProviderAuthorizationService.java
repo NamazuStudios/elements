@@ -6,6 +6,7 @@ import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
 import dev.getelements.elements.sdk.service.auth.OidcProviderAuthorizationService;
@@ -19,6 +20,10 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_REQUEST;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNSUPPORTED_RESPONSE_TYPE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.RESPONSE_TYPE_CODE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.SCOPE_OPENID;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_AUTHORIZATION_CODE_TTL_SECONDS;
@@ -33,17 +38,22 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
 
     private UserDao userDao;
 
+    private OidcProviderRateLimiter rateLimiter;
+
     @Named(OIDC_AUTHORIZATION_CODE_TTL_SECONDS)
     @Inject
     private long authorizationCodeTtlSeconds;
 
     @Override
     public OidcAuthorizationCode beginAuthorization(final OidcProviderAuthorizationRequest request) {
+        getRateLimiter().checkAuthorizationEndpoint(request.getClientId());
         return getOidcProviderDao().createAuthorizationCode(newAuthorizationCodeRecord(request, null, 0));
     }
 
     @Override
     public String completeAuthorization(final OidcProviderLoginRequest loginRequest) {
+
+        getRateLimiter().checkHostedLogin(loginRequest.getAuthorizationId(), loginRequest.getUsername());
 
         final var user = getUserDao().validateUserPassword(
                 loginRequest.getUsername(), loginRequest.getPassword());
@@ -88,33 +98,50 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
 
     private OidcClientRegistration validateAuthorizationRequest(final OidcProviderAuthorizationRequest request) {
 
+        // Errors raised before the client and redirect URI are validated carry no redirect context: per
+        // RFC 6749 section 4.1.2.1 the provider must NOT bounce the browser to an unvalidated URI.
+
         if (!RESPONSE_TYPE_CODE.equals(request.getResponseType())) {
-            throw new InvalidDataException("Unsupported response_type; only \"code\" is supported.");
+            throw new OAuth2Exception(ERROR_UNSUPPORTED_RESPONSE_TYPE,
+                    "Unsupported response_type; only \"code\" is supported.");
         }
 
         if (!CODE_CHALLENGE_METHOD_S256.equals(request.getCodeChallengeMethod())) {
-            throw new InvalidDataException("Unsupported code_challenge_method; only \"S256\" is supported.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST,
+                    "Unsupported code_challenge_method; only \"S256\" is supported.");
         }
 
         final var registration = getOidcProviderDao().getClient(request.getClientId())
-                .orElseThrow(() -> new InvalidDataException("Unknown client."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_REQUEST, "Unknown client."));
 
         if (registration.getStatus() != OidcClientRegistration.Status.ACTIVE) {
-            throw new InvalidDataException("Client registration is not active.");
+            throw new OAuth2Exception(ERROR_UNAUTHORIZED_CLIENT, "Client registration is not active.");
         }
 
         if (!registration.getRedirectUris().contains(request.getRedirectUri())) {
-            throw new InvalidDataException("Redirect URI is not registered for this client.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "Redirect URI is not registered for this client.");
         }
 
-        final var requestedScopes = Set.of(request.getScope().trim().split("\\s+"));
+        // Past this point the redirect URI is registered, so the error is redirect-able: attach the context
+        // the resource needs to send the browser back to the relying party with the error parameters.
 
-        if (!requestedScopes.contains(SCOPE_OPENID)) {
-            throw new InvalidDataException("The openid scope is required.");
-        }
+        try {
 
-        if (!registration.getScopes().containsAll(requestedScopes)) {
-            throw new InvalidDataException("Requested scope exceeds the client's allowed scopes.");
+            final var requestedScopes = Set.of(request.getScope().trim().split("\\s+"));
+
+            if (!requestedScopes.contains(SCOPE_OPENID)) {
+                throw new OAuth2Exception(ERROR_INVALID_SCOPE, "The openid scope is required.");
+            }
+
+            if (!registration.getScopes().containsAll(requestedScopes)) {
+                throw new OAuth2Exception(ERROR_INVALID_SCOPE,
+                        "Requested scope exceeds the client's allowed scopes.");
+            }
+
+        } catch (final OAuth2Exception ex) {
+            ex.setRedirectUri(request.getRedirectUri());
+            ex.setState(request.getState());
+            throw ex;
         }
 
         return registration;
@@ -160,6 +187,15 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
     @Inject
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    public OidcProviderRateLimiter getRateLimiter() {
+        return rateLimiter;
+    }
+
+    @Inject
+    public void setRateLimiter(OidcProviderRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
     }
 
     public long getAuthorizationCodeTtlSeconds() {

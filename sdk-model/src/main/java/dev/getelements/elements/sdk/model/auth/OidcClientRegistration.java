@@ -45,6 +45,10 @@ public class OidcClientRegistration {
     @NotEmpty
     private Set<String> scopes;
 
+    @Schema(description = "Optional. The audiences (aud) a machine client using the client_credentials grant " +
+            "may request. When empty, the client may only request its own client id as the audience.")
+    private Set<String> audiences;
+
     @Schema(description = "The registration status.")
     private Status status;
 
@@ -59,7 +63,10 @@ public class OidcClientRegistration {
         AUTHORIZATION_CODE,
 
         /** Refresh token exchange, rotating the access and refresh tokens under an existing grant. */
-        REFRESH_TOKEN
+        REFRESH_TOKEN,
+
+        /** The machine-to-machine client credentials flow, for clients acting on their own behalf. */
+        CLIENT_CREDENTIALS
     }
 
     public enum Status {
@@ -116,6 +123,14 @@ public class OidcClientRegistration {
 
     public void setScopes(Set<String> scopes) {
         this.scopes = scopes;
+    }
+
+    public Set<String> getAudiences() {
+        return audiences;
+    }
+
+    public void setAudiences(Set<String> audiences) {
+        this.audiences = audiences;
     }
 
     public Status getStatus() {

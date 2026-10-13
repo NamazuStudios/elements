@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
 import dev.getelements.elements.sdk.model.user.User;
@@ -16,8 +17,13 @@ import org.testng.annotations.Test;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_REQUEST;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNSUPPORTED_RESPONSE_TYPE;
 import static java.lang.System.currentTimeMillis;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -57,6 +63,23 @@ public class StandardOidcProviderAuthorizationServiceTest {
             protected void configure() {
                 bind(OidcProviderDao.class).toInstance(oidcProviderDao);
                 bind(UserDao.class).toInstance(userDao);
+                bind(OidcProviderRateLimiter.class);
+                bind(boolean.class).annotatedWith(
+                        com.google.inject.name.Names.named(
+                                dev.getelements.elements.sdk.service.Constants.OIDC_RATE_LIMIT_ENABLED))
+                        .toInstance(false);
+                bind(long.class).annotatedWith(
+                        com.google.inject.name.Names.named(
+                                dev.getelements.elements.sdk.service.Constants.OIDC_RATE_LIMIT_TOKEN_PER_MINUTE))
+                        .toInstance(60L);
+                bind(long.class).annotatedWith(
+                        com.google.inject.name.Names.named(
+                                dev.getelements.elements.sdk.service.Constants.OIDC_RATE_LIMIT_AUTHORIZE_PER_MINUTE))
+                        .toInstance(60L);
+                bind(long.class).annotatedWith(
+                        com.google.inject.name.Names.named(
+                                dev.getelements.elements.sdk.service.Constants.OIDC_RATE_LIMIT_LOGIN_PER_MINUTE))
+                        .toInstance(10L);
                 bind(long.class).annotatedWith(
                         com.google.inject.name.Names.named(
                                 dev.getelements.elements.sdk.service.Constants.OIDC_AUTHORIZATION_CODE_TTL_SECONDS))
@@ -118,48 +141,76 @@ public class StandardOidcProviderAuthorizationServiceTest {
     @Test
     public void testBeginAuthorizationRejectsUnknownClient() {
         when(oidcProviderDao.getClient(CLIENT_ID)).thenReturn(Optional.empty());
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(validRequest()));
+        assertOAuth2Error(ERROR_INVALID_REQUEST, () -> getService().beginAuthorization(validRequest()));
     }
 
     @Test
     public void testBeginAuthorizationRejectsSuspendedClient() {
         registration.setStatus(OidcClientRegistration.Status.SUSPENDED);
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(validRequest()));
+        assertOAuth2Error(ERROR_UNAUTHORIZED_CLIENT, () -> getService().beginAuthorization(validRequest()));
     }
 
     @Test
     public void testBeginAuthorizationRejectsUnregisteredRedirectUri() {
         final var request = validRequest();
         request.setRedirectUri("https://evil.example.com/callback");
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(request));
+        assertOAuth2Error(ERROR_INVALID_REQUEST, () -> getService().beginAuthorization(request));
     }
 
     @Test
     public void testBeginAuthorizationRejectsScopeBeyondRegistration() {
+
         final var request = validRequest();
         request.setScope("openid profile email admin");
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(request));
+
+        final var ex = assertOAuth2Error(ERROR_INVALID_SCOPE, () -> getService().beginAuthorization(request));
+
+        // The redirect URI was validated before the scope check, so the error is redirect-able and carries
+        // the context the resource needs to send the browser back to the relying party.
+        assertEquals(ex.getRedirectUri(), REDIRECT_URI);
+        assertEquals(ex.getState(), "state-123");
+
     }
 
     @Test
     public void testBeginAuthorizationRejectsMissingOpenidScope() {
         final var request = validRequest();
         request.setScope("profile");
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(request));
+        assertOAuth2Error(ERROR_INVALID_SCOPE, () -> getService().beginAuthorization(request));
     }
 
     @Test
     public void testBeginAuthorizationRejectsWrongResponseType() {
         final var request = validRequest();
         request.setResponseType("token");
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(request));
+        assertOAuth2Error(ERROR_UNSUPPORTED_RESPONSE_TYPE, () -> getService().beginAuthorization(request));
     }
 
     @Test
     public void testBeginAuthorizationRejectsWrongChallengeMethod() {
         final var request = validRequest();
         request.setCodeChallengeMethod("plain");
-        assertThrows(InvalidDataException.class, () -> getService().beginAuthorization(request));
+        assertOAuth2Error(ERROR_INVALID_REQUEST, () -> getService().beginAuthorization(request));
+    }
+
+    /**
+     * Asserts the callable fails with an {@link OAuth2Exception} carrying the supplied RFC 6749 error code.
+     *
+     * @param expectedError the expected OAuth 2.0 error code
+     * @param callable the call expected to fail
+     * @return the thrown exception, for further assertions
+     */
+    private OAuth2Exception assertOAuth2Error(final String expectedError, final Supplier<?> callable) {
+
+        try {
+            callable.get();
+        } catch (final OAuth2Exception ex) {
+            assertEquals(ex.getError(), expectedError);
+            return ex;
+        }
+
+        throw new AssertionError("Expected OAuth2Exception with error " + expectedError + ", but none was thrown.");
+
     }
 
     @Test

@@ -382,6 +382,7 @@ public class MongoOidcProviderDao implements OidcProviderDao {
         model.setRedirectUris(entity.getRedirectUris());
         model.setGrantTypes(entity.getGrantTypes());
         model.setScopes(entity.getScopes());
+        model.setAudiences(entity.getAudiences());
         model.setStatus(entity.getStatus());
         model.setApplicationId(entity.getApplicationId());
         model.setCreatedAt(entity.getCreatedAt());
@@ -397,6 +398,7 @@ public class MongoOidcProviderDao implements OidcProviderDao {
         entity.setRedirectUris(registration.getRedirectUris());
         entity.setGrantTypes(registration.getGrantTypes());
         entity.setScopes(registration.getScopes());
+        entity.setAudiences(registration.getAudiences());
         entity.setStatus(registration.getStatus() == null ? OidcClientRegistration.Status.ACTIVE : registration.getStatus());
         entity.setApplicationId(registration.getApplicationId());
         entity.setCreatedAt(registration.getCreatedAt() == 0 ? System.currentTimeMillis() : registration.getCreatedAt());

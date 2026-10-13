@@ -1,5 +1,6 @@
 package dev.getelements.elements.rest.oidcprovider;
 
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenResponse;
 import dev.getelements.elements.sdk.service.auth.OidcProviderTokenService;
@@ -8,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
@@ -19,6 +19,8 @@ import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNSUPPORTED_GRANT_TYPE;
 
 @Path("oidc/token")
 public class OidcProviderTokenResource {
@@ -31,10 +33,11 @@ public class OidcProviderTokenResource {
     @Operation(
             summary = "Exchanges an authorization code or refresh token for tokens.",
             description = "Redeems a single-use authorization code (grant_type=authorization_code, with PKCE " +
-                    "S256 verification) or rotates a refresh token (grant_type=refresh_token). Returns the " +
-                    "signed id_token, an Elements session token as the access_token, and a refresh token when " +
-                    "the client's registration allows it. Client credentials may arrive in the form or via " +
-                    "HTTP basic authentication.")
+                    "S256 verification), rotates a refresh token (grant_type=refresh_token), or issues a " +
+                    "machine-to-machine token (grant_type=client_credentials). Returns the signed id_token, " +
+                    "an Elements session token as the access_token, and a refresh token when the client's " +
+                    "registration allows it. Client credentials may arrive in the form or via HTTP basic " +
+                    "authentication. Errors follow RFC 6749 section 5.2 (error/error_description).")
     @ApiResponse(responseCode = "200", description = "Tokens issued.",
             content = @Content(schema = @Schema(implementation = OidcProviderTokenResponse.class)))
     public OidcProviderTokenResponse token(final MultivaluedMap<String, String> form,
@@ -46,6 +49,8 @@ public class OidcProviderTokenResource {
         request.setRedirectUri(form.getFirst("redirect_uri"));
         request.setCodeVerifier(form.getFirst("code_verifier"));
         request.setRefreshToken(form.getFirst("refresh_token"));
+        request.setScope(form.getFirst("scope"));
+        request.setAudience(form.getFirst("audience"));
         request.setClientId(form.getFirst("client_id"));
         request.setClientSecret(form.getFirst("client_secret"));
 
@@ -70,7 +75,11 @@ public class OidcProviderTokenResource {
             return getOidcProviderTokenService().refresh(request);
         }
 
-        throw new BadRequestException("Unsupported grant_type.");
+        if ("client_credentials".equals(grantType)) {
+            return getOidcProviderTokenService().clientCredentials(request);
+        }
+
+        throw new OAuth2Exception(ERROR_UNSUPPORTED_GRANT_TYPE, "Unsupported grant_type.");
 
     }
 
