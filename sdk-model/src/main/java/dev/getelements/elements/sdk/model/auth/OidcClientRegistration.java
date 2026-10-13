@@ -33,8 +33,9 @@ public class OidcClientRegistration {
     @NotBlank
     private String displayName;
 
-    @Schema(description = "The exact redirect URIs this client may use. Exact string matching per RFC 6819.")
-    @NotEmpty
+    @Schema(description = "The exact redirect URIs this client may use. Required for clients using the " +
+            "authorization code flow; machine clients exercising only client_credentials may omit them. " +
+            "Exact string matching per RFC 6819.")
     private Set<String> redirectUris;
 
     @Schema(description = "The grant types this client may exercise.")

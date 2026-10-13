@@ -262,6 +262,22 @@ public class MongoOidcProviderDao implements OidcProviderDao {
     }
 
     @Override
+    public List<OidcProviderGrant> getGrantsForClient(final String clientId) {
+
+        return getDatastore().find(MongoOidcProviderGrant.class)
+                .filter(and(
+                        eq("clientId", clientId),
+                        gte("expiry", new Timestamp(System.currentTimeMillis()))
+                ))
+                .iterator()
+                .toList()
+                .stream()
+                .map(this::toModel)
+                .toList();
+
+    }
+
+    @Override
     public Optional<OidcProviderGrant> findGrantBySessionId(final String sessionId) {
 
         final var entity = getDatastore().find(MongoOidcProviderGrant.class)

@@ -154,6 +154,16 @@ public interface OidcProviderDao {
     List<OidcProviderGrant> getGrantsForUserAndClient(String userId, String clientId);
 
     /**
+     * Returns every unexpired grant held with the supplied client, regardless of user. Used when a client
+     * registration is deleted, so its outstanding grants (and their backing sessions and refresh tokens) can
+     * be revoked.
+     *
+     * @param clientId the client id
+     * @return the matching grants, possibly empty
+     */
+    List<OidcProviderGrant> getGrantsForClient(String clientId);
+
+    /**
      * Fetches a grant by the id of the Elements session currently backing its access token.
      *
      * @param sessionId the session id carried in the access token's {@code sid} claim

@@ -89,6 +89,16 @@ public class OidcProviderApiTest {
 
     private String refreshToken;
 
+    /** A dedicated machine client exercising the client_credentials grant. */
+    private String machineClientId;
+
+    private String machineClientSecret;
+
+    /** A dedicated client used to drive the token endpoint into its 429 path. */
+    private String rateLimitClientId;
+
+    private String rateLimitClientSecret;
+
     @BeforeClass
     public void setup() {
 
@@ -186,7 +196,7 @@ public class OidcProviderApiTest {
     }
 
     @Test(dependsOnMethods = "authorize_redirectsToHostedLogin")
-    public void login_redirectsToRelyingPartyWithCodeAndState() {
+    public void login_presentsConsentScreen() {
 
         final var form = new Form();
         form.param("authorizationId", authorizationId);
@@ -195,6 +205,36 @@ public class OidcProviderApiTest {
 
         final Response response = client
                 .target(apiRoot + "/oidc/login")
+                .request()
+                .property(FOLLOW_REDIRECTS, false)
+                .post(Entity.entity(form, APPLICATION_FORM_URLENCODED));
+
+        // The deployment requires explicit consent: the login submission is answered with the hosted
+        // consent screen rather than an immediate redirect.
+
+        assertEquals(response.getStatus(), 200);
+        final var html = response.readEntity(String.class);
+
+        assertTrue(html.contains("Grant access"), "Expected the consent screen: " + html);
+        assertTrue(html.contains("RP integration client"), "The consent screen names the client: " + html);
+        assertTrue(html.contains("openid") && html.contains("profile"),
+                "The consent screen lists the requested scopes: " + html);
+
+        // The consent form carries the pending authorization's id in its hidden field.
+        final var consentAuthorizationId = hiddenAuthorizationId(html);
+        assertEquals(consentAuthorizationId, authorizationId);
+
+    }
+
+    @Test(dependsOnMethods = "login_presentsConsentScreen")
+    public void consentApproval_redirectsToRelyingPartyWithCodeAndState() {
+
+        final var form = new Form();
+        form.param("authorizationId", authorizationId);
+        form.param("decision", "approve");
+
+        final Response response = client
+                .target(apiRoot + "/oidc/consent")
                 .request()
                 .property(FOLLOW_REDIRECTS, false)
                 .post(Entity.entity(form, APPLICATION_FORM_URLENCODED));
@@ -212,7 +252,7 @@ public class OidcProviderApiTest {
 
     }
 
-    @Test(dependsOnMethods = "login_redirectsToRelyingPartyWithCodeAndState")
+    @Test(dependsOnMethods = "consentApproval_redirectsToRelyingPartyWithCodeAndState")
     public void exchange_returnsTokensVerifiableAgainstPublishedJwks() throws Exception {
 
         final Response response = exchangeCode();
@@ -386,20 +426,208 @@ public class OidcProviderApiTest {
     @Test(dependsOnMethods = "createClientRegistration_returnsSecretOnce")
     public void exchange_replayedCode_isRejected() throws Exception {
 
-        // A fresh, complete authorization: begin + login.
+        // A fresh, complete authorization: begin + login + consent approval.
+
+        final var location = java.net.URI.create(completeNewAuthorization("openid", "approve"));
+        final var replayedCode = splitQuery(location).get("code");
+
+        // First redemption succeeds...
+        assertEquals(exchangeRaw(replayedCode, PKCE_VERIFIER).getStatus(), 200);
+
+        // ...the replay fails.
+        assertEquals(exchangeRaw(replayedCode, PKCE_VERIFIER).getStatus(), 400);
+
+    }
+
+    @Test(dependsOnMethods = "createClientRegistration_returnsSecretOnce")
+    public void consentDenied_redirectsWithAccessDenied() throws Exception {
+
+        final var location = java.net.URI.create(completeNewAuthorization("openid", "deny"));
+
+        assertTrue(location.toString().startsWith(REDIRECT_URI));
+        final var params = splitQuery(location);
+        assertEquals(params.get("error"), "access_denied");
+        assertEquals(params.get("state"), STATE);
+
+    }
+
+    @Test(dependsOnMethods = "createClientRegistration_returnsSecretOnce")
+    public void tokenEndpoint_errorsUseOAuthErrorBodies() throws Exception {
+
+        // Bad client credentials: 401 with the RFC 6749 error shape.
+
+        final var badSecretForm = new Form();
+        badSecretForm.param("grant_type", "authorization_code");
+        badSecretForm.param("code", "anything");
+        badSecretForm.param("redirect_uri", REDIRECT_URI);
+        badSecretForm.param("code_verifier", PKCE_VERIFIER);
+        badSecretForm.param("client_id", clientId);
+        badSecretForm.param("client_secret", "wrong-secret");
+
+        final var badSecret = client
+                .target(apiRoot + "/oidc/token")
+                .request(APPLICATION_JSON)
+                .post(Entity.entity(badSecretForm, APPLICATION_FORM_URLENCODED));
+
+        assertEquals(badSecret.getStatus(), 401);
+        final var badSecretBody = objectMapper.readTree(badSecret.readEntity(String.class));
+        assertEquals(badSecretBody.get("error").asText(), "invalid_client");
+        assertNotNull(badSecretBody.get("error_description"));
+
+        // A bad grant_type: unsupported_grant_type.
+
+        final var badGrantForm = new Form();
+        badGrantForm.param("grant_type", "password");
+        badGrantForm.param("client_id", clientId);
+        badGrantForm.param("client_secret", clientSecret);
+
+        final var badGrant = client
+                .target(apiRoot + "/oidc/token")
+                .request(APPLICATION_JSON)
+                .post(Entity.entity(badGrantForm, APPLICATION_FORM_URLENCODED));
+
+        assertEquals(badGrant.getStatus(), 400);
+        assertEquals(objectMapper.readTree(badGrant.readEntity(String.class)).get("error").asText(),
+                "unsupported_grant_type");
+
+        // A bogus code: invalid_grant.
+
+        final var badCode = exchangeRaw("bogus-code", PKCE_VERIFIER);
+        assertEquals(badCode.getStatus(), 400);
+        assertEquals(objectMapper.readTree(badCode.readEntity(String.class)).get("error").asText(),
+                "invalid_grant");
+
+    }
+
+    @Test(dependsOnMethods = "createClientRegistration_returnsSecretOnce")
+    public void clientCredentials_issuesMachineTokenVerifiableAgainstJwks() throws Exception {
+
+        final var created = registerMachineClient();
+        machineClientId = created.getClientId();
+        machineClientSecret = created.getClientSecret();
+
+        final var form = new Form();
+        form.param("grant_type", "client_credentials");
+        form.param("client_id", machineClientId);
+        form.param("client_secret", machineClientSecret);
+        form.param("audience", "filebrowser");
+        form.param("scope", "openid profile");
+
+        final Response response = client
+                .target(apiRoot + "/oidc/token")
+                .request(APPLICATION_JSON)
+                .post(Entity.entity(form, APPLICATION_FORM_URLENCODED));
+
+        assertEquals(response.getStatus(), 200);
+        final var body = response.readEntity(JsonNode.class);
+
+        // No end-user is involved: no id_token, no refresh token, no grant — the access token is a
+        // standalone JWT the downstream service verifies against the JWKS.
+
+        assertFalse(body.hasNonNull("id_token"));
+        assertFalse(body.hasNonNull("refresh_token"));
+        assertEquals(body.get("token_type").asText(), "Bearer");
+        assertTrue(body.get("expires_in").asLong() > 0 && body.get("expires_in").asLong() <= 600);
+
+        final var machineToken = body.get("access_token").asText();
+
+        final var jwks = client
+                .target(apiRoot + "/.well-known/jwks.json")
+                .request(APPLICATION_JSON)
+                .get()
+                .readEntity(JsonNode.class);
+
+        final var parsed = SignedJWT.parse(machineToken);
+        final var kid = parsed.getHeader().getKeyID();
+        assertTrue(parsed.verify(new RSASSAVerifier(publicKeyFromJwks(jwks, kid))));
+        assertEquals(parsed.getJWTClaimsSet().getSubject(), machineClientId);
+        assertEquals(parsed.getJWTClaimsSet().getAudience().get(0), "filebrowser");
+        assertEquals(parsed.getJWTClaimsSet().getStringClaim("azp"), machineClientId);
+        assertEquals(parsed.getJWTClaimsSet().getStringClaim("scope"), "openid profile");
+
+    }
+
+    @Test(dependsOnMethods = "clientCredentials_issuesMachineTokenVerifiableAgainstJwks")
+    public void clientCredentials_rejectsUnregisteredAudience() throws Exception {
+
+        final var form = new Form();
+        form.param("grant_type", "client_credentials");
+        form.param("client_id", machineClientId);
+        form.param("client_secret", machineClientSecret);
+        form.param("audience", "not-registered");
+
+        final Response response = client
+                .target(apiRoot + "/oidc/token")
+                .request(APPLICATION_JSON)
+                .post(Entity.entity(form, APPLICATION_FORM_URLENCODED));
+
+        assertEquals(response.getStatus(), 400);
+        assertEquals(objectMapper.readTree(response.readEntity(String.class)).get("error").asText(),
+                "invalid_target");
+
+    }
+
+    @Test(dependsOnMethods = "createClientRegistration_returnsSecretOnce")
+    public void tokenEndpoint_rateLimited_returns429() {
+
+        final var created = registerMachineClient();
+        rateLimitClientId = created.getClientId();
+        rateLimitClientSecret = created.getClientSecret();
+
+        // The test deployment budgets 10 token requests per client per minute; the probe client spends
+        // them all and expects the next request to be refused with 429.
+
+        var saw429 = false;
+
+        for (int i = 0; i < 12; i++) {
+
+            final var form = new Form();
+            form.param("grant_type", "client_credentials");
+            form.param("client_id", rateLimitClientId);
+            form.param("client_secret", rateLimitClientSecret);
+
+            final Response response = client
+                    .target(apiRoot + "/oidc/token")
+                    .request(APPLICATION_JSON)
+                    .post(Entity.entity(form, APPLICATION_FORM_URLENCODED));
+
+            if (response.getStatus() == 429) {
+                saw429 = true;
+                break;
+            }
+
+            assertEquals(response.getStatus(), 200, "Request " + i + " unexpectedly failed.");
+
+        }
+
+        assertTrue(saw429, "The token endpoint never returned 429 within the budget.");
+
+    }
+
+    /**
+     * Runs a fresh authorization to completion: authorize, hosted login, and the consent decision.
+     *
+     * @param scope the scope to request
+     * @param decision "approve" or "deny"
+     * @return the value of the {@code Location} header the consent decision produced
+     */
+    private String completeNewAuthorization(final String scope, final String decision) {
 
         final var authorize = client
                 .target(apiRoot + "/oidc/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("client_id", clientId)
                 .queryParam("redirect_uri", REDIRECT_URI)
-                .queryParam("scope", "openid")
+                .queryParam("scope", scope)
+                .queryParam("state", STATE)
+                .queryParam("nonce", NONCE)
                 .queryParam("code_challenge", PKCE_CHALLENGE)
                 .queryParam("code_challenge_method", "S256")
                 .request()
                 .property(FOLLOW_REDIRECTS, false)
                 .get();
 
+        assertEquals(authorize.getStatus(), 303);
         final var loginId = splitQuery(authorize.getLocation()).get("authorizationId");
 
         final var loginForm = new Form();
@@ -413,13 +641,57 @@ public class OidcProviderApiTest {
                 .property(FOLLOW_REDIRECTS, false)
                 .post(Entity.entity(loginForm, APPLICATION_FORM_URLENCODED));
 
-        final var replayedCode = splitQuery(login.getLocation()).get("code");
+        assertEquals(login.getStatus(), 200, "Expected the consent screen.");
 
-        // First redemption succeeds...
-        assertEquals(exchangeRaw(replayedCode, PKCE_VERIFIER).getStatus(), 200);
+        final var consentForm = new Form();
+        consentForm.param("authorizationId", hiddenAuthorizationId(login.readEntity(String.class)));
+        consentForm.param("decision", decision);
 
-        // ...the replay fails.
-        assertEquals(exchangeRaw(replayedCode, PKCE_VERIFIER).getStatus(), 400);
+        final var consent = client
+                .target(apiRoot + "/oidc/consent")
+                .request()
+                .property(FOLLOW_REDIRECTS, false)
+                .post(Entity.entity(consentForm, APPLICATION_FORM_URLENCODED));
+
+        assertEquals(consent.getStatus(), 303);
+
+        return consent.getLocation().toString();
+
+    }
+
+    /**
+     * Registers a machine-only client (client_credentials, audience-scoped, no redirect URIs).
+     */
+    private OidcClientRegistration registerMachineClient() {
+
+        final var registration = new OidcClientRegistration();
+        registration.setDisplayName("Machine integration client");
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        registration.setAudiences(Set.of("filebrowser"));
+        registration.setScopes(Set.of("openid", "profile"));
+
+        final Response response = client
+                .target(apiRoot + "/oidc_client")
+                .request(APPLICATION_JSON)
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .post(Entity.entity(registration, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 200);
+        return response.readEntity(OidcClientRegistration.class);
+
+    }
+
+    private String hiddenAuthorizationId(final String html) {
+
+        final var marker = "name=\"authorizationId\" value=\"";
+        final var start = html.indexOf(marker);
+
+        assertTrue(start >= 0, "No hidden authorizationId in: " + html);
+
+        final var from = start + marker.length();
+        final var end = html.indexOf('"', from);
+
+        return html.substring(from, end);
 
     }
 
