@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
  * @param elements list of Element definitions specifying the classpaths and artifacts (deprecated; use ELM packages)
  * @param packages list of Element package definitions specifying ELM artifacts to deploy
  * @param useDefaultRepositories flag indicating whether to use the default artifact repositories
+ * @param missionCritical flag indicating whether a failure to load this deployment should fail the system health check
  * @param repositories list of artifact repositories for resolving artifacts
  * @param state the state of the deployment
  * @param version monotonically increasing version number
@@ -99,6 +100,13 @@ public record ElementDeployment(
                 "deployment time."
         )
         boolean useDefaultRepositories,
+
+        @Schema(description =
+                "Flag indicating whether this deployment is mission critical. When true, a failure to load this " +
+                "deployment (or a load that completes with errors) is treated as a system health check failure, " +
+                "causing the health endpoint to report the instance as unhealthy."
+        )
+        boolean missionCritical,
 
         @Valid
         @Schema(description =

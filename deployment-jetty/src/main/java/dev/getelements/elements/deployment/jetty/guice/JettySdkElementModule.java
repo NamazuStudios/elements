@@ -2,6 +2,7 @@ package dev.getelements.elements.deployment.jetty.guice;
 
 import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.deployment.jetty.JettyElementContainerService;
+import dev.getelements.elements.deployment.jetty.StandardDeploymentHealthStatusDao;
 import dev.getelements.elements.deployment.jetty.StandardElementRuntimeService;
 import dev.getelements.elements.deployment.jetty.loader.AuthFilterFeature;
 import dev.getelements.elements.deployment.jetty.loader.HttpPathRegistry;
@@ -10,6 +11,7 @@ import dev.getelements.elements.deployment.jetty.loader.JakartaRsLoader;
 import dev.getelements.elements.deployment.jetty.loader.JakartaWebsocketLoader;
 import dev.getelements.elements.deployment.jetty.loader.Loader;
 import dev.getelements.elements.deployment.jetty.loader.StaticContentLoader;
+import dev.getelements.elements.sdk.dao.DeploymentHealthStatusDao;
 import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
@@ -45,6 +47,12 @@ public class JettySdkElementModule extends SharedElementModule {
         bind(ElementContainerService.class)
                 .to(JettyElementContainerService.class)
                 .asEagerSingleton();
+
+        // This is the only module which hosts an ElementRuntimeService, so it is the sole contributor of observed
+        // deployment status to the health check. The set may be empty on deployments without a runtime service.
+        newSetBinder(binder(), DeploymentHealthStatusDao.class)
+                .addBinding()
+                .to(StandardDeploymentHealthStatusDao.class);
 
         final var loaders = newSetBinder(binder(), Loader.class);
         loaders.addBinding().to(ElementEntityLoader.class);

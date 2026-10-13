@@ -8,6 +8,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoMigrationModule;
 import dev.getelements.elements.dao.mongo.migration.MigrationRunner;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.SystemVersion;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -58,6 +59,7 @@ public class Migrate {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final var injector = Guice.createInjector(
+                GuiceStages.get(),
                 new ConfigurationModule(defaultConfigurationSupplier::get, defaultConfigurationSupplier::getExplicitProperties),
                 new MongoDatastoreBootstrapModule(),
                 new MongoSdkModule(),

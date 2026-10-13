@@ -46,6 +46,7 @@ public class ServicesModule extends AbstractModule {
 
         install(new ServiceUtilityModule());
         install(new DatabaseHealthStatusDaoAggregator());
+        install(new DeploymentHealthStatusDaoAggregator());
 
         install(new StandardServicesModule());
         install(new UnscopedServicesModule());

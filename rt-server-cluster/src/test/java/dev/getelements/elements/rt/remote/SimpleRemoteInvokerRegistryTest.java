@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import dev.getelements.elements.rt.InstanceMetadata;
 import dev.getelements.elements.rt.InstanceMetadataContext;
+import dev.getelements.elements.rt.exception.NodeNotFoundException;
 import dev.getelements.elements.rt.remote.InstanceConnectionService.InstanceConnection;
 import dev.getelements.elements.sdk.cluster.id.ApplicationId;
 import dev.getelements.elements.sdk.cluster.id.InstanceId;
@@ -473,6 +474,10 @@ public class SimpleRemoteInvokerRegistryTest {
         final InstanceConnection removed = mockActiveConnections.remove(0);
         getInstanceConnectionService().getOnDisconnectPublisher().publish(removed);
 
+        // The removal is processed on the registry's scheduler thread so it is serialized with the periodic
+        // refresh, so wait until the removed instance's connections are gone before asserting.
+        awaitRemoval(getRemoteInvokerRegistry(), removed.getInstanceId(), mockApplicationIds);
+
         // Determines the best instance based on the mocked load values.
         final InstanceId best = mockActiveConnections.get(0).getInstanceId();
 
@@ -542,6 +547,42 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockRemoteInvokerList.forEach(ri -> verify(ri, times(1)).stop());
 
+    }
+
+    /**
+     * Waits until every node of the removed instance is gone from the registry snapshot. The disconnect removal is
+     * processed asynchronously on the registry's scheduler thread, so asserting immediately after publishing the
+     * event could race the removal (issue #124).
+     */
+    private static void awaitRemoval(final RemoteInvokerRegistry registry,
+                                     final InstanceId removedInstanceId,
+                                     final List<ApplicationId> applicationIds) throws Exception {
+
+        final long deadline = System.currentTimeMillis() + 10_000;
+
+        final List<NodeId> removedNodes = applicationIds
+                .stream()
+                .map(a -> forInstanceAndApplication(removedInstanceId, a))
+                .toList();
+
+        while (System.currentTimeMillis() < deadline && !removedNodesAreGone(registry, removedNodes)) {
+            Thread.sleep(10);
+        }
+
+        assertTrue(removedNodesAreGone(registry, removedNodes),
+                "Timed out waiting for removal of instance " + removedInstanceId);
+
+    }
+
+    private static boolean removedNodesAreGone(final RemoteInvokerRegistry registry, final List<NodeId> removedNodes) {
+        return removedNodes.stream().noneMatch(nid -> {
+            try {
+                registry.getRemoteInvoker(nid);
+                return true;
+            } catch (NodeNotFoundException ex) {
+                return false;
+            }
+        });
     }
 
     public Supplier<RemoteInvoker> getRemoteInvokerSupplier() {
