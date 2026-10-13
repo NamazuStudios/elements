@@ -140,7 +140,13 @@ test.describe('API Authentication Headers', () => {
   test('Element API Explorer - OpenAPI spec should have auth headers', async ({ page }) => {
     await page.goto('/admin/dashboard');
     await page.waitForTimeout(1000);
-    
+
+    // Sidebar groups start collapsed; expand Explorer to reveal element links
+    const explorerGroup = page.getByRole('button', { name: 'Explorer' });
+    if (await explorerGroup.count() > 0) {
+      await explorerGroup.click().catch(() => {});
+    }
+
     // Find an element in the sidebar and click it
     const elementLink = page.locator('[data-testid^="link-element-"]').first();
     const hasElements = await elementLink.count() > 0;

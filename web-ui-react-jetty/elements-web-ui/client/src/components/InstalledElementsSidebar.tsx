@@ -13,14 +13,22 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import * as Icons from 'lucide-react';
 import { usePlugins } from '@/contexts/PluginContext';
 import { LoadedPlugin } from '@/lib/plugin-loader';
+import {
+  EXPLORER_GROUP_KEY,
+  ELEMENT_MANAGEMENT_GROUP_KEY,
+  ELEMENT_PLUGINS_GROUP_KEY,
+  pluginGroupKey,
+} from '@/lib/adminUiState';
 
 interface PluginGroupsProps {
   plugins: LoadedPlugin[];
   location: string;
   setLocation: (path: string) => void;
+  openGroups: Record<string, boolean>;
+  setOpenGroups: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
-function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
+function PluginGroups({ plugins, location, setLocation, openGroups, setOpenGroups }: PluginGroupsProps) {
   const qualifiedPluginPath = (plugin: LoadedPlugin) =>
     `/plugin/${encodeURIComponent(plugin.qualifiedKey)}`;
 
@@ -45,7 +53,10 @@ function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
     <SidebarMenu>
       {groupNames.map(groupName => (
         <SidebarMenuItem key={groupName}>
-          <Collapsible defaultOpen>
+          <Collapsible
+            open={openGroups[pluginGroupKey(groupName)] ?? grouped[groupName].some(plugin => location.startsWith(qualifiedPluginPath(plugin)))}
+            onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [pluginGroupKey(groupName)]: isOpen }))}
+          >
             <CollapsibleTrigger asChild>
               <SidebarMenuButton className="font-medium">
                 <Icons.AppWindow className="w-4 h-4 shrink-0" />
@@ -99,14 +110,34 @@ function PluginGroups({ plugins, location, setLocation }: PluginGroupsProps) {
 interface InstalledElementsSidebarProps {
   location: string;
   setLocation: (path: string) => void;
+  openGroups: Record<string, boolean>;
+  setOpenGroups: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
 }
 
-export function InstalledElementsSidebar({ location, setLocation }: InstalledElementsSidebarProps) {
+export function InstalledElementsSidebar({ location, setLocation, openGroups, setOpenGroups }: InstalledElementsSidebarProps) {
   const { plugins, isLoading: pluginsLoading } = usePlugins();
+
+  // A group is "open" if the user explicitly toggled it (stored) or the current route
+  // lives inside it as an ancestor, so the restored page is always surfaced.
+  const inExplorer = location === '/dynamic-api-explorer'
+    || location.startsWith('/installed-elements')
+    || location.startsWith('/element-api-explorer')
+    || location === '/core-elements';
+  const explorerOpen = openGroups[EXPLORER_GROUP_KEY] ?? inExplorer;
+
+  const managementRoutes = ['/element-deployments', '/containers', '/runtimes', '/elm-inspector'];
+  const managementOpen = openGroups[ELEMENT_MANAGEMENT_GROUP_KEY] ?? managementRoutes.some(route => location === route);
+
+  const inPlugins = location.startsWith('/plugin/');
+  const elementPluginsOpen = openGroups[ELEMENT_PLUGINS_GROUP_KEY] ?? inPlugins;
 
   return (
     <>
-    <Collapsible defaultOpen className="group/collapsible">
+    <Collapsible
+      open={explorerOpen}
+      onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [EXPLORER_GROUP_KEY]: isOpen }))}
+      className="group/collapsible"
+    >
       <SidebarGroup>
         <SidebarGroupLabel asChild>
           <CollapsibleTrigger className="text-xs uppercase tracking-wider hover-elevate">
@@ -155,7 +186,11 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
       </SidebarGroup>
     </Collapsible>
 
-    <Collapsible defaultOpen className="group/collapsible-mgmt">
+    <Collapsible
+      open={managementOpen}
+      onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [ELEMENT_MANAGEMENT_GROUP_KEY]: isOpen }))}
+      className="group/collapsible-mgmt"
+    >
       <SidebarGroup>
         <SidebarGroupLabel asChild>
           <CollapsibleTrigger className="text-xs uppercase tracking-wider hover-elevate">
@@ -223,7 +258,11 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
     )}
 
     {plugins.length > 0 && (
-      <Collapsible defaultOpen className="group/collapsible-plugins">
+      <Collapsible
+        open={elementPluginsOpen}
+        onOpenChange={(isOpen) => setOpenGroups(prev => ({ ...prev, [ELEMENT_PLUGINS_GROUP_KEY]: isOpen }))}
+        className="group/collapsible-plugins"
+      >
         <SidebarGroup>
           <SidebarGroupLabel asChild>
             <CollapsibleTrigger className="text-xs uppercase tracking-wider hover-elevate">
@@ -233,7 +272,13 @@ export function InstalledElementsSidebar({ location, setLocation }: InstalledEle
           </SidebarGroupLabel>
           <CollapsibleContent>
             <SidebarGroupContent>
-              <PluginGroups plugins={plugins} location={location} setLocation={setLocation} />
+              <PluginGroups
+                plugins={plugins}
+                location={location}
+                setLocation={setLocation}
+                openGroups={openGroups}
+                setOpenGroups={setOpenGroups}
+              />
             </SidebarGroupContent>
           </CollapsibleContent>
         </SidebarGroup>

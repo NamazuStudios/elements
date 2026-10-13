@@ -3,6 +3,7 @@ package dev.getelements.elements.config;
 import dev.getelements.elements.sdk.annotation.ElementDefaultAttribute;
 import dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord;
 import dev.getelements.elements.sdk.util.Environment;
+import dev.getelements.elements.sdk.util.OperatorProperties;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.FieldInfo;
 import org.slf4j.Logger;
@@ -27,9 +28,6 @@ import java.util.stream.Collectors;
 import static dev.getelements.elements.sdk.model.Constants.*;
 import static dev.getelements.elements.sdk.record.ElementDefaultAttributeRecord.REDACTED;
 import static java.lang.String.format;
-import static java.lang.System.getProperties;
-import static java.lang.System.getenv;
-import static java.util.stream.Collectors.toMap;
 
 /**
  * Implements the default configuration scheme.  In addition to providing a set of {@link Properties}
@@ -42,13 +40,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationSupplier.class);
 
-    private static final char PROPERTY_SEPARATOR = '.';
-
-    private static final char ENVIRONMENT_SEPARATOR = '_';
-
     private static final String PROPERTY_PREFIX = "dev.getelements";
-
-    private static final String ENVIRONMENT_PROPERTY_PREFIX = PROPERTY_PREFIX.replace(PROPERTY_SEPARATOR, ENVIRONMENT_SEPARATOR);
 
     private static final String ENVIRONMENT_PREFIX = "ELEMENTS";
 
@@ -101,20 +93,12 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
      */
     public static Properties loadProperties() {
 
-        // The priority of the following is really important.
+        // The priority of the following is really important. Environment-variable translation and the
+        // JVM-system-property override are shared with other early bootstrap code (e.g. GuiceStages) via
+        // OperatorProperties, so both consult the exact same scheme.
+        final var properties = OperatorProperties.resolve();
 
-        final var env = getenv()
-            .entrySet()
-            .stream()
-            .filter(DefaultConfigurationSupplier::shouldKeepEnvironmentVariable)
-            .collect(toMap(DefaultConfigurationSupplier::remapEnvironmentVariable, Entry::getValue));
-
-        final var properties = new Properties();
-
-        properties.putAll(env);
-        properties.putAll(getProperties());
-
-        final var home = env.getOrDefault(Environment.ELEMENTS_HOME, Environment.ELEMENTS_HOME_DEFAULT);
+        final var home = properties.getProperty(Environment.ELEMENTS_HOME, Environment.ELEMENTS_HOME_DEFAULT);
 
         return loadProperties(
             properties,
@@ -126,26 +110,6 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             Paths.get(properties.getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE))
 
         );
-
-    }
-
-    private static boolean shouldKeepEnvironmentVariable(final Entry<String, String> stringStringEntry) {
-
-        final var name = stringStringEntry.getKey();
-
-        return name.startsWith(ENVIRONMENT_PREFIX) ||
-               name.toLowerCase().startsWith(PROPERTY_PREFIX) ||
-               name.toLowerCase().startsWith(ENVIRONMENT_PROPERTY_PREFIX);
-
-    }
-
-    private static String remapEnvironmentVariable(final Entry<String, String> environmentEntry) {
-
-        final var original = environmentEntry.getKey();
-
-        return original.startsWith(ENVIRONMENT_PROPERTY_PREFIX)
-            ? original.toLowerCase().replace(ENVIRONMENT_SEPARATOR, PROPERTY_SEPARATOR)
-            : original;
 
     }
 

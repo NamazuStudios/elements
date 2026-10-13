@@ -138,6 +138,8 @@ public class MongoElementDeploymentDao implements ElementDeploymentDao {
 
         builder.with(set("useDefaultRepositories", mongoElementDeployment.isUseDefaultRepositories()));
 
+        builder.with(set("missionCritical", mongoElementDeployment.isMissionCritical()));
+
         if (mongoElementDeployment.getRepositories() != null) {
             builder.with(set("repositories", mongoElementDeployment.getRepositories()));
         } else {

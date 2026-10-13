@@ -6,6 +6,7 @@ import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.rt.remote.ControlClient;
 import dev.getelements.elements.rt.remote.InstanceStatus;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,7 @@ public class StatusCheck {
         final var configurationSupplier = new DefaultConfigurationSupplier();
 
         final var injector = Guice.createInjector(
+                GuiceStages.get(),
                 new ZContextModule(),
                 new JeroMQSecurityModule(),
                 new ConfigurationModule(configurationSupplier),

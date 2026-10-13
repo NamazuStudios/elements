@@ -295,6 +295,16 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private void remove(final InstanceConnection connection) {
 
+            // We schedule the removal on the scheduler thread so it is serialized with the periodic refresh.
+            // This prevents a refresh that captured the connection while still active from committing after the
+            // disconnect event and resurrecting the instance's connections.
+
+            scheduledExecutorService.submit(() -> removeConnection(connection));
+
+        }
+
+        private void removeConnection(final InstanceConnection connection) {
+
             final var builder = snapshot.refresh();
             final var instanceId = connection.getInstanceId();
 

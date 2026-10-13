@@ -36,6 +36,9 @@ public class MongoElementDeployment {
     private boolean useDefaultRepositories;
 
     @Property
+    private boolean missionCritical;
+
+    @Property
     private List<ArtifactRepository> repositories;
 
     @Property
@@ -107,6 +110,14 @@ public class MongoElementDeployment {
 
     public void setUseDefaultRepositories(boolean useDefaultRepositories) {
         this.useDefaultRepositories = useDefaultRepositories;
+    }
+
+    public boolean isMissionCritical() {
+        return missionCritical;
+    }
+
+    public void setMissionCritical(boolean missionCritical) {
+        this.missionCritical = missionCritical;
     }
 
     public List<ArtifactRepository> getRepositories() {

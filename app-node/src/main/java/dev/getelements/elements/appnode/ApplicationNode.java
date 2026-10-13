@@ -25,6 +25,7 @@ import dev.getelements.elements.rt.remote.guice.PersistentInstanceIdModule;
 import dev.getelements.elements.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import dev.getelements.elements.rt.remote.jeromq.guice.*;
 import dev.getelements.elements.rt.remote.watchdog.WatchdogService;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import dev.getelements.elements.service.guice.AppleIapReceiptInvokerModule;
 import org.slf4j.Logger;
@@ -61,6 +62,7 @@ public class ApplicationNode {
         }
 
         injector = Guice.createInjector(
+            GuiceStages.get(),
             storageDriverModule,
             new SimpleWatchdogServiceModule(),
             new ClusterContextFactoryModule(),
