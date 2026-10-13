@@ -8,8 +8,10 @@ import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
+import dev.getelements.elements.sdk.model.oidc.OidcProviderConsent;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
 import dev.getelements.elements.sdk.service.auth.OidcProviderAuthorizationService;
+import dev.getelements.elements.sdk.service.Constants;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_ACCESS_DENIED;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_REQUEST;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
@@ -27,6 +30,7 @@ import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.RESPONSE_TYPE_CODE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.SCOPE_OPENID;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_AUTHORIZATION_CODE_TTL_SECONDS;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_PROVIDER_CONSENT_REQUIRED;
 
 public class StandardOidcProviderAuthorizationService implements OidcProviderAuthorizationService {
 
@@ -44,6 +48,10 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
     @Inject
     private long authorizationCodeTtlSeconds;
 
+    @Named(OIDC_PROVIDER_CONSENT_REQUIRED)
+    @Inject
+    private boolean consentRequired;
+
     @Override
     public OidcAuthorizationCode beginAuthorization(final OidcProviderAuthorizationRequest request) {
         getRateLimiter().checkAuthorizationEndpoint(request.getClientId());
@@ -51,24 +59,84 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
     }
 
     @Override
-    public String completeAuthorization(final OidcProviderLoginRequest loginRequest) {
+    public OidcProviderConsent submitLogin(final OidcProviderLoginRequest loginRequest) {
 
         getRateLimiter().checkHostedLogin(loginRequest.getAuthorizationId(), loginRequest.getUsername());
 
         final var user = getUserDao().validateUserPassword(
                 loginRequest.getUsername(), loginRequest.getPassword());
 
+        // Atomic attach: the user id and auth_time land on the code exactly once, and the code enters
+        // AWAITING_CONSENT. The consent decision (explicit or implicit) restores PENDING.
         final var code = getOidcProviderDao().completeAuthorizationCode(
                 loginRequest.getAuthorizationId(),
                 user.getId(),
                 System.currentTimeMillis()
         ).orElseThrow(() -> new InvalidDataException("Unknown or already used authorization request."));
 
-        logger.info("Completed OIDC provider authorization for user {} on client {}.",
-                user.getId(), code.getClientId());
+        final var registration = getOidcProviderDao().getClient(code.getClientId())
+                .orElseThrow(() -> new InvalidDataException("Unknown client."));
 
+        if (!getConsentRequired()) {
+            return complete(code, true);
+        }
+
+        logger.info("Awaiting consent from user {} for client {}.", user.getId(), code.getClientId());
+
+        final var consent = new OidcProviderConsent();
+        consent.setAuthorizationId(code.getCode());
+        consent.setConsentRequired(true);
+        consent.setClientDisplayName(registration.getDisplayName());
+        consent.setScope(code.getScope());
+        return consent;
+
+    }
+
+    @Override
+    public String approveConsent(final String authorizationId) {
+        final var code = decide(authorizationId, true);
+        logger.info("Consent granted for user {} on client {}.", code.getUserId(), code.getClientId());
         return buildRedirectUri(code);
+    }
 
+    @Override
+    public String denyConsent(final String authorizationId) {
+
+        final var code = decide(authorizationId, false);
+
+        logger.info("Consent denied by user {} on client {}.", code.getUserId(), code.getClientId());
+
+        // Per RFC 6749 section 4.1.2.1 the denial is reported back to the relying party as an
+        // access_denied error, echoing the client's state.
+
+        final var builder = new StringBuilder(code.getRedirectUri());
+        builder.append(code.getRedirectUri().contains("?") ? '&' : '?');
+        builder.append("error=").append(ERROR_ACCESS_DENIED);
+
+        if (code.getState() != null) {
+            builder.append("&state=").append(code.getState());
+        }
+
+        return builder.toString();
+
+    }
+
+    private OidcProviderConsent complete(final OidcAuthorizationCode code, final boolean approved) {
+
+        final var decided = decide(code.getCode(), approved);
+
+        final var consent = new OidcProviderConsent();
+        consent.setAuthorizationId(code.getCode());
+        consent.setConsentRequired(false);
+        consent.setScope(decided.getScope());
+        consent.setRedirectUri(buildRedirectUri(decided));
+        return consent;
+
+    }
+
+    private OidcAuthorizationCode decide(final String authorizationId, final boolean approved) {
+        return getOidcProviderDao().decideConsent(authorizationId, approved)
+                .orElseThrow(() -> new InvalidDataException("Unknown or already decided authorization request."));
     }
 
     private OidcAuthorizationCode newAuthorizationCodeRecord(final OidcProviderAuthorizationRequest request,
@@ -204,6 +272,14 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
 
     public void setAuthorizationCodeTtlSeconds(long authorizationCodeTtlSeconds) {
         this.authorizationCodeTtlSeconds = authorizationCodeTtlSeconds;
+    }
+
+    public boolean getConsentRequired() {
+        return consentRequired;
+    }
+
+    public void setConsentRequired(boolean consentRequired) {
+        this.consentRequired = consentRequired;
     }
 
 }

@@ -99,8 +99,9 @@ public interface OidcProviderDao {
 
     /**
      * Atomically attaches the authenticated user to a PENDING, unexpired authorization code that is still
-     * awaiting login (its user id unset), recording when authentication occurred. A second completion attempt
-     * returns empty.
+     * awaiting login (its user id unset), recording when authentication occurred. When the deployment
+     * requires consent the code enters {@code AWAITING_CONSENT} instead of completing; a second completion
+     * attempt returns empty.
      *
      * @param code the pending authorization's code value
      * @param userId the id of the authenticated user
@@ -109,6 +110,18 @@ public interface OidcProviderDao {
      *         PENDING, or already carrying a user
      */
     Optional<OidcAuthorizationCode> completeAuthorizationCode(String code, String userId, long authTime);
+
+    /**
+     * Atomically records the authenticated user's consent decision. An {@code AWAITING_CONSENT} code
+     * transitions to PENDING (approved, now awaiting token redemption) or DENIED (refused, permanently
+     * unredeemable); a code in any other state, or one already decided, returns empty.
+     *
+     * @param code the pending authorization's code value
+     * @param approved the user's consent decision
+     * @return an {@link Optional} containing the updated code record, or empty if unknown, expired, not
+     *         awaiting consent, or already decided
+     */
+    Optional<OidcAuthorizationCode> decideConsent(String code, boolean approved);
 
     //
     // Grants

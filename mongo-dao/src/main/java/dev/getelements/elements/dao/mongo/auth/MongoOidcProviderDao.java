@@ -165,7 +165,10 @@ public class MongoOidcProviderDao implements OidcProviderDao {
                                                                      final long authTime) {
 
         // userId == null matches documents where the field is absent (awaiting login). A concurrent second
-        // completion attempt no longer matches and returns null.
+        // completion attempt no longer matches and returns null. The code enters AWAITING_CONSENT rather
+        // than completing outright: when the deployment does not require consent, the authorization service
+        // immediately records the implicit approval through decideConsent, restoring PENDING.
+
         final var query = getDatastore().find(MongoOidcAuthorizationCode.class)
                 .filter(and(
                         eq("_id", code),
@@ -176,7 +179,32 @@ public class MongoOidcProviderDao implements OidcProviderDao {
 
         final var entity = query.modify(
                 set("userId", userId),
-                set("authTime", authTime)
+                set("authTime", authTime),
+                set("status", OidcAuthorizationCode.Status.AWAITING_CONSENT)
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
+
+        return Optional.ofNullable(entity).map(this::toModel);
+
+    }
+
+    @Override
+    public Optional<OidcAuthorizationCode> decideConsent(final String code, final boolean approved) {
+
+        // returnDocument(AFTER), mirroring the code's other transitions: a concurrent second decision no
+        // longer matches the status guard and returns null. The expiry filter makes an
+        // expired-but-not-yet-swept code fail atomically rather than relying on the async TTL sweep.
+
+        final var query = getDatastore().find(MongoOidcAuthorizationCode.class)
+                .filter(and(
+                        eq("_id", code),
+                        eq("status", OidcAuthorizationCode.Status.AWAITING_CONSENT),
+                        gte("expiry", new Timestamp(System.currentTimeMillis()))
+                ));
+
+        final var entity = query.modify(
+                set("status", approved
+                        ? OidcAuthorizationCode.Status.PENDING
+                        : OidcAuthorizationCode.Status.DENIED)
         ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         return Optional.ofNullable(entity).map(this::toModel);
