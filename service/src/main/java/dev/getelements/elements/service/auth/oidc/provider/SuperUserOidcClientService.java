@@ -58,7 +58,9 @@ public class SuperUserOidcClientService implements OidcClientService {
 
         final var updated = getOidcProviderDao().updateClient(registration);
 
-        if (registration.getClientSecret() != null) {
+        // A blank secret retains the stored one, mirroring create's generate-when-blank posture: an admin
+        // saving unrelated edits must not silently rotate the credential to the empty string.
+        if (registration.getClientSecret() != null && !registration.getClientSecret().isBlank()) {
             logger.info("Rotated secret for OIDC client registration {}.", updated.getClientId());
             return toEchoed(updated, registration.getClientSecret());
         }
