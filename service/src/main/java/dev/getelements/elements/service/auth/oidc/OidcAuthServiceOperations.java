@@ -13,7 +13,7 @@ import com.nimbusds.jose.util.Base64URL;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
@@ -64,7 +64,7 @@ public class OidcAuthServiceOperations {
 
     private ProfileDao profileDao;
 
-    private SessionDao SessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private ApplicationDao applicationDao;
 
@@ -193,7 +193,7 @@ public class OidcAuthServiceOperations {
         session.setUser(user);
         session.setExpiry(expiry);
         attachApplicationProfile(session, user, applicationNameOrId, explicitlyRequested);
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
     }
 
     /**
@@ -230,7 +230,7 @@ public class OidcAuthServiceOperations {
 
         attachApplicationProfile(session, user, applicationId, requestedApplicationNameOrId != null);
 
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
     }
 
     /**
@@ -469,13 +469,13 @@ public class OidcAuthServiceOperations {
         this.profileDao = profileDao;
     }
 
-    public SessionDao getSessionDao() {
-        return SessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao SessionDao) {
-        this.SessionDao = SessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public ApplicationDao getApplicationDao() {

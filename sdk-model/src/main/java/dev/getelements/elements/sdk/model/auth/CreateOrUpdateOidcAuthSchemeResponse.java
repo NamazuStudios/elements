@@ -10,7 +10,7 @@ public class CreateOrUpdateOidcAuthSchemeResponse {
     public CreateOrUpdateOidcAuthSchemeResponse() {}
 
     /** The created or updated OIDC auth scheme. */
-    @Schema(description = "The full JSON response as described in AuthScheme")
+    @Schema(description = "The full OIDC auth scheme as described in OidcAuthScheme")
     public OidcAuthScheme scheme;
 
     /**

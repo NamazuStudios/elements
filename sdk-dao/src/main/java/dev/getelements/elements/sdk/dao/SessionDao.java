@@ -82,4 +82,33 @@ public interface SessionDao {
      */
     void blacklist(String sessionSecret);
 
+    /**
+     * Gets the {@link Session} by its server-side session id. This is only valid for sessions issued
+     * with a signed session token, whose {@code sid} claim identifies the server-side record. The
+     * caller is responsible for having verified the token's signature prior to calling this method.
+     * Throwing an appropriate exception type if the {@link Session} can't be found or has expired.
+     *
+     * @param sessionId the server-side session id
+     * @return the {@link Session} never null
+     */
+    Session getSessionBySessionId(String sessionId);
+
+    /**
+     * Deletes the {@link Session} with the supplied server-side session id. This is only valid for
+     * sessions issued with a signed session token, whose {@code sid} claim identifies the server-side
+     * record. The caller is responsible for having verified the token's signature prior to calling
+     * this method.
+     *
+     * @param sessionId the server-side session id
+     */
+    void deleteSessionBySessionId(String sessionId);
+
+    /**
+     * Deletes all {@link Session} instances belonging to the supplied user. Used to explicitly revoke
+     * every outstanding session, e.g. when a password is reset or a user is deactivated.
+     *
+     * @param userId the user's id
+     */
+    void deleteSessionsForUser(String userId);
+
 }

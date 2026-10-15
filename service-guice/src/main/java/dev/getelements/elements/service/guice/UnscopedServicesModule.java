@@ -39,6 +39,12 @@ import dev.getelements.elements.service.auth.oidc.AnonOidcAuthService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcAuthSchemeService;
 import dev.getelements.elements.service.auth.oidc.AnonOidcLoginAttemptService;
 import dev.getelements.elements.service.auth.oidc.SuperUserOidcProviderConfigurationService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderAuthorizationService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderDiscoveryService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderJwksService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderTokenService;
+import dev.getelements.elements.service.auth.oidc.provider.StandardOidcProviderUserService;
+import dev.getelements.elements.service.auth.oidc.provider.SuperUserOidcClientService;
 import dev.getelements.elements.service.auth.captcha.DefaultCaptchaService;
 import dev.getelements.elements.service.auth.captcha.SuperUserCaptchaConfigurationService;
 import dev.getelements.elements.service.auth.oidc.DefaultOidcAdminLoginService;
@@ -234,6 +240,38 @@ public class UnscopedServicesModule extends AbstractModule {
                 .annotatedWith(named(UNSCOPED))
                 .to(DefaultSessionService.class);
 
+        bind(SessionTokenIssuer.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardSessionTokenIssuer.class);
+
+        bind(SessionTokenVerifier.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardSessionTokenVerifier.class);
+
+        bind(OidcProviderDiscoveryService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcProviderDiscoveryService.class);
+
+        bind(OidcProviderJwksService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcProviderJwksService.class);
+
+        bind(OidcProviderAuthorizationService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcProviderAuthorizationService.class);
+
+        bind(OidcProviderTokenService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcProviderTokenService.class);
+
+        bind(OidcProviderUserService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(StandardOidcProviderUserService.class);
+
+        bind(OidcClientService.class)
+                .annotatedWith(named(UNSCOPED))
+                .to(SuperUserOidcClientService.class);
+
         bind(AdvancementService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(StandardAdvancementService.class);
@@ -259,10 +297,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(EmailTemplateService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserEmailTemplateService.class);
-
-        bind(AuthSchemeService.class)
-                .annotatedWith(named(UNSCOPED))
-                .to(SuperUserAuthSchemeService.class);
 
         bind(OidcAuthSchemeService.class)
                 .annotatedWith(named(UNSCOPED))
@@ -303,10 +337,6 @@ public class UnscopedServicesModule extends AbstractModule {
         bind(SaveDataDocumentService.class)
                 .annotatedWith(named(UNSCOPED))
                 .to(SuperUserSaveDataDocumentService.class);
-
-        bind(CustomAuthSessionService.class)
-                .annotatedWith(named(UNSCOPED))
-                .to(StandardCustomAuthSessionService.class);
 
         bind(DistinctInventoryItemService.class)
                 .annotatedWith(named(UNSCOPED))

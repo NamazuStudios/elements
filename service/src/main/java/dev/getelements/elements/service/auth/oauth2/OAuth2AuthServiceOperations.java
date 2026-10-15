@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
 import dev.getelements.elements.sdk.model.exception.InternalException;
@@ -41,7 +41,7 @@ public class OAuth2AuthServiceOperations {
 
     private ProfileDao profileDao;
 
-    private SessionDao sessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private ApplicationDao applicationDao;
 
@@ -106,7 +106,7 @@ public class OAuth2AuthServiceOperations {
 
         }
 
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
     }
 
     private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
@@ -283,13 +283,13 @@ public class OAuth2AuthServiceOperations {
         this.profileDao = profileDao;
     }
 
-    public SessionDao getSessionDao() {
-        return sessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao SessionDao) {
-        this.sessionDao = SessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public ApplicationDao getApplicationDao() {

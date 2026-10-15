@@ -5,6 +5,7 @@ import com.google.inject.multibindings.Multibinder;
 import dev.getelements.elements.dao.mongo.migration.Migration;
 import dev.getelements.elements.dao.mongo.migration.MigrationRunner;
 import dev.getelements.elements.dao.mongo.migration.migrations.BackfillProfileSlotZeroMigration;
+import dev.getelements.elements.dao.mongo.migration.migrations.DropCustomAuthSchemeCollectionMigration;
 
 /**
  * Registers every known {@link Migration} with Guice so both the standalone {@code migrate} CLI and tests
@@ -20,6 +21,7 @@ public class MongoMigrationModule extends AbstractModule {
 
         final var migrations = Multibinder.newSetBinder(binder(), Migration.class);
         migrations.addBinding().to(BackfillProfileSlotZeroMigration.class);
+        migrations.addBinding().to(DropCustomAuthSchemeCollectionMigration.class);
 
     }
 

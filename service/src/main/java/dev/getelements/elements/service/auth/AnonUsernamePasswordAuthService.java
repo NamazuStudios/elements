@@ -2,7 +2,7 @@ package dev.getelements.elements.service.auth;
 
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.TotpLoginChallengeDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.auth.CaptchaVerifyRequest;
@@ -46,7 +46,7 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
 
     private UserDao userDao;
 
-    private SessionDao sessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private ProfileDao profileDao;
 
@@ -158,7 +158,7 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         session.setExpiry(expiry);
 
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
 
     }
 
@@ -229,13 +229,13 @@ public class AnonUsernamePasswordAuthService implements UsernamePasswordAuthServ
         this.userDao = userDao;
     }
 
-    public SessionDao getSessionDao() {
-        return sessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao sessionDao) {
-        this.sessionDao = sessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public ProfileDao getProfileDao() {

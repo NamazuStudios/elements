@@ -3,6 +3,7 @@ package dev.getelements.elements.rest.test;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
@@ -39,6 +40,8 @@ public class ClientContext {
     private ProfileDao profileDao;
 
     private SessionDao sessionDao;
+
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private User user;
 
@@ -140,11 +143,20 @@ public class ClientContext {
             session.setApplication(profile.getApplication());
         }
 
-        sessionCreation = sessionDao.create(session);
+        sessionCreation = sessionTokenIssuer.issue(session);
         return this;
 
     }
 
+
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
+    }
+
+    @Inject
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
+    }
 
     public UserDao getUserDao() {
         return userDao;
