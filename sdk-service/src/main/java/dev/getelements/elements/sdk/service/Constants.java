@@ -80,13 +80,54 @@ public interface Constants {
     String OIDC_DISCOVERY_REFRESH_SECONDS = "dev.getelements.elements.oidc.discovery.refresh.seconds";
 
     /**
-     * Used to specify how often a cached OIDC scheme's JWKS keys are refreshed.
+     * Used to specify how often cached OIDC scheme's JWKS keys are refreshed.
      */
     @ElementDefaultAttribute(
             value = "3600",
             description = "How often cached OIDC JWKS keys are refreshed, in seconds."
     )
     String OIDC_JWKS_REFRESH_SECONDS = "dev.getelements.elements.oidc.jwks.refresh.seconds";
+
+    /**
+     * Used to specify the issuer (iss) claim placed on Elements-issued session tokens. Tokens are
+     * rejected whose iss does not match.
+     */
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The issuer (iss) claim placed on Elements-issued session tokens."
+    )
+    String SESSION_TOKEN_ISSUER = "dev.getelements.elements.session.token.issuer";
+
+    /**
+     * Used to specify the audience (aud) claim placed on Elements-issued session tokens. Tokens are
+     * rejected whose aud does not match.
+     */
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The audience (aud) claim placed on Elements-issued session tokens."
+    )
+    String SESSION_TOKEN_AUDIENCE = "dev.getelements.elements.session.token.audience";
+
+    /**
+     * Used to specify the passphrase with which the session-token signing keys' private halves are
+     * encrypted at rest. Operators should override this per deployment; the default is suitable only
+     * for local development.
+     */
+    @ElementDefaultAttribute(
+            value = "elements-default-signing-key-passphrase",
+            description = "The passphrase used to encrypt session-token signing keys at rest. Override per deployment."
+    )
+    String SESSION_TOKEN_KEY_PASSPHRASE = "dev.getelements.elements.session.token.key.passphrase";
+
+    /**
+     * Used to specify how often the set of session-token signing keys is refreshed from the database,
+     * so that key rotation is picked up without a restart.
+     */
+    @ElementDefaultAttribute(
+            value = "300",
+            description = "How often the set of session-token signing keys is refreshed, in seconds."
+    )
+    String SESSION_TOKEN_KEY_REFRESH_SECONDS = "dev.getelements.elements.session.token.key.refresh.seconds";
 
     /**
      * Used to specify the host for neo blockchain.

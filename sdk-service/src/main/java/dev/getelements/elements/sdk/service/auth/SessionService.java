@@ -33,4 +33,17 @@ public interface SessionService {
      */
     void blacklistSession(String sessionSecret);
 
+    /**
+     * Finds an instance of {@link Session} based on the id, as determined by
+     * {@link SessionCreation#getSessionSecret()}. Unlike
+     * {@link #checkAndRefreshSessionIfNecessary(String)}, this performs no refresh and writes nothing:
+     * it validates the credential and resolves the session record. Signed session tokens are verified
+     * locally (signature, expiry, issuer, and audience) before the record is resolved.
+     *
+     * @param sessionSecret the {@link Session} identifier
+     * @return the {@link Session}, never null. Throws the appropriate exception if the session isn't
+     *         found or the credential is invalid.
+     */
+    Session getSessionIfValid(String sessionSecret);
+
 }

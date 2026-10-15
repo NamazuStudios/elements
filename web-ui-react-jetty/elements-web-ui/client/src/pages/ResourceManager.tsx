@@ -826,13 +826,11 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            {resourceName === 'Custom' ? 'Custom Auth Scheme' : resourceName}
+            {resourceName}
           </h1>
           <p className="text-muted-foreground mt-1">
             {resourceName === 'OAuth2' 
               ? 'Manage OAuth2 Auth Schemes in your Elements application'
-              : resourceName === 'Custom'
-              ? 'Manage custom auth schemes in your Elements application'
               : `Manage ${resourceName.toLowerCase()} in your Elements application`}
           </p>
         </div>
@@ -874,8 +872,6 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
               ? 'Create OAuth2 Scheme' 
               : resourceName === 'OIDC'
               ? 'Create OIDC Scheme'
-              : resourceName === 'Custom'
-              ? 'Create Custom Auth Scheme'
               : resourceName === 'Metadata Spec' 
               ? 'Create Metadata Spec' 
               : resourceName === 'Metadata' 
@@ -938,15 +934,13 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           <CardTitle>
             All {resourceName === 'OAuth2' 
               ? 'OAuth2 Auth Schemes' 
-              : resourceName === 'Custom'
-              ? 'Custom Auth Schemes'
               : resourceName === 'Metadata Spec' 
               ? 'Metadata Specs' 
               : resourceName}
           </CardTitle>
           <CardDescription>
             {paginationInfo ? `${paginationInfo.total} total` : `${items?.length || 0}`} {
-              resourceName === 'OAuth2' || resourceName === 'Custom' || resourceName === 'Oidc'
+              resourceName === 'OAuth2' || resourceName === 'Oidc'
                 ? 'auth schemes'
                 : resourceName.toLowerCase()
             } found
@@ -1162,8 +1156,8 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             setDialogMode('create');
                             setIsDialogOpen(true);
                           } else {
-                            // For auth schemes (OAuth2, OIDC, Custom, OIDC Providers), fetch full details
-                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'Custom' || resourceName === 'OIDC Providers';
+                            // For auth schemes (OAuth2, OIDC, OIDC Providers), fetch full details
+                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'OIDC Providers';
                             
                             if (isAuthScheme && item.id) {
                               try {
@@ -1333,9 +1327,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                 data-testid="button-create-first"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Create your first {resourceName === 'Custom' 
-                  ? 'custom auth scheme' 
-                  : resourceName.slice(0, -1).toLowerCase()}
+                Create your first {resourceName.slice(0, -1).toLowerCase()}
               </Button>
             </div>
           )}
@@ -1380,14 +1372,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                dialogMode === 'create' ? (
                  resourceName === 'OAuth2' ? 'Create OAuth2 Auth Scheme' :
                  resourceName === 'OIDC' ? 'Create OIDC Auth Scheme' :
-                 resourceName === 'Custom' ? 'Create Custom Auth Scheme' :
                  resourceName === 'Metadata Spec' ? 'Create Metadata Spec' :
                  resourceName === 'Metadata' ? 'Create Metadata' :
                  `Create ${resourceName.slice(0, -1)}`
                ) : (
                  resourceName === 'OAuth2' ? 'Edit OAuth2 Auth Scheme' :
                  resourceName === 'OIDC' ? 'Edit OIDC Auth Scheme' :
-                 resourceName === 'Custom' ? 'Edit Custom Auth Scheme' :
                  resourceName === 'Metadata Spec' ? 'Edit Metadata Spec' :
                  resourceName === 'Metadata' ? 'Edit Metadata' :
                  `Edit ${resourceName.slice(0, -1)}`
@@ -1398,7 +1388,6 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                 ? `Are you sure you want to delete this ${
                     resourceName === 'OAuth2' ? 'OAuth2 auth scheme' :
                     resourceName === 'OIDC' ? 'OIDC auth scheme' :
-                    resourceName === 'Custom' ? 'custom auth scheme' :
                     resourceName === 'Metadata Spec' ? 'metadata spec' :
                     resourceName.slice(0, -1).toLowerCase()
                   }? This action cannot be undone.`
@@ -1406,7 +1395,6 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                 ? `Add a new ${
                     resourceName === 'OAuth2' ? 'OAuth2 auth scheme' :
                     resourceName === 'OIDC' ? 'OIDC auth scheme' :
-                    resourceName === 'Custom' ? 'custom auth scheme' :
                     resourceName === 'Metadata Spec' ? 'metadata object' :
                     resourceName.slice(0, -1).toLowerCase()
                   } to your Elements application.`
@@ -1414,8 +1402,6 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                 ? 'Update the OAuth2 auth scheme details.'
                 : resourceName === 'OIDC'
                 ? 'Update the OIDC auth scheme details.'
-                : resourceName === 'Custom'
-                ? 'Update the custom auth scheme details.'
                 : resourceName === 'Metadata Spec'
                 ? 'Update the metadata spec details.'
                 : resourceName === 'Metadata'

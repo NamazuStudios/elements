@@ -4,6 +4,7 @@ import com.google.inject.TypeLiteral;
 import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStoreProvider;
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
+import dev.getelements.elements.sdk.dao.JwtSigningKeyDao;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 import dev.morphia.Datastore;
 import dev.morphia.config.MorphiaConfig;
@@ -30,6 +31,11 @@ public class MongoDaoElementModule extends SharedElementModule {
         install(new MongoDaoModule());
         install(new MongoGridFSLargeObjectBucketModule());
         expose(ElementEntityRegistrar.class);
+        // The signing-key DAO is intentionally not @ElementServiceExport-annotated: it is internal
+        // server infrastructure and must not be visible to Elements. Bind and expose it here
+        // directly, since Guice's PrivateModule.expose() does not accept forwarding bindings
+        // propagated up from the nested MongoDaoModule.
+        expose(JwtSigningKeyDao.class);
         // Expose to the outer scope so MongoSdkModule.DatastoreFromRef can inject it.
         expose(new TypeLiteral<AtomicReference<Datastore>>(){});
     }

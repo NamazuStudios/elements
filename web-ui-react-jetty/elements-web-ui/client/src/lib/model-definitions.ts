@@ -322,18 +322,6 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'responseValidExpectedValue', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional expected value for the validation field. If not set: boolean true is treated as success, and non-empty/non-null values are treated as success for non-booleans. If set, the field\'s string value must equal this.' },
     ],
   },
-  'auth/CustomAuthScheme': {
-    name: 'CustomAuthScheme',
-    fields: [
-      { name: 'id', type: 'string', required: false, isArray: false, isMap: false, validationGroups: { insert: 'null', create: 'null', update: 'notNull' } },
-      { name: 'audience', type: 'string', required: true, isArray: false, isMap: false, description: 'The JWT audience for the scheme. Must be unique.' },
-      { name: 'publicKey', type: 'string', required: false, isArray: false, isMap: false, description: 'The Base64 encoded public key. Optional - if not provided, the system will generate one. Must be valid Base64 format if provided.' },
-      { name: 'algorithm', type: 'enum', required: true, enumValues: ['RSA_256', 'RSA_384', 'RSA_512'], isArray: false, isMap: false, description: 'The signing algorithm for the auth scheme.' },
-      { name: 'userLevel', type: 'enum', required: true, enumValues: ['UNPRIVILEGED', 'USER', 'SUPERUSER'], isArray: false, isMap: false, description: 'The highest permitted user level this particular scheme will authorize.' },
-      { name: 'tags', type: 'string', required: true, isArray: true, isMap: false, description: 'A list of tags used to index the auth scheme.' },
-      { name: 'allowedIssuers', type: 'string', required: true, isArray: true, isMap: false, description: 'The list of issuers allowed to use this scheme.' },
-    ],
-  },
   'auth/OidcProviderConfiguration': {
     name: 'OidcProviderConfiguration',
     fields: [
