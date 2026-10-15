@@ -58,6 +58,12 @@ public class OidcAuthorizationCode {
         /** The code has been issued but not yet redeemed. */
         PENDING,
 
+        /** The user has authenticated but has not yet made a consent decision. */
+        AWAITING_CONSENT,
+
+        /** The end user denied the consent request. Any redemption attempt must fail. */
+        DENIED,
+
         /** The code has been redeemed. Any further redemption attempt must fail. */
         REDEEMED
     }

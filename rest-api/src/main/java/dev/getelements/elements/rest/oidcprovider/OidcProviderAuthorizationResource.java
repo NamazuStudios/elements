@@ -1,6 +1,7 @@
 package dev.getelements.elements.rest.oidcprovider;
 
 import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
 import dev.getelements.elements.sdk.service.auth.OidcProviderAuthorizationService;
 import dev.getelements.elements.sdk.service.Constants;
@@ -50,13 +51,37 @@ public class OidcProviderAuthorizationResource {
         request.setCodeChallenge(codeChallenge);
         request.setCodeChallengeMethod(codeChallengeMethod);
 
-        final OidcAuthorizationCode code = getOidcProviderAuthorizationService().beginAuthorization(request);
+        try {
 
-        final var loginUri = UriBuilder.fromUri(getIssuer() + "/oidc/login")
-                .queryParam("authorizationId", code.getCode())
-                .build();
+            final OidcAuthorizationCode code = getOidcProviderAuthorizationService().beginAuthorization(request);
 
-        return Response.seeOther(loginUri).build();
+            final var loginUri = UriBuilder.fromUri(getIssuer() + "/oidc/login")
+                    .queryParam("authorizationId", code.getCode())
+                    .build();
+
+            return Response.seeOther(loginUri).build();
+
+        } catch (final OAuth2Exception ex) {
+
+            // Per RFC 6749 section 4.1.2.1, errors raised after the client and redirect URI have been
+            // validated are sent back to the relying party as query parameters; errors raised before are
+            // not redirect-able and fall through to the exception mapper's OAuth error body.
+
+            if (ex.getRedirectUri() == null) {
+                throw ex;
+            }
+
+            final var errorRedirectUri = UriBuilder.fromUri(ex.getRedirectUri())
+                    .queryParam("error", ex.getError())
+                    .queryParam("error_description", ex.getErrorDescription());
+
+            if (ex.getState() != null) {
+                errorRedirectUri.queryParam("state", ex.getState());
+            }
+
+            return Response.seeOther(errorRedirectUri.build()).build();
+
+        }
 
     }
 

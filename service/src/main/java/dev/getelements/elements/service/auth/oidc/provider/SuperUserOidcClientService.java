@@ -1,6 +1,7 @@
 package dev.getelements.elements.service.auth.oidc.provider;
 
 import dev.getelements.elements.sdk.dao.OidcProviderDao;
+import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
@@ -19,6 +20,8 @@ public class SuperUserOidcClientService implements OidcClientService {
     private static final int CLIENT_ID_BYTES = 16;
 
     private OidcProviderDao oidcProviderDao;
+
+    private SessionDao sessionDao;
 
     private PasswordGenerator passwordGenerator;
 
@@ -55,7 +58,9 @@ public class SuperUserOidcClientService implements OidcClientService {
 
         final var updated = getOidcProviderDao().updateClient(registration);
 
-        if (registration.getClientSecret() != null) {
+        // A blank secret retains the stored one, mirroring create's generate-when-blank posture: an admin
+        // saving unrelated edits must not silently rotate the credential to the empty string.
+        if (registration.getClientSecret() != null && !registration.getClientSecret().isBlank()) {
             logger.info("Rotated secret for OIDC client registration {}.", updated.getClientId());
             return toEchoed(updated, registration.getClientSecret());
         }
@@ -68,17 +73,24 @@ public class SuperUserOidcClientService implements OidcClientService {
     public void deleteClient(final String clientId) {
 
         // Revoking registrations must not leave orphaned live grants: every grant the client holds dies with
-        // it, along with its backing sessions and refresh tokens.
+        // it, along with its backing sessions and refresh tokens — tokens already issued downstream stop
+        // verifying immediately, exactly as end-session does.
 
         getOidcProviderDao().getClients().stream()
                 .filter(r -> r.getClientId().equals(clientId))
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException("No client registration " + clientId));
 
+        for (final var grant : getOidcProviderDao().getGrantsForClient(clientId)) {
+            getOidcProviderDao().revokeRefreshTokensForGrant(grant.getId());
+            getOidcProviderDao().deleteGrantBySessionId(grant.getSessionId());
+            getSessionDao().deleteSessionBySessionId(grant.getSessionId());
+            logger.info("Revoked grant {} on deleted client {}.", grant.getId(), clientId);
+        }
+
         getOidcProviderDao().deleteClient(clientId);
 
-        logger.info("Deleted OIDC client registration {}. Outstanding grants for this client remain until " +
-                "their expiry; 135b tracks cascading revocation on deletion.", clientId);
+        logger.info("Deleted OIDC client registration {}.", clientId);
 
     }
 
@@ -95,8 +107,16 @@ public class SuperUserOidcClientService implements OidcClientService {
 
     private void validate(final OidcClientRegistration registration) {
 
-        if (registration.getRedirectUris() == null || registration.getRedirectUris().isEmpty()) {
-            throw new InvalidDataException("At least one redirect URI is required.");
+        final var machineOnly = registration.getGrantTypes() != null && !registration.getGrantTypes().isEmpty()
+                && registration.getGrantTypes().stream()
+                        .allMatch(gt -> gt == OidcClientRegistration.GrantType.CLIENT_CREDENTIALS);
+
+        // Redirect URIs gate the browser redirect: any client that can start the authorization-code flow
+        // must have at least one. Machine-only clients never redirect and may omit them.
+
+        if (!machineOnly && (registration.getRedirectUris() == null || registration.getRedirectUris().isEmpty())) {
+            throw new InvalidDataException(
+                    "At least one redirect URI is required for clients using the authorization code flow.");
         }
 
         if (registration.getGrantTypes() == null || registration.getGrantTypes().isEmpty()) {
@@ -128,6 +148,7 @@ public class SuperUserOidcClientService implements OidcClientService {
         target.setRedirectUris(source.getRedirectUris());
         target.setGrantTypes(source.getGrantTypes());
         target.setScopes(source.getScopes());
+        target.setAudiences(source.getAudiences());
         target.setStatus(source.getStatus());
         target.setApplicationId(source.getApplicationId());
         target.setCreatedAt(source.getCreatedAt());
@@ -146,6 +167,15 @@ public class SuperUserOidcClientService implements OidcClientService {
     @Inject
     public void setOidcProviderDao(OidcProviderDao oidcProviderDao) {
         this.oidcProviderDao = oidcProviderDao;
+    }
+
+    public SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
     }
 
     public PasswordGenerator getPasswordGenerator() {

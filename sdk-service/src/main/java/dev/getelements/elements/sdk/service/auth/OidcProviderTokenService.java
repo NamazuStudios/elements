@@ -38,6 +38,17 @@ public interface OidcProviderTokenService {
     OidcProviderTokenResponse refresh(OidcProviderTokenRequest request);
 
     /**
+     * The machine-to-machine {@code client_credentials} grant: authenticates the client and issues a
+     * short-lived access token signed by this deployment's key lifecycle, carrying the requested (and
+     * permitted) audience. No end-user is involved, so there is no id_token and no refresh token; the access
+     * token is verifiable by a downstream service against the published JWKS.
+     *
+     * @param request the token request parameters
+     * @return the token response
+     */
+    OidcProviderTokenResponse clientCredentials(OidcProviderTokenRequest request);
+
+    /**
      * Ends the session(s) identified by the supplied {@code id_token_hint}: verifies the id_token's signature
      * against this deployment's signing keys, then for every grant the identified user holds with the
      * identified client ({@code sub} + {@code azp}), revokes the backing Elements session, deletes the

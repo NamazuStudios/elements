@@ -15,8 +15,7 @@ import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.auth.OidcProviderGrant;
 import dev.getelements.elements.sdk.model.auth.OidcRefreshToken;
 import dev.getelements.elements.sdk.model.auth.SessionTokenClaims;
-import dev.getelements.elements.sdk.model.exception.InvalidDataException;
-import dev.getelements.elements.sdk.model.exception.UnauthorizedException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenRequest;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderTokenResponse;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
@@ -40,18 +39,26 @@ import java.sql.Timestamp;
 import java.util.Base64;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import static com.nimbusds.jose.util.Base64URL.encode;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_CLIENT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_GRANT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_TARGET;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
 import static dev.getelements.elements.sdk.model.user.User.Level.USER;
 import static java.lang.System.currentTimeMillis;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertThrows;
 import static org.testng.Assert.assertTrue;
 
@@ -125,6 +132,7 @@ public class StandardOidcProviderTokenServiceTest {
                 bind(SessionTokenIssuer.class).toInstance(sessionTokenIssuer);
                 bind(SessionTokenVerifier.class).toInstance(sessionTokenVerifier);
                 bind(StandardSessionTokenKeySupport.class).toInstance(sessionTokenKeySupport);
+                bind(OidcProviderRateLimiter.class);
                 // The key support's own @Inject members are member-injected even on the mock, so its
                 // dependencies must be present in the injector.
                 bind(dev.getelements.elements.sdk.dao.JwtSigningKeyDao.class)
@@ -137,7 +145,12 @@ public class StandardOidcProviderTokenServiceTest {
                         .toInstance("https://elements.example.com/api/rest");
                 bind(long.class).annotatedWith(Names.named(Constants.OIDC_ID_TOKEN_TTL_SECONDS)).toInstance(3600L);
                 bind(long.class).annotatedWith(Names.named(Constants.OIDC_REFRESH_GRANT_TTL_SECONDS)).toInstance(2592000L);
+                bind(long.class).annotatedWith(Names.named(Constants.OIDC_MACHINE_TOKEN_TTL_SECONDS)).toInstance(300L);
                 bind(long.class).annotatedWith(Names.named(Constants.SESSION_TIMEOUT_SECONDS)).toInstance(172800L);
+                bind(boolean.class).annotatedWith(Names.named(Constants.OIDC_RATE_LIMIT_ENABLED)).toInstance(false);
+                bind(long.class).annotatedWith(Names.named(Constants.OIDC_RATE_LIMIT_TOKEN_PER_MINUTE)).toInstance(60L);
+                bind(long.class).annotatedWith(Names.named(Constants.OIDC_RATE_LIMIT_AUTHORIZE_PER_MINUTE)).toInstance(60L);
+                bind(long.class).annotatedWith(Names.named(Constants.OIDC_RATE_LIMIT_LOGIN_PER_MINUTE)).toInstance(10L);
                 bind(StandardOidcProviderTokenService.class);
             }
         }).injectMembers(this);
@@ -263,7 +276,7 @@ public class StandardOidcProviderTokenServiceTest {
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.of(codeRecord()));
         final var request = exchangeRequest();
         request.setCodeVerifier("wrong-verifier");
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(request));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().exchangeCode(request));
     }
 
     @Test
@@ -271,7 +284,7 @@ public class StandardOidcProviderTokenServiceTest {
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.of(codeRecord()));
         final var request = exchangeRequest();
         request.setRedirectUri("https://client.example.com/other");
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(request));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().exchangeCode(request));
     }
 
     @Test
@@ -279,13 +292,13 @@ public class StandardOidcProviderTokenServiceTest {
         final var code = codeRecord();
         code.setClientId("el_other");
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.of(code));
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(exchangeRequest()));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().exchangeCode(exchangeRequest()));
     }
 
     @Test
     public void testExchangeCodeRejectsReplayedCode() {
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.empty());
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(exchangeRequest()));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().exchangeCode(exchangeRequest()));
     }
 
     @Test
@@ -293,20 +306,20 @@ public class StandardOidcProviderTokenServiceTest {
         final var code = codeRecord();
         code.setUserId(null);
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.of(code));
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(exchangeRequest()));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().exchangeCode(exchangeRequest()));
     }
 
     @Test
     public void testExchangeCodeRejectsBadClientSecret() {
         when(oidcProviderDao.verifyClientSecret(CLIENT_ID, CLIENT_SECRET)).thenReturn(false);
-        assertThrows(UnauthorizedException.class, () -> getService().exchangeCode(exchangeRequest()));
+        assertOAuth2Error(ERROR_INVALID_CLIENT, () -> getService().exchangeCode(exchangeRequest()));
     }
 
     @Test
     public void testExchangeCodeRejectsGrantTypeNotAllowed() {
         registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.REFRESH_TOKEN));
         when(oidcProviderDao.redeemAuthorizationCode("the-code")).thenReturn(Optional.of(codeRecord()));
-        assertThrows(InvalidDataException.class, () -> getService().exchangeCode(exchangeRequest()));
+        assertOAuth2Error(ERROR_UNAUTHORIZED_CLIENT, () -> getService().exchangeCode(exchangeRequest()));
     }
 
     @Test
@@ -374,7 +387,7 @@ public class StandardOidcProviderTokenServiceTest {
         request.setClientId(CLIENT_ID);
         request.setClientSecret(CLIENT_SECRET);
 
-        assertThrows(InvalidDataException.class, () -> getService().refresh(request));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().refresh(request));
 
         // The freshly-issued session must not remain live when the rotation is lost.
         verify(sessionDao).deleteSessionBySessionId("sid-1");
@@ -389,7 +402,121 @@ public class StandardOidcProviderTokenServiceTest {
         request.setRefreshToken("presented-raw-token");
         request.setClientId(CLIENT_ID);
         request.setClientSecret(CLIENT_SECRET);
-        assertThrows(InvalidDataException.class, () -> getService().refresh(request));
+        assertOAuth2Error(ERROR_INVALID_GRANT, () -> getService().refresh(request));
+    }
+
+    @Test
+    public void testClientCredentialsIssuesAudienceScopedMachineToken() throws Exception {
+
+        registration.setAudiences(Set.of("filebrowser", "llm"));
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+
+        final var response = getService().clientCredentials(machineRequest("filebrowser", "openid profile"));
+
+        // A machine token is a standalone RS256 JWT verifiable against the published JWKS, not an Elements
+        // session token: there is no end-user, so no session is minted and none is revocable.
+        final var accessToken = SignedJWT.parse(response.getAccessToken());
+        assertTrue(accessToken.verify(new com.nimbusds.jose.crypto.RSASSAVerifier(publicKey)));
+        assertEquals(accessToken.getHeader().getKeyID(), "kid-1");
+        assertEquals(accessToken.getJWTClaimsSet().getIssuer(), "https://elements.example.com/api/rest");
+        assertEquals(accessToken.getJWTClaimsSet().getSubject(), CLIENT_ID);
+        assertEquals(accessToken.getJWTClaimsSet().getAudience().get(0), "filebrowser");
+        assertEquals(accessToken.getJWTClaimsSet().getStringClaim("azp"), CLIENT_ID);
+        assertEquals(accessToken.getJWTClaimsSet().getStringClaim("scope"), "openid profile");
+        assertNotNull(accessToken.getJWTClaimsSet().getJWTID());
+
+        assertEquals(response.getTokenType(), "Bearer");
+        assertEquals(response.getExpiresIn(), 300L);
+        assertEquals(response.getScope(), "openid profile");
+
+        // No end-user means no id_token, no refresh token, and no grant/backing session.
+        assertNull(response.getIdToken());
+        assertNull(response.getRefreshToken());
+        verify(sessionTokenIssuer, never()).issue(any());
+
+    }
+
+    @Test
+    public void testClientCredentialsDefaultsToSoleRegisteredAudience() throws Exception {
+
+        registration.setAudiences(Set.of("filebrowser"));
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+
+        final var response = getService().clientCredentials(machineRequest(null, null));
+
+        final var accessToken = SignedJWT.parse(response.getAccessToken());
+        assertEquals(accessToken.getJWTClaimsSet().getAudience().get(0), "filebrowser");
+        assertEquals(response.getScope(), "email openid profile");
+
+    }
+
+    @Test
+    public void testClientCredentialsRequiresAudienceWhenSeveralRegistered() {
+        registration.setAudiences(Set.of("filebrowser", "llm"));
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        assertOAuth2Error(ERROR_INVALID_TARGET, () -> getService().clientCredentials(machineRequest(null, null)));
+    }
+
+    @Test
+    public void testClientCredentialsRejectsUnregisteredAudience() {
+        registration.setAudiences(Set.of("filebrowser"));
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        assertOAuth2Error(ERROR_INVALID_TARGET, () -> getService().clientCredentials(machineRequest("other", null)));
+    }
+
+    @Test
+    public void testClientCredentialsRejectsAudienceWhenNoneRegistered() {
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        assertOAuth2Error(ERROR_INVALID_TARGET, () -> getService().clientCredentials(machineRequest("other", null)));
+    }
+
+    @Test
+    public void testClientCredentialsRejectsScopeBeyondRegistration() {
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        assertOAuth2Error(ERROR_INVALID_SCOPE, () -> getService().clientCredentials(machineRequest(null, "openid admin")));
+    }
+
+    @Test
+    public void testClientCredentialsRejectsGrantTypeNotAllowed() {
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.AUTHORIZATION_CODE));
+        assertOAuth2Error(ERROR_UNAUTHORIZED_CLIENT, () -> getService().clientCredentials(machineRequest(null, null)));
+    }
+
+    @Test
+    public void testClientCredentialsRejectsBadClientSecret() {
+        registration.setGrantTypes(Set.of(OidcClientRegistration.GrantType.CLIENT_CREDENTIALS));
+        when(oidcProviderDao.verifyClientSecret(CLIENT_ID, CLIENT_SECRET)).thenReturn(false);
+        assertOAuth2Error(ERROR_INVALID_CLIENT, () -> getService().clientCredentials(machineRequest(null, null)));
+    }
+
+    private OidcProviderTokenRequest machineRequest(final String audience, final String scope) {
+        final var request = new OidcProviderTokenRequest();
+        request.setGrantType("client_credentials");
+        request.setAudience(audience);
+        request.setScope(scope);
+        request.setClientId(CLIENT_ID);
+        request.setClientSecret(CLIENT_SECRET);
+        return request;
+    }
+
+    /**
+     * Asserts the callable fails with an {@link OAuth2Exception} carrying the supplied RFC 6749 error code.
+     *
+     * @param expectedError the expected OAuth 2.0 error code
+     * @param callable the call expected to fail
+     * @return the thrown exception, for further assertions
+     */
+    private OAuth2Exception assertOAuth2Error(final String expectedError, final Supplier<?> callable) {
+
+        try {
+            callable.get();
+        } catch (final OAuth2Exception ex) {
+            assertEquals(ex.getError(), expectedError);
+            return ex;
+        }
+
+        throw new AssertionError("Expected OAuth2Exception with error " + expectedError + ", but none was thrown.");
+
     }
 
     public StandardOidcProviderTokenService getService() {

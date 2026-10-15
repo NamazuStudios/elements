@@ -138,6 +138,63 @@ public interface Constants {
     String OIDC_REFRESH_GRANT_TTL_SECONDS = "dev.getelements.elements.oidc.refresh.grant.ttl.seconds";
 
     /**
+     * Used to specify the lifetime of machine-to-machine access tokens issued by the {@code client_credentials}
+     * grant. These tokens are short-lived by design.
+     */
+    @ElementDefaultAttribute(
+            value = "300",
+            description = "The lifetime of OIDC provider client_credentials access tokens, in seconds."
+    )
+    String OIDC_MACHINE_TOKEN_TTL_SECONDS = "dev.getelements.elements.oidc.machine.token.ttl.seconds";
+
+    /**
+     * Whether the OIDC provider requires explicit end-user consent before completing an authorization. When
+     * false, admin-registered clients are trusted implicitly (135a behavior).
+     */
+    @ElementDefaultAttribute(
+            value = "true",
+            description = "Whether the OIDC provider requires explicit end-user consent before granting access."
+    )
+    String OIDC_PROVIDER_CONSENT_REQUIRED = "dev.getelements.elements.oidc.provider.consent.required";
+
+    /**
+     * Whether rate limiting is enforced on the OIDC provider's authorization, token, and login endpoints.
+     */
+    @ElementDefaultAttribute(
+            value = "true",
+            description = "Whether rate limiting is enforced on the OIDC provider endpoints."
+    )
+    String OIDC_RATE_LIMIT_ENABLED = "dev.getelements.elements.oidc.rate.limit.enabled";
+
+    /**
+     * The maximum number of token endpoint requests permitted per client per minute.
+     */
+    @ElementDefaultAttribute(
+            value = "60",
+            description = "The maximum token endpoint requests permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_TOKEN_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.token.per.minute";
+
+    /**
+     * The maximum number of authorization endpoint requests permitted per client per minute.
+     */
+    @ElementDefaultAttribute(
+            value = "60",
+            description = "The maximum authorization endpoint requests permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_AUTHORIZE_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.authorize.per.minute";
+
+    /**
+     * The maximum number of hosted-login submissions permitted per client per minute, guarding the credential
+     * entry step against brute force.
+     */
+    @ElementDefaultAttribute(
+            value = "10",
+            description = "The maximum hosted-login submissions permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_LOGIN_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.login.per.minute";
+
+    /**
      * Used to specify the audience (aud) claim placed on Elements-issued session tokens. Tokens are
      * rejected whose aud does not match.
      */

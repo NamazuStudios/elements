@@ -32,6 +32,14 @@ public class OidcProviderTokenRequest {
     @Schema(description = "The refresh token, when granting with refresh_token.")
     private String refreshToken;
 
+    @Schema(description = "The requested scope, when granting with client_credentials. Defaults to the " +
+            "client's registered scopes when omitted.")
+    private String scope;
+
+    @Schema(description = "The requested audience (aud), when granting with client_credentials. Must be one " +
+            "of the client's registered audiences (or the client id when none are registered).")
+    private String audience;
+
     public String getGrantType() {
         return grantType;
     }
@@ -86,6 +94,22 @@ public class OidcProviderTokenRequest {
 
     public void setRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public void setScope(String scope) {
+        this.scope = scope;
+    }
+
+    public String getAudience() {
+        return audience;
+    }
+
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
 }

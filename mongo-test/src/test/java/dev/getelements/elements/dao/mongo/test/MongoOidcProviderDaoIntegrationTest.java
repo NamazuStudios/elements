@@ -155,11 +155,65 @@ public class MongoOidcProviderDaoIntegrationTest {
                 "code-awaiting-login", "user-1", System.currentTimeMillis());
         assertTrue(completed.isPresent());
         assertEquals(completed.get().getUserId(), "user-1");
+        // The code awaits the (explicit or implicit) consent decision before it may be redeemed.
+        assertEquals(completed.get().getStatus(), OidcAuthorizationCode.Status.AWAITING_CONSENT);
 
         // A second completion attempt (double-submitted form) fails closed.
         assertTrue(getOidcProviderDao()
                 .completeAuthorizationCode("code-awaiting-login", "user-2", System.currentTimeMillis())
                 .isEmpty());
+
+        // Approval restores PENDING so the token endpoint can redeem it.
+        final var approved = getOidcProviderDao().decideConsent("code-awaiting-login", true);
+        assertTrue(approved.isPresent());
+        assertEquals(approved.get().getStatus(), OidcAuthorizationCode.Status.PENDING);
+        assertEquals(approved.get().getUserId(), "user-1");
+
+        assertTrue(getOidcProviderDao().redeemAuthorizationCode("code-awaiting-login").isPresent());
+
+    }
+
+    @Test
+    public void testConsentDenialIsFinalAndSingleUse() {
+
+        final var code = new OidcAuthorizationCode();
+        code.setCode("code-consent-denied");
+        code.setClientId("el_it_client");
+        code.setRedirectUri("https://client.example.com/callback");
+        code.setScope("openid");
+        code.setStatus(OidcAuthorizationCode.Status.PENDING);
+        code.setExpiry(new Timestamp(System.currentTimeMillis() + 600_000));
+
+        getOidcProviderDao().createAuthorizationCode(code);
+
+        getOidcProviderDao().completeAuthorizationCode("code-consent-denied", "user-1", System.currentTimeMillis());
+
+        final var denied = getOidcProviderDao().decideConsent("code-consent-denied", false);
+        assertTrue(denied.isPresent());
+        assertEquals(denied.get().getStatus(), OidcAuthorizationCode.Status.DENIED);
+
+        // A denied code is unredeemable, and the decision cannot be revisited.
+        assertTrue(getOidcProviderDao().redeemAuthorizationCode("code-consent-denied").isEmpty());
+        assertTrue(getOidcProviderDao().decideConsent("code-consent-denied", true).isEmpty());
+        assertTrue(getOidcProviderDao().decideConsent("code-consent-denied", false).isEmpty());
+
+    }
+
+    @Test
+    public void testConsentDecisionRequiresAwaitingConsentState() {
+
+        final var code = new OidcAuthorizationCode();
+        code.setCode("code-never-logged-in");
+        code.setClientId("el_it_client");
+        code.setRedirectUri("https://client.example.com/callback");
+        code.setScope("openid");
+        code.setStatus(OidcAuthorizationCode.Status.PENDING);
+        code.setExpiry(new Timestamp(System.currentTimeMillis() + 600_000));
+
+        getOidcProviderDao().createAuthorizationCode(code);
+
+        // A PENDING code with no authenticated user cannot be consented to — there is no user to consent.
+        assertTrue(getOidcProviderDao().decideConsent("code-never-logged-in", true).isEmpty());
 
     }
 

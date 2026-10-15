@@ -6,9 +6,12 @@ import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthorizationCode;
 import dev.getelements.elements.sdk.model.auth.OidcClientRegistration;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderAuthorizationRequest;
+import dev.getelements.elements.sdk.model.oidc.OidcProviderConsent;
 import dev.getelements.elements.sdk.model.oidc.OidcProviderLoginRequest;
 import dev.getelements.elements.sdk.service.auth.OidcProviderAuthorizationService;
+import dev.getelements.elements.sdk.service.Constants;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
@@ -19,9 +22,15 @@ import java.sql.Timestamp;
 import java.util.Set;
 
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.CODE_CHALLENGE_METHOD_S256;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_ACCESS_DENIED;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_REQUEST;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_INVALID_SCOPE;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNAUTHORIZED_CLIENT;
+import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.ERROR_UNSUPPORTED_RESPONSE_TYPE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.RESPONSE_TYPE_CODE;
 import static dev.getelements.elements.sdk.model.oidc.OidcProviderProtocol.SCOPE_OPENID;
 import static dev.getelements.elements.sdk.service.Constants.OIDC_AUTHORIZATION_CODE_TTL_SECONDS;
+import static dev.getelements.elements.sdk.service.Constants.OIDC_PROVIDER_CONSENT_REQUIRED;
 
 public class StandardOidcProviderAuthorizationService implements OidcProviderAuthorizationService {
 
@@ -33,32 +42,101 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
 
     private UserDao userDao;
 
+    private OidcProviderRateLimiter rateLimiter;
+
     @Named(OIDC_AUTHORIZATION_CODE_TTL_SECONDS)
     @Inject
     private long authorizationCodeTtlSeconds;
 
+    @Named(OIDC_PROVIDER_CONSENT_REQUIRED)
+    @Inject
+    private boolean consentRequired;
+
     @Override
     public OidcAuthorizationCode beginAuthorization(final OidcProviderAuthorizationRequest request) {
+        getRateLimiter().checkAuthorizationEndpoint(request.getClientId());
         return getOidcProviderDao().createAuthorizationCode(newAuthorizationCodeRecord(request, null, 0));
     }
 
     @Override
-    public String completeAuthorization(final OidcProviderLoginRequest loginRequest) {
+    public OidcProviderConsent submitLogin(final OidcProviderLoginRequest loginRequest) {
+
+        getRateLimiter().checkHostedLogin(loginRequest.getAuthorizationId(), loginRequest.getUsername());
 
         final var user = getUserDao().validateUserPassword(
                 loginRequest.getUsername(), loginRequest.getPassword());
 
+        // Atomic attach: the user id and auth_time land on the code exactly once, and the code enters
+        // AWAITING_CONSENT. The consent decision (explicit or implicit) restores PENDING.
         final var code = getOidcProviderDao().completeAuthorizationCode(
                 loginRequest.getAuthorizationId(),
                 user.getId(),
                 System.currentTimeMillis()
         ).orElseThrow(() -> new InvalidDataException("Unknown or already used authorization request."));
 
-        logger.info("Completed OIDC provider authorization for user {} on client {}.",
-                user.getId(), code.getClientId());
+        final var registration = getOidcProviderDao().getClient(code.getClientId())
+                .orElseThrow(() -> new InvalidDataException("Unknown client."));
 
+        if (!getConsentRequired()) {
+            return complete(code, true);
+        }
+
+        logger.info("Awaiting consent from user {} for client {}.", user.getId(), code.getClientId());
+
+        final var consent = new OidcProviderConsent();
+        consent.setAuthorizationId(code.getCode());
+        consent.setConsentRequired(true);
+        consent.setClientDisplayName(registration.getDisplayName());
+        consent.setScope(code.getScope());
+        return consent;
+
+    }
+
+    @Override
+    public String approveConsent(final String authorizationId) {
+        final var code = decide(authorizationId, true);
+        logger.info("Consent granted for user {} on client {}.", code.getUserId(), code.getClientId());
         return buildRedirectUri(code);
+    }
 
+    @Override
+    public String denyConsent(final String authorizationId) {
+
+        final var code = decide(authorizationId, false);
+
+        logger.info("Consent denied by user {} on client {}.", code.getUserId(), code.getClientId());
+
+        // Per RFC 6749 section 4.1.2.1 the denial is reported back to the relying party as an
+        // access_denied error, echoing the client's state.
+
+        final var builder = new StringBuilder(code.getRedirectUri());
+        builder.append(code.getRedirectUri().contains("?") ? '&' : '?');
+        builder.append("error=").append(ERROR_ACCESS_DENIED);
+
+        if (code.getState() != null) {
+            builder.append("&state=").append(code.getState());
+        }
+
+        return builder.toString();
+
+    }
+
+    private OidcProviderConsent complete(final OidcAuthorizationCode code, final boolean approved) {
+
+        final var decided = decide(code.getCode(), approved);
+
+        final var consent = new OidcProviderConsent();
+        consent.setAuthorizationId(code.getCode());
+        consent.setConsentRequired(false);
+        consent.setScope(decided.getScope());
+        consent.setRedirectUri(buildRedirectUri(decided));
+        return consent;
+
+    }
+
+    private OidcAuthorizationCode decide(final String authorizationId, final boolean approved) {
+        return getOidcProviderDao().decideConsent(authorizationId, approved)
+                .orElseThrow(() -> new InvalidDataException("Unknown or already decided authorization request."));
     }
 
     private OidcAuthorizationCode newAuthorizationCodeRecord(final OidcProviderAuthorizationRequest request,
@@ -88,33 +166,50 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
 
     private OidcClientRegistration validateAuthorizationRequest(final OidcProviderAuthorizationRequest request) {
 
+        // Errors raised before the client and redirect URI are validated carry no redirect context: per
+        // RFC 6749 section 4.1.2.1 the provider must NOT bounce the browser to an unvalidated URI.
+
         if (!RESPONSE_TYPE_CODE.equals(request.getResponseType())) {
-            throw new InvalidDataException("Unsupported response_type; only \"code\" is supported.");
+            throw new OAuth2Exception(ERROR_UNSUPPORTED_RESPONSE_TYPE,
+                    "Unsupported response_type; only \"code\" is supported.");
         }
 
         if (!CODE_CHALLENGE_METHOD_S256.equals(request.getCodeChallengeMethod())) {
-            throw new InvalidDataException("Unsupported code_challenge_method; only \"S256\" is supported.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST,
+                    "Unsupported code_challenge_method; only \"S256\" is supported.");
         }
 
         final var registration = getOidcProviderDao().getClient(request.getClientId())
-                .orElseThrow(() -> new InvalidDataException("Unknown client."));
+                .orElseThrow(() -> new OAuth2Exception(ERROR_INVALID_REQUEST, "Unknown client."));
 
         if (registration.getStatus() != OidcClientRegistration.Status.ACTIVE) {
-            throw new InvalidDataException("Client registration is not active.");
+            throw new OAuth2Exception(ERROR_UNAUTHORIZED_CLIENT, "Client registration is not active.");
         }
 
         if (!registration.getRedirectUris().contains(request.getRedirectUri())) {
-            throw new InvalidDataException("Redirect URI is not registered for this client.");
+            throw new OAuth2Exception(ERROR_INVALID_REQUEST, "Redirect URI is not registered for this client.");
         }
 
-        final var requestedScopes = Set.of(request.getScope().trim().split("\\s+"));
+        // Past this point the redirect URI is registered, so the error is redirect-able: attach the context
+        // the resource needs to send the browser back to the relying party with the error parameters.
 
-        if (!requestedScopes.contains(SCOPE_OPENID)) {
-            throw new InvalidDataException("The openid scope is required.");
-        }
+        try {
 
-        if (!registration.getScopes().containsAll(requestedScopes)) {
-            throw new InvalidDataException("Requested scope exceeds the client's allowed scopes.");
+            final var requestedScopes = Set.of(request.getScope().trim().split("\\s+"));
+
+            if (!requestedScopes.contains(SCOPE_OPENID)) {
+                throw new OAuth2Exception(ERROR_INVALID_SCOPE, "The openid scope is required.");
+            }
+
+            if (!registration.getScopes().containsAll(requestedScopes)) {
+                throw new OAuth2Exception(ERROR_INVALID_SCOPE,
+                        "Requested scope exceeds the client's allowed scopes.");
+            }
+
+        } catch (final OAuth2Exception ex) {
+            ex.setRedirectUri(request.getRedirectUri());
+            ex.setState(request.getState());
+            throw ex;
         }
 
         return registration;
@@ -162,12 +257,29 @@ public class StandardOidcProviderAuthorizationService implements OidcProviderAut
         this.userDao = userDao;
     }
 
+    public OidcProviderRateLimiter getRateLimiter() {
+        return rateLimiter;
+    }
+
+    @Inject
+    public void setRateLimiter(OidcProviderRateLimiter rateLimiter) {
+        this.rateLimiter = rateLimiter;
+    }
+
     public long getAuthorizationCodeTtlSeconds() {
         return authorizationCodeTtlSeconds;
     }
 
     public void setAuthorizationCodeTtlSeconds(long authorizationCodeTtlSeconds) {
         this.authorizationCodeTtlSeconds = authorizationCodeTtlSeconds;
+    }
+
+    public boolean getConsentRequired() {
+        return consentRequired;
+    }
+
+    public void setConsentRequired(boolean consentRequired) {
+        this.consentRequired = consentRequired;
     }
 
 }
