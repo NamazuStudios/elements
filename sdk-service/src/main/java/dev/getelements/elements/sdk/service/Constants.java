@@ -80,13 +80,150 @@ public interface Constants {
     String OIDC_DISCOVERY_REFRESH_SECONDS = "dev.getelements.elements.oidc.discovery.refresh.seconds";
 
     /**
-     * Used to specify how often a cached OIDC scheme's JWKS keys are refreshed.
+     * Used to specify how often cached OIDC scheme's JWKS keys are refreshed.
      */
     @ElementDefaultAttribute(
             value = "3600",
             description = "How often cached OIDC JWKS keys are refreshed, in seconds."
     )
     String OIDC_JWKS_REFRESH_SECONDS = "dev.getelements.elements.oidc.jwks.refresh.seconds";
+
+    /**
+     * Used to specify the issuer (iss) claim placed on Elements-issued session tokens. Tokens are
+     * rejected whose iss does not match.
+     */
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The issuer (iss) claim placed on Elements-issued session tokens."
+    )
+    String SESSION_TOKEN_ISSUER = "dev.getelements.elements.session.token.issuer";
+
+    /**
+     * Used to specify the base issuer URL advertised by the Elements OIDC provider's discovery document.
+     * The discovery document is served at {@code <issuer>/.well-known/openid-configuration}, so this must
+     * be set to the externally-reachable base URL of the REST API (e.g. {@code https://host/api/rest}).
+     */
+    @ElementDefaultAttribute(
+            value = "http://localhost:8080/api/rest",
+            description = "The base issuer URL advertised by the OIDC provider discovery document."
+    )
+    String OIDC_PROVIDER_ISSUER = "dev.getelements.elements.oidc.provider.issuer";
+
+    /**
+     * Used to specify how long an issued provider authorization code remains redeemable.
+     */
+    @ElementDefaultAttribute(
+            value = "600",
+            description = "The lifetime of an OIDC provider authorization code, in seconds."
+    )
+    String OIDC_AUTHORIZATION_CODE_TTL_SECONDS = "dev.getelements.elements.oidc.authorization.code.ttl.seconds";
+
+    /**
+     * Used to specify the lifetime of id_tokens issued by the Elements OIDC provider.
+     */
+    @ElementDefaultAttribute(
+            value = "3600",
+            description = "The lifetime of id_tokens issued by the OIDC provider, in seconds."
+    )
+    String OIDC_ID_TOKEN_TTL_SECONDS = "dev.getelements.elements.oidc.id.token.ttl.seconds";
+
+    /**
+     * Used to specify how long a grant (and its refresh token) remains valid. Refreshing does not extend
+     * the grant: when it expires, the user must re-authenticate through the hosted login page.
+     */
+    @ElementDefaultAttribute(
+            value = "2592000",
+            description = "The lifetime of an OIDC provider grant and its refresh tokens, in seconds."
+    )
+    String OIDC_REFRESH_GRANT_TTL_SECONDS = "dev.getelements.elements.oidc.refresh.grant.ttl.seconds";
+
+    /**
+     * Used to specify the lifetime of machine-to-machine access tokens issued by the {@code client_credentials}
+     * grant. These tokens are short-lived by design.
+     */
+    @ElementDefaultAttribute(
+            value = "300",
+            description = "The lifetime of OIDC provider client_credentials access tokens, in seconds."
+    )
+    String OIDC_MACHINE_TOKEN_TTL_SECONDS = "dev.getelements.elements.oidc.machine.token.ttl.seconds";
+
+    /**
+     * Whether the OIDC provider requires explicit end-user consent before completing an authorization. When
+     * false, admin-registered clients are trusted implicitly (135a behavior).
+     */
+    @ElementDefaultAttribute(
+            value = "true",
+            description = "Whether the OIDC provider requires explicit end-user consent before granting access."
+    )
+    String OIDC_PROVIDER_CONSENT_REQUIRED = "dev.getelements.elements.oidc.provider.consent.required";
+
+    /**
+     * Whether rate limiting is enforced on the OIDC provider's authorization, token, and login endpoints.
+     */
+    @ElementDefaultAttribute(
+            value = "true",
+            description = "Whether rate limiting is enforced on the OIDC provider endpoints."
+    )
+    String OIDC_RATE_LIMIT_ENABLED = "dev.getelements.elements.oidc.rate.limit.enabled";
+
+    /**
+     * The maximum number of token endpoint requests permitted per client per minute.
+     */
+    @ElementDefaultAttribute(
+            value = "60",
+            description = "The maximum token endpoint requests permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_TOKEN_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.token.per.minute";
+
+    /**
+     * The maximum number of authorization endpoint requests permitted per client per minute.
+     */
+    @ElementDefaultAttribute(
+            value = "60",
+            description = "The maximum authorization endpoint requests permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_AUTHORIZE_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.authorize.per.minute";
+
+    /**
+     * The maximum number of hosted-login submissions permitted per client per minute, guarding the credential
+     * entry step against brute force.
+     */
+    @ElementDefaultAttribute(
+            value = "10",
+            description = "The maximum hosted-login submissions permitted per client per minute."
+    )
+    String OIDC_RATE_LIMIT_LOGIN_PER_MINUTE = "dev.getelements.elements.oidc.rate.limit.login.per.minute";
+
+    /**
+     * Used to specify the audience (aud) claim placed on Elements-issued session tokens. Tokens are
+     * rejected whose aud does not match.
+     */
+    @ElementDefaultAttribute(
+            value = "elements",
+            description = "The audience (aud) claim placed on Elements-issued session tokens."
+    )
+    String SESSION_TOKEN_AUDIENCE = "dev.getelements.elements.session.token.audience";
+
+    /**
+     * Used to specify the passphrase with which the session-token signing keys' private halves are
+     * encrypted at rest. Operators should override this per deployment; the default is suitable only
+     * for local development.
+     */
+    @ElementDefaultAttribute(
+            value = "elements-default-signing-key-passphrase",
+            description = "The passphrase used to encrypt session-token signing keys at rest. Override per deployment."
+    )
+    String SESSION_TOKEN_KEY_PASSPHRASE = "dev.getelements.elements.session.token.key.passphrase";
+
+    /**
+     * Used to specify how often the set of session-token signing keys is refreshed from the database,
+     * so that key rotation is picked up without a restart.
+     */
+    @ElementDefaultAttribute(
+            value = "300",
+            description = "How often the set of session-token signing keys is refreshed, in seconds."
+    )
+    String SESSION_TOKEN_KEY_REFRESH_SECONDS = "dev.getelements.elements.session.token.key.refresh.seconds";
 
     /**
      * Used to specify the host for neo blockchain.

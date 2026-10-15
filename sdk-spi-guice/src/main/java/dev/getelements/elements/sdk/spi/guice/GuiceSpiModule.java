@@ -254,6 +254,7 @@ public class GuiceSpiModule extends PrivateModule {
                             : element.getServiceLocator().getInstance(aClass);
 
                     bind(key).toProvider(provider);
+                    expose(key);
 
                 });
     }

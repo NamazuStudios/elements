@@ -40,7 +40,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipInputStream;
 
 import static dev.getelements.elements.sdk.Attributes.GLOBAL_ELEMENT_ATTRIBUTES;
 import static dev.getelements.elements.sdk.Attributes.SYSTEM_ATTRIBUTES;
@@ -241,6 +240,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     request.elements(),
                     request.packages(),
                     request.useDefaultRepositories(),
+                    false,
                     request.repositories(),
                     ElementDeploymentState.ENABLED,
                     0L  // version not relevant for transient
@@ -694,22 +694,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             context.log("Resolved package ELM to: " + elmPath);
 
-            // Validate the ELM file
-            validateElmFile(elmPath, context);
+            final var fileSystemRoot = context.stageElmPackage(elmPath, definition.elmArtifact());
 
-            final var fileSystem = FileSystems.newFileSystem(elmPath);
-            context.fileSystems().add(fileSystem);
-
-            final var fileSystemRoot = fileSystem
-                    .getRootDirectories()
-                    .iterator()
-                    .next()
-                    .toAbsolutePath();
-
-            context.elementPaths().add(fileSystemRoot);
-            context.elementPathSources().put(fileSystemRoot, definition.elmArtifact());
-
-            applyPathMappings(definition.pathSpiBuiltins(), definition.pathSpiClassPaths(), definition.pathAttributes(), fileSystem, context);
+            applyPathMappings(definition.pathSpiBuiltins(), definition.pathSpiClassPaths(), definition.pathAttributes(), fileSystemRoot.getFileSystem(), context);
 
             context.log("Successfully staged package ELM");
 
@@ -854,7 +841,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             context.log("Downloaded ELM to temporary file: " + tempPath);
 
             // Validate the ELM file
-            validateElmFile(tempPath, context);
+            context.validateElmFile(tempPath);
 
             final var fileSystem = FileSystems.newFileSystem(tempPath);
             context.fileSystems().add(fileSystem);
@@ -920,39 +907,6 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                 context.attributePaths().put(fileSystemPath, attributes);
                 context.unconsumedAttributePaths().add(fileSystemPath);
             });
-        }
-
-    }
-
-    /**
-     * Validates that a file is a proper ELM file.
-     * Checks both the file extension and ZIP format validity.
-     *
-     * @param elmPath the path to validate
-     * @throws IllegalArgumentException if validation fails
-     */
-    private void validateElmFile(final Path elmPath, final DeploymentContext context) {
-
-        // Check extension
-        if (!elmPath.toString().endsWith(".elm")) {
-            final var msg = "Artifact is not an ELM file: " + elmPath;
-            context.warn(msg);
-            final var ex = new InternalException(msg);
-            context.errors().add(ex);
-            throw ex;
-        }
-
-        // Verify it's a valid ZIP
-        try (final var zis = new ZipInputStream(Files.newInputStream(elmPath))) {
-            if (zis.getNextEntry() == null) {
-                throw new InternalException("ELM file is empty or corrupted");
-            }
-        } catch (IOException ex) {
-            final var msg = "ELM file is not a valid ZIP: " + elmPath;
-            context.warn(msg);
-            final var wrappedEx = new InternalException(msg, ex);
-            context.errors().add(wrappedEx);
-            throw wrappedEx;
         }
 
     }

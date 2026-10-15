@@ -322,6 +322,21 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'responseValidExpectedValue', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional expected value for the validation field. If not set: boolean true is treated as success, and non-empty/non-null values are treated as success for non-booleans. If set, the field\'s string value must equal this.' },
     ],
   },
+  'auth/OidcClientRegistration': {
+    name: 'OidcClientRegistration',
+    fields: [
+      { name: 'clientId', type: 'string', required: false, isArray: false, isMap: false, readOnly: true, description: 'The unique client identifier. Server-generated when omitted on create.' },
+      { name: 'clientSecret', type: 'string', required: false, isArray: false, isMap: false, description: 'Write-only. Omitted on create: a secret is generated and echoed in the create response exactly once. Set on update to rotate the secret (echoed in that response only); blank or omitted retains the current secret.' },
+      { name: 'displayName', type: 'string', required: true, isArray: false, isMap: false, description: 'A human-readable display name, shown on the provider consent screen.' },
+      { name: 'redirectUris', type: 'string', required: false, isArray: true, isMap: false, description: 'Exact redirect URIs this client may use (one per entry). Required for clients using the authorization code flow; machine clients exercising only CLIENT_CREDENTIALS may omit them.' },
+      { name: 'grantTypes', type: 'string', required: true, isArray: true, isMap: false, description: 'Grant types this client may exercise, one per entry: AUTHORIZATION_CODE, REFRESH_TOKEN, or CLIENT_CREDENTIALS.' },
+      { name: 'scopes', type: 'string', required: true, isArray: true, isMap: false, description: 'Scopes this client may request, one per entry (e.g. openid, profile, email).' },
+      { name: 'audiences', type: 'string', required: false, isArray: true, isMap: false, description: 'For machine clients (CLIENT_CREDENTIALS): the audiences (aud) a token may be issued for, one per entry. When omitted, the client may only request its own client id.' },
+      { name: 'status', type: 'enum', required: false, isArray: false, isMap: false, enumValues: ['ACTIVE', 'SUSPENDED'], description: 'SUSPENDED registrations are refused at the authorization and token endpoints.' },
+      { name: 'applicationId', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional application id scoping tokens issued to this client (drives profile resolution).' },
+      { name: 'createdAt', type: 'number', required: false, isArray: false, isMap: false, readOnly: true, description: 'Epoch milliseconds when this registration was created.' },
+    ],
+  },
   'auth/OidcProviderConfiguration': {
     name: 'OidcProviderConfiguration',
     fields: [
@@ -332,7 +347,7 @@ export const MODEL_DEFINITIONS: Record<string, ModelSchema> = {
       { name: 'clientSecret', type: 'string', required: false, isArray: false, isMap: false, validationGroups: { create: 'notNull' }, description: 'The OAuth2 client secret registered with the provider. Required on create; leave blank on update to keep the existing secret unchanged.' },
       { name: 'scopes', type: 'string', required: false, isArray: true, isMap: false, description: 'The OAuth2 scopes to request during authorization.' },
       { name: 'redirectUri', type: 'string', required: false, isArray: false, isMap: false, description: "The full, literal redirect URI registered with the provider. Leave blank to use this server's built-in OIDC callback URI." },
-      { name: 'extraAuthorizeParams', type: 'object', required: false, isArray: false, isMap: true, description: "Additional provider-specific query parameters to include in the authorize request. For Twitch, to also receive email/username, set: { \"claims\": { \"id_token\": { \"email\": null, \"email_verified\": null, \"preferred_username\": null } } } — note the 'claims' key wraps the whole request; nested object values are stringified automatically." },
+      { name: 'extraAuthorizeParams', type: 'object', required: false, isArray: false, isMap: true, description: "Additional provider-specific query parameters to include in the authorize request. Add each parameter as its own row; a value that is itself a nested object or array (for example Twitch's 'claims') is edited as structured key/value rows. See the OIDC login docs for a full Twitch example." },
       { name: 'tokenEndpointAuthMethod', type: 'enum', required: false, enumValues: ['CLIENT_SECRET_BASIC', 'CLIENT_SECRET_POST'], isArray: false, isMap: false, description: "How the client authenticates to the provider's token endpoint during code exchange." },
       { name: 'successRedirectUrl', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a successful login instead of rendering the default success page. Server-authoritative: not overridable per login attempt.' },
       { name: 'errorRedirectUrl', type: 'string', required: false, isArray: false, isMap: false, description: 'Optional. If set, GET /oidc/{provider}/callback redirects the browser here on a failed login instead of rendering the default error page. Server-authoritative: not overridable per login attempt.' },

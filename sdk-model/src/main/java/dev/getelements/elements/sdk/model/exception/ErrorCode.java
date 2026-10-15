@@ -48,6 +48,11 @@ public enum  ErrorCode {
     OVERLOAD,
 
     /**
+     * The caller has exceeded a rate limit and should retry later.
+     */
+    RATE_LIMITED,
+
+    /**
      * The particular feature is not implemented or is currently unavailable.
      */
     NOT_IMPLEMENTED,

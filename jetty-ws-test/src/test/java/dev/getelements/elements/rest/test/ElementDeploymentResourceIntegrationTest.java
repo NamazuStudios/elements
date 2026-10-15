@@ -84,6 +84,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(elementDefinition),
                 packages,
                 true,
+                true,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 pathSpiBuiltins,
@@ -108,6 +109,7 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(created.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(created.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
         assertTrue(created.useDefaultRepositories());
+        assertTrue(created.missionCritical(), "missionCritical should round-trip in create response");
         assertEquals(created.state(), ElementDeploymentState.DISABLED);
         assertEquals(created.version(), 0L);
         assertEquals(created.pathSpiBuiltins(), pathSpiBuiltins,
@@ -136,6 +138,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // name
                 List.of(elementDefinition),
                 null, // packages
+                false,
                 false,
                 List.of(),
                 null,
@@ -283,6 +286,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(elementDefinition),
                 updatedPackages,
                 true,
+                false,
                 List.of(new ElementArtifactRepository("central", "https://repo.maven.apache.org/maven2")),
                 null,
                 updatedPathSpiBuiltins,
@@ -307,6 +311,7 @@ public class ElementDeploymentResourceIntegrationTest {
         assertEquals(updated.elements().get(0).apiArtifacts(), elementDefinition.apiArtifacts());
         assertEquals(updated.elements().get(0).spiArtifacts(), elementDefinition.spiArtifacts());
         assertEquals(updated.state(), ElementDeploymentState.ENABLED);
+        assertFalse(updated.missionCritical(), "missionCritical should be updatable via the update request");
         assertEquals(updated.version(), 1L, "Version should be incremented after update");
         assertEquals(updated.pathSpiBuiltins(), updatedPathSpiBuiltins,
                 "pathSpiBuiltins should be updated correctly");
@@ -334,6 +339,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 null, // name
                 List.of(elementDefinition),
                 null, // packages
+                false,
                 false,
                 List.of(),
                 null,
@@ -416,6 +422,7 @@ public class ElementDeploymentResourceIntegrationTest {
                 List.of(elementDefinition),
                 null, // packages
                 true,
+                false,
                 List.of(),
                 null,
                 null,

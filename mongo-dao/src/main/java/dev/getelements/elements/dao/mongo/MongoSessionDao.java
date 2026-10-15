@@ -25,12 +25,15 @@ import org.bson.types.ObjectId;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import dev.getelements.elements.rt.util.Hex;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -42,6 +45,15 @@ import static java.lang.System.currentTimeMillis;
 public class MongoSessionDao implements SessionDao {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoSessionDao.class);
+
+    private static final SecureRandom secureRandom = new SecureRandom();
+
+    /**
+     * The number of random bytes in a server-side session id. Unlike the legacy secret format, the
+     * session id carries no embedded user identity; it is meaningful only in combination with a
+     * signed session token.
+     */
+    public static final int SESSION_ID_LENGTH = 16;
 
     private ValidationHelper validationHelper;
 
@@ -59,20 +71,11 @@ public class MongoSessionDao implements SessionDao {
 
     @Override
     public Session getBySessionSecret(final String sessionSecret) {
+        return getByLegacySessionSecret(sessionSecret);
+    }
 
-        final ObjectId mongoUserId;
-        final MongoSessionSecret mongoSessionSecret;
-
-        try {
-            mongoSessionSecret = new MongoSessionSecret(sessionSecret);
-            mongoUserId = mongoSessionSecret.getContextAsObjectId();
-        } catch (IllegalArgumentException ex) {
-            throw new BadSessionSecretException(ex, "Bad Session Secret");
-        }
-
-        final MessageDigest messageDigest = getMessageDigestProvider().get();
-        final MongoUser mongoUser = getMongoUserDao().getMongoUser(mongoUserId);
-        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+    @Override
+    public Session getSessionBySessionId(final String sessionId) {
 
         final Timestamp now = new Timestamp(currentTimeMillis());
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
@@ -88,6 +91,26 @@ public class MongoSessionDao implements SessionDao {
         }
 
         return getMapper().map(mongoSession, Session.class);
+
+    }
+
+    private Session getByLegacySessionSecret(final String sessionSecret) {
+
+        final ObjectId mongoUserId;
+        final MongoSessionSecret mongoSessionSecret;
+
+        try {
+            mongoSessionSecret = new MongoSessionSecret(sessionSecret);
+            mongoUserId = mongoSessionSecret.getContextAsObjectId();
+        } catch (IllegalArgumentException ex) {
+            throw new BadSessionSecretException(ex, "Bad Session Secret");
+        }
+
+        final MessageDigest messageDigest = getMessageDigestProvider().get();
+        final MongoUser mongoUser = getMongoUserDao().getMongoUser(mongoUserId);
+        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+
+        return findValidSessionById(sessionId);
 
     }
 
@@ -107,6 +130,12 @@ public class MongoSessionDao implements SessionDao {
         final var md = getMessageDigestProvider().get();
         final var mongoUser = getMongoUserDao().getMongoUser(mongoUserId);
         final var sessionId = mongoSessionSecret.getSecretDigestEncoded(md, mongoUser.getPasswordHash());
+
+        return doRefresh(sessionId, expiry);
+
+    }
+
+    private Session doRefresh(final String sessionId, final long expiry) {
 
         final var now = new Timestamp(currentTimeMillis());
 
@@ -150,11 +179,7 @@ public class MongoSessionDao implements SessionDao {
 
         validate(session);
 
-        final var mongoUser = getMongoUserDao().getMongoUser(session.getUser().getId());
-        final var mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
-
-        final var messageDigest = getMessageDigestProvider().get();
-        final var sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+        final var sessionId = generateSessionId();
 
         final var mongoSession = getMapper().map(session, MongoSession.class);
         mongoSession.setType(STANDARD_ELEMENTS);
@@ -169,7 +194,7 @@ public class MongoSessionDao implements SessionDao {
         final var createdSession = getMapper().map(mongoSession, Session.class);
 
         final SessionCreation sessionCreation = new SessionCreation();
-        sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
+        sessionCreation.setSessionSecret(sessionId);
         sessionCreation.setSession(createdSession);
 
         getEventPublisher().accept(Event.builder()
@@ -221,10 +246,21 @@ public class MongoSessionDao implements SessionDao {
         final MongoUser mongoUser = getMongoUserDao().getMongoUser(mongoUserId);
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
+        deleteLegacySession(sessionId, mongoUser);
+
+    }
+
+    @Override
+    public void deleteSessionBySessionId(final String sessionId) {
+        deleteLegacySession(sessionId, null);
+    }
+
+    private void deleteLegacySession(final String sessionId, final MongoUser mongoUser) {
+
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.filter(eq("_id", sessionId))
-             .filter(eq("user", mongoUser));
+        query.filter(eq("_id", sessionId));
+        if (mongoUser != null) query.filter(eq("user", mongoUser));
 
         final var existing = query.first();
 
@@ -249,13 +285,54 @@ public class MongoSessionDao implements SessionDao {
 
     }
 
-    private void deleteAllSessionsForUser(final String userId) {
+    @Override
+    public void deleteSessionsForUser(final String userId) {
 
         final MongoUser mongoUser = getMongoUserDao().getMongoUser(userId);
+
+        final List<MongoSession> sessions = getDatastore()
+                .find(MongoSession.class)
+                .filter(eq("user", mongoUser))
+                .iterator()
+                .toList();
+
+        sessions.forEach(mongoSession -> {
+            getDatastore()
+                    .find(MongoSession.class)
+                    .filter(eq("_id", mongoSession.getSessionId()))
+                    .delete();
+            final var deletedSession = getMapper().map(mongoSession, Session.class);
+            getEventPublisher().accept(Event.builder()
+                    .argument(deletedSession)
+                    .named(SESSION_DELETED)
+                    .build());
+        });
+
+    }
+
+    private Session findValidSessionById(final String sessionId) {
+
+        final Timestamp now = new Timestamp(currentTimeMillis());
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.filter(eq("user", mongoUser));
-        query.delete();
+        query.filter(and(eq("_id", sessionId)));
+
+        final MongoSession mongoSession = query.first();
+
+        if (mongoSession == null) {
+            throw new NoSessionException("Session not valid.");
+        } else if (mongoSession.getExpiry().before(now)) {
+            throw new SessionExpiredException("Session expired.");
+        }
+
+        return getMapper().map(mongoSession, Session.class);
+
+    }
+
+    private static String generateSessionId() {
+        final var bytes = new byte[SESSION_ID_LENGTH];
+        secureRandom.nextBytes(bytes);
+        return Hex.encode(bytes);
     }
 
     public void validate(final Session session) {

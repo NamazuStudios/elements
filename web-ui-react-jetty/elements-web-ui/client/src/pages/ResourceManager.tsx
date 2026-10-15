@@ -41,6 +41,10 @@ function formatColumnName(fieldName: string): string {
 
 export default function ResourceManager({ resourceName, endpoint }: ResourceManagerProps) {
   const { toast } = useToast();
+
+  // Resources keyed on something other than "id" (e.g. OIDC Clients are keyed on clientId).
+  const idField = resourceName === 'OIDC Clients' ? 'clientId' : 'id';
+
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [currentFormData, setCurrentFormData] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -474,7 +478,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         
         return createdItem;
       } else {
-        const itemId = selectedItem?.id || id;
+        const itemId = selectedItem?.[idField] || id;
         if (!itemId) {
           throw new Error('Cannot update: No ID found for the selected item');
         }
@@ -501,7 +505,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         });
       }
     },
-    onSuccess: (data: any) => {
+    onSuccess: async (data: any) => {
       queryClient.invalidateQueries({ queryKey: [endpoint] });
       
       // Helper function to singularize resource name
@@ -513,7 +517,22 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
       };
       
       const singularName = getSingularName(resourceName);
-      
+
+      // OIDC Clients: the raw secret is echoed in this response only. Surface it once, prominently, and
+      // copy it to the clipboard so the operator can hand it to the downstream application.
+      if (resourceName === 'OIDC Clients' && data?.clientSecret) {
+        try {
+          await navigator.clipboard.writeText(data.clientSecret);
+        } catch {
+          // Clipboard access can fail (permissions/insecure context); the toast still shows the secret.
+        }
+        toast({
+          title: `${data.clientId || 'Client'} secret — copy it now`,
+          description: `${data.clientSecret} (also copied to your clipboard; this is the only time it is shown)`,
+          duration: 60000,
+        });
+      }
+
       // Check for configuration copy results
       const configResults = (data as any)?._configCopyResults;
       if (configResults && (configResults.success > 0 || configResults.failed > 0)) {
@@ -589,7 +608,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
           
           // Remove the deleted item if it's in this page
           if (Array.isArray(items)) {
-            const filteredItems = items.filter((item: any) => item.id !== deletedId);
+            const filteredItems = items.filter((item: any) => item[idField] !== deletedId);
             
             // Only update if something was actually removed
             if (filteredItems.length < items.length) {
@@ -650,8 +669,8 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
   };
 
   const confirmDelete = () => {
-    if (selectedItem?.id) {
-      deleteMutation.mutate(selectedItem.id);
+    if (selectedItem?.[idField]) {
+      deleteMutation.mutate(selectedItem[idField]);
     }
   };
 
@@ -751,6 +770,14 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
         // Custom column filtering for OIDC Providers resource - clientSecret must never render in the table
         if (resourceName === 'OIDC Providers') {
           const filteredKeys = keys.filter(k => k === 'id' || k === 'name' || k === 'discoveryUrl');
+          return filteredKeys;
+        }
+
+        // Custom column filtering for OIDC Clients resource - clientSecret is write-only (null on read) and
+        // its value is surfaced via a one-time toast after create/rotate instead.
+        if (resourceName === 'OIDC Clients') {
+          const filteredKeys = keys.filter(k =>
+            k === 'clientId' || k === 'displayName' || k === 'status' || k === 'applicationId');
           return filteredKeys;
         }
         
@@ -966,7 +993,7 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
                   {itemsWithDraft.map((item: any, idx: number) => (
-                    <TableRow key={item._isDraft ? 'draft' : (item.id || idx)} data-testid={`row-${resourceName.toLowerCase()}-${idx}`}>
+                    <TableRow key={item._isDraft ? 'draft' : (item[idField] || idx)} data-testid={`row-${resourceName.toLowerCase()}-${idx}`}>
                       {columns.map((col) => {
                         // Custom rendering for Profiles resource
                         let cellValue = item[col];
@@ -1157,12 +1184,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                             setIsDialogOpen(true);
                           } else {
                             // For auth schemes (OAuth2, OIDC, OIDC Providers), fetch full details
-                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'OIDC Providers';
-                            
-                            if (isAuthScheme && item.id) {
+                            const isAuthScheme = resourceName === 'OAuth2' || resourceName === 'OIDC' || resourceName === 'OIDC Providers' || resourceName === 'OIDC Clients';
+
+                            if (isAuthScheme && item[idField]) {
                               try {
                                 // Fetch full details from individual endpoint
-                                const fullItem = await apiClient.request<any>(`${endpoint}/${item.id}`);
+                                const fullItem = await apiClient.request<any>(`${endpoint}/${item[idField]}`);
                                 setSelectedItem(fullItem);
                                 setCurrentFormData(fullItem);
                                 setFormInitialData(fullItem);
@@ -1205,6 +1232,12 @@ export default function ResourceManager({ resourceName, endpoint }: ResourceMana
                         size="icon"
                         onClick={async () => {
                           const { id, ...itemDataWithoutId } = item;
+                          // Duplicate must not carry a server-generated identity: OIDC Clients key on
+                          // clientId and would collide with the source registration on create.
+                          if (resourceName === 'OIDC Clients') {
+                            delete itemDataWithoutId.clientId;
+                            delete itemDataWithoutId.clientSecret;
+                          }
                           
                           // For Applications, fetch and include configurations
                           if (resourceName === 'Applications' && id) {

@@ -45,6 +45,7 @@ public class MongoTransactionTest {
                 new Object[] {MultiMatchDao.class},
                 new Object[] {FCMRegistrationDao.class},
                 new Object[] {SessionDao.class},
+                new Object[] {JwtSigningKeyDao.class},
                 new Object[] {LeaderboardDao.class},
                 new Object[] {ScoreDao.class},
                 new Object[] {RankDao.class},

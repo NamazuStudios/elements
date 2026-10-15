@@ -39,6 +39,9 @@ deploy_github:
 deploy_central:
 	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish deploy
 
+deploy_maven_s3:
+	mvn --no-transfer-progress -B -q -Pgpg-sign deploy -DaltDeploymentRepository=staging::default::file:./staging
+
 docker:
 	make -C docker-config internal
 
