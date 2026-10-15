@@ -258,7 +258,14 @@ public class StandardSessionTokenKeySupport {
 
     }
 
-    private RSAPublicKey decodePublicKey(final String publicKeyBase64) {
+    /**
+     * Decodes a Base64-encoded X.509 public key. Shared with the OIDC provider's JWKS publishing so both
+     * consumers parse the stored key material identically.
+     *
+     * @param publicKeyBase64 the Base64-encoded X.509 public key
+     * @return the decoded public key
+     */
+    public RSAPublicKey decodePublicKey(final String publicKeyBase64) {
         try {
             final var keyFactory = KeyFactory.getInstance("RSA");
             final var keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyBase64));

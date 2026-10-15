@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStore
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.dao.JwtSigningKeyDao;
+import dev.getelements.elements.sdk.dao.OidcProviderDao;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 import dev.morphia.Datastore;
 import dev.morphia.config.MorphiaConfig;
@@ -36,6 +37,10 @@ public class MongoDaoElementModule extends SharedElementModule {
         // directly, since Guice's PrivateModule.expose() does not accept forwarding bindings
         // propagated up from the nested MongoDaoModule.
         expose(JwtSigningKeyDao.class);
+        // The OIDC provider DAO is likewise internal server infrastructure (client registrations,
+        // authorization codes, grants, refresh tokens) and must not be visible to Elements. The nested
+        // MongoDaoModule binds it; publishing it here makes it resolvable by the service-side modules.
+        expose(OidcProviderDao.class);
         // Expose to the outer scope so MongoSdkModule.DatastoreFromRef can inject it.
         expose(new TypeLiteral<AtomicReference<Datastore>>(){});
     }

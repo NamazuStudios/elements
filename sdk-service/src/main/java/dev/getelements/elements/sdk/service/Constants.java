@@ -99,6 +99,45 @@ public interface Constants {
     String SESSION_TOKEN_ISSUER = "dev.getelements.elements.session.token.issuer";
 
     /**
+     * Used to specify the base issuer URL advertised by the Elements OIDC provider's discovery document.
+     * The discovery document is served at {@code <issuer>/.well-known/openid-configuration}, so this must
+     * be set to the externally-reachable base URL of the REST API (e.g. {@code https://host/api/rest}).
+     */
+    @ElementDefaultAttribute(
+            value = "http://localhost:8080/api/rest",
+            description = "The base issuer URL advertised by the OIDC provider discovery document."
+    )
+    String OIDC_PROVIDER_ISSUER = "dev.getelements.elements.oidc.provider.issuer";
+
+    /**
+     * Used to specify how long an issued provider authorization code remains redeemable.
+     */
+    @ElementDefaultAttribute(
+            value = "600",
+            description = "The lifetime of an OIDC provider authorization code, in seconds."
+    )
+    String OIDC_AUTHORIZATION_CODE_TTL_SECONDS = "dev.getelements.elements.oidc.authorization.code.ttl.seconds";
+
+    /**
+     * Used to specify the lifetime of id_tokens issued by the Elements OIDC provider.
+     */
+    @ElementDefaultAttribute(
+            value = "3600",
+            description = "The lifetime of id_tokens issued by the OIDC provider, in seconds."
+    )
+    String OIDC_ID_TOKEN_TTL_SECONDS = "dev.getelements.elements.oidc.id.token.ttl.seconds";
+
+    /**
+     * Used to specify how long a grant (and its refresh token) remains valid. Refreshing does not extend
+     * the grant: when it expires, the user must re-authenticate through the hosted login page.
+     */
+    @ElementDefaultAttribute(
+            value = "2592000",
+            description = "The lifetime of an OIDC provider grant and its refresh tokens, in seconds."
+    )
+    String OIDC_REFRESH_GRANT_TTL_SECONDS = "dev.getelements.elements.oidc.refresh.grant.ttl.seconds";
+
+    /**
      * Used to specify the audience (aud) claim placed on Elements-issued session tokens. Tokens are
      * rejected whose aud does not match.
      */

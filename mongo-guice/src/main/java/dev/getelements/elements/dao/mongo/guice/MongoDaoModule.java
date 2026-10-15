@@ -23,6 +23,7 @@ import dev.getelements.elements.dao.mongo.auth.MongoTotpLoginChallengeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcProviderConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcLoginAttemptDao;
+import dev.getelements.elements.dao.mongo.auth.MongoOidcProviderDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoSmartContractDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
@@ -126,6 +127,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(OidcAuthSchemeDao.class).to(MongoOidcAuthSchemeDao.class);
         bind(OidcProviderConfigurationDao.class).to(MongoOidcProviderConfigurationDao.class);
         bind(OidcLoginAttemptDao.class).to(MongoOidcLoginAttemptDao.class);
+        bind(OidcProviderDao.class).to(MongoOidcProviderDao.class);
         bind(CaptchaConfigurationDao.class).to(MongoCaptchaConfigurationDao.class);
         bind(OAuth2AuthSchemeDao.class).to(MongoOAuth2AuthSchemeDao.class);
         bind(TotpConfigurationDao.class).to(MongoTotpConfigurationDao.class);
@@ -218,6 +220,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(OidcAuthSchemeDao.class);
         expose(OidcProviderConfigurationDao.class);
         expose(OidcLoginAttemptDao.class);
+        expose(OidcProviderDao.class);
         expose(CaptchaConfigurationDao.class);
         expose(OAuth2AuthSchemeDao.class);
         expose(TotpConfigurationDao.class);
