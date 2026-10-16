@@ -230,7 +230,8 @@ public class OidcLoginAttemptOperations {
                 claims.getProfileClaims());
 
         final var sessionCreation = getOidcAuthServiceOperations().createSessionForResolvedUser(
-                linkedUser, claims.getApplicationNameOrId(), claims.isApplicationExplicitlyRequested());
+                linkedUser, claims.getApplicationNameOrId(), claims.isApplicationExplicitlyRequested(),
+                findConfigOrThrow(claimed.get().getProvider()));
 
         return OidcLoginAttemptStatusResponse.complete(sessionCreation);
 
@@ -319,7 +320,7 @@ public class OidcLoginAttemptOperations {
             }
 
             final var sessionCreation = getOidcAuthServiceOperations().createOrUpdateUserWithVerifiedToken(
-                    decodedJWT, scheme, getAnonOidcAuthService()::apply, attempt.getApplicationNameOrId());
+                    decodedJWT, scheme, getAnonOidcAuthService()::apply, attempt.getApplicationNameOrId(), config);
 
             final var completed = getOidcLoginAttemptDao().markComplete(state, serializeSession(sessionCreation));
 

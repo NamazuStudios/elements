@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
@@ -408,6 +409,7 @@ public class OidcAuthServiceOperationsProfileTest {
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));
             bind(Client.class).toInstance(mock(Client.class));
             bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
+            bind(ElementRegistry.class).toInstance(mock(ElementRegistry.class));
             bindConstant().annotatedWith(Names.named(SESSION_TIMEOUT_SECONDS)).to(3600L);
             bindConstant().annotatedWith(Names.named(OIDC_JWKS_REFRESH_SECONDS)).to(3600L);
             bind(String.class).annotatedWith(named(API_OUTSIDE_URL)).toInstance("http://localhost:8080/api/rest");
