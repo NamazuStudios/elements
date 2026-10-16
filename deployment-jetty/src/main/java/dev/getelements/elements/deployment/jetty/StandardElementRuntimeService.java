@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,6 +47,7 @@ import static dev.getelements.elements.sdk.Attributes.SYSTEM_ATTRIBUTES;
 import static dev.getelements.elements.sdk.ElementPathLoader.ELM_EXTENSION;
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static java.nio.file.Files.createDirectories;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Standard implementation of {@link ElementRuntimeService} that polls the database for
@@ -56,6 +58,16 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private static final String ELEMENT_DEFAULT_PATH = "element";
 
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 90;
+
+    // Base delay before the first retry of a failed deployment. Each subsequent consecutive failure doubles the
+    // delay up to RETRY_MAX_DELAY_NANOS. Reconciling only runs on the poll interval, so the effective cadence is
+    // the greater of these delays and the poll interval.
+    private static final long RETRY_INITIAL_DELAY_NANOS = TimeUnit.SECONDS.toNanos(30);
+
+    // Upper bound on the retry backoff. Retries are unbounded in count but capped in rate, so a deployment broken
+    // by a transient outage (e.g. an unreachable artifact repository) eventually recovers once the outage clears,
+    // without ever hot-looping against a permanently broken dependency.
+    private static final long RETRY_MAX_DELAY_NANOS = TimeUnit.SECONDS.toNanos(600);
 
     private static final Logger logger = LoggerFactory.getLogger(StandardElementRuntimeService.class);
 
@@ -101,7 +113,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private final Map<String, ActiveDeployment> activeDeployments = new HashMap<>();
 
-    private final ElementArtifactLoader elementArtifactLoader = loadArtifactLoader();
+    // Tracks consecutive load failures and the next permitted retry time per deployment ID, so a deployment that
+    // latches RuntimeStatus.FAILED is retried with backoff rather than staying dead until an operator PUTs it
+    // again or the process restarts (issue #147).
+    private final Map<String, RetryState> retryStates = new HashMap<>();
+
+    private ElementArtifactLoader elementArtifactLoader;
+
+    private LongSupplier ticker = System::nanoTime;
 
     private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
 
@@ -112,6 +131,21 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private ValidationHelper validationHelper;
 
     private ScheduledExecutorService scheduler;
+
+    @Inject
+    public StandardElementRuntimeService() {
+        this(loadArtifactLoader());
+    }
+
+    /**
+     * Test seam that accepts a pre-built {@link ElementArtifactLoader}, avoiding the {@link ServiceLoader} lookup
+     * performed by the public constructor. Package-private on purpose: production always uses the SPI-loaded loader.
+     *
+     * @param elementArtifactLoader the artifact loader to use
+     */
+    StandardElementRuntimeService(final ElementArtifactLoader elementArtifactLoader) {
+        this.elementArtifactLoader = requireNonNull(elementArtifactLoader, "elementArtifactLoader");
+    }
 
     @Override
     public void start() {
@@ -180,6 +214,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             }
 
             activeDeployments.clear();
+            retryStates.clear();
             logger.info("ElementRuntimeService stopped");
 
         }
@@ -323,8 +358,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     /**
      * Reconciles database state with in-memory state.
+     * <p>
+     * Package-private so tests can drive a single reconciliation directly; the production path calls it from the
+     * scheduler via {@link #safeReconcile()}.
      */
-    private void reconcile() {
+    void reconcile() {
 
         // Collect events to publish outside the lock
         final var loadedRecords = new ArrayList<RuntimeRecord>();
@@ -352,6 +390,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             }
 
             // Process each deployment from the database
+            final var nowNanos = ticker.getAsLong();
+
             for (final var deployment : enabledDeployments) {
 
                 final var deploymentId = deployment.id();
@@ -362,6 +402,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     try {
                         final var record = doLoadDeployment(deployment, false);  // Not transient
                         loadedRecords.add(record);
+                        recordInitialLoadResult(deploymentId, record, nowNanos);
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
@@ -376,11 +417,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         if (record != null) {
                             loadedRecords.add(record);
                         }
+                        recordInitialLoadResult(deploymentId, record, nowNanos);
                         logger.info("Reloaded deployment: {} (version {} -> {})",
                                 deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
                         logger.error("Failed to reload deployment: {}", deploymentId, ex);
                     }
+                } else if (active.status() == RuntimeStatus.FAILED) {
+                    // Previously failed at the current version - retry with backoff (issue #147)
+                    retryFailedDeployment(deployment, deploymentId, nowNanos, loadedRecords);
                 } else {
                     logger.debug("Deployment {} does not needed to be reloaded", deploymentId);
                 }
@@ -912,14 +957,116 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     /**
-     * Unloads a deployment.
+     * Unloads a deployment and clears any pending retry bookkeeping for it.
      */
     private void doUnloadDeployment(final String deploymentId) {
         final var active = activeDeployments.remove(deploymentId);
+        retryStates.remove(deploymentId);
         if (active != null) {
             active.close();
         }
     }
+
+    /**
+     * Records the outcome of a first (or version-change) load attempt so that a failure schedules the initial
+     * retry backoff, and a success clears any stale retry state. Without this, a deployment that fails its very
+     * first load would not be backoff-gated and would be retried on every poll.
+     *
+     * @param deploymentId the deployment ID
+     * @param record       the record returned by the load attempt, or {@code null} if the load threw
+     * @param nowNanos     current monotonic time, in nanoseconds
+     */
+    private void recordInitialLoadResult(
+            final String deploymentId,
+            final RuntimeRecord record,
+            final long nowNanos) {
+
+        if (record == null || record.status() == RuntimeStatus.FAILED) {
+            retryStates.put(deploymentId, new RetryState(1, nowNanos + retryDelayNanos(1)));
+        } else {
+            retryStates.remove(deploymentId);
+        }
+
+    }
+
+    /**
+     * Retries loading a deployment that previously latched {@link RuntimeStatus#FAILED} at the current version.
+     * Respects the per-deployment exponential backoff recorded in {@link #retryStates}; a retry whose load still
+     * fails reschedules the next attempt, while a successful retry clears the retry state and publishes a
+     * {@code RUNTIME_LOADED} event so the container service mounts it. Called while holding {@link #lock}; the
+     * caller publishes events outside the lock.
+     *
+     * @param deployment    the current database deployment (same version as the failed attempt)
+     * @param deploymentId  the deployment ID
+     * @param nowNanos      current monotonic time, in nanoseconds
+     * @param loadedRecords collects runtime records to publish after the lock is released
+     */
+    private void retryFailedDeployment(
+            final ElementDeployment deployment,
+            final String deploymentId,
+            final long nowNanos,
+            final List<RuntimeRecord> loadedRecords) {
+
+        final var previous = retryStates.get(deploymentId);
+
+        if (previous != null && nowNanos < previous.nextAttemptNanos()) {
+            logger.debug(
+                    "Deployment {} is FAILED; next retry in {} second(s)",
+                    deploymentId,
+                    TimeUnit.NANOSECONDS.toSeconds(previous.nextAttemptNanos() - nowNanos)
+            );
+            return;
+        }
+
+        final var attempt = (previous == null ? 0 : previous.attempts()) + 1;
+
+        logger.info("Retrying FAILED deployment {} (attempt {})", deploymentId, attempt);
+
+        RuntimeRecord record = null;
+
+        try {
+            // The previous attempt's failure path already cleaned up temp files and closed the registry, but the
+            // staged file systems are only closed by ActiveDeployment#close, so unload (which is idempotent) first.
+            doUnloadDeployment(deploymentId);
+            record = doLoadDeployment(deployment, false);  // Not transient
+        } catch (Exception ex) {
+            logger.error("Error retrying deployment: {}", deploymentId, ex);
+        }
+
+        if (record != null && record.status() != RuntimeStatus.FAILED && record.status() != null) {
+            // Recovered - make this the active deployment and let the container service mount it.
+            loadedRecords.add(record);
+            logger.info("Deployment {} recovered after {} failed attempt(s)", deploymentId, attempt);
+        } else {
+            // Still failing - reschedule with backoff. doUnloadDeployment above cleared the prior state.
+            retryStates.put(deploymentId, new RetryState(attempt, nowNanos + retryDelayNanos(attempt)));
+            logger.warn("Deployment {} still FAILED; next retry scheduled", deploymentId);
+        }
+
+    }
+
+    /**
+     * Computes the backoff delay before the next retry, doubling per consecutive failure up to
+     * {@link #RETRY_MAX_DELAY_NANOS}.
+     *
+     * @param consecutiveFailures the number of consecutive failures so far (at least 1)
+     * @return the delay in nanoseconds
+     */
+    static long retryDelayNanos(final int consecutiveFailures) {
+        var delay = RETRY_INITIAL_DELAY_NANOS;
+        for (var i = 1; i < consecutiveFailures && delay < RETRY_MAX_DELAY_NANOS; i++) {
+            delay = Math.min(RETRY_MAX_DELAY_NANOS, delay * 2);
+        }
+        return delay;
+    }
+
+    /**
+     * Per-deployment retry bookkeeping for a deployment that has latched {@link RuntimeStatus#FAILED}.
+     *
+     * @param attempts          the number of consecutive failed load attempts
+     * @param nextAttemptNanos  the monotonic time (nanoseconds) at or after which the next retry is permitted
+     */
+    private record RetryState(int attempts, long nextAttemptNanos) {}
 
     /**
      * Publishes runtime service started event.
@@ -1027,6 +1174,15 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    /**
+     * Test seam overriding the monotonic clock used for retry backoff. Package-private on purpose.
+     *
+     * @param ticker the time source, in nanoseconds
+     */
+    void setTicker(final LongSupplier ticker) {
+        this.ticker = requireNonNull(ticker, "ticker");
     }
 
     public Attributes getSystemAttributes() {
