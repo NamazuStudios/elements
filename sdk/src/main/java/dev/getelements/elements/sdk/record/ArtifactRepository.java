@@ -31,9 +31,17 @@ public record ArtifactRepository(String id, String url) {
     public static final ArtifactRepository DEFAULT = new ArtifactRepository(null, null);
 
     /**
+     * The Namazu Studios Maven repository, hosting the platform's published artifacts (the Elements SDK
+     * modules and released ELM packages). Included among the default repositories so deployments resolve
+     * Namazu Studio artifacts without configuring this repository explicitly in every environment (#163).
+     */
+    public static final ArtifactRepository NAMAZU_STUDIOS =
+            new ArtifactRepository("namazu", "https://maven.namazustudios.com/");
+
+    /**
      * The default set of repositories.
      */
-    public static final Set<ArtifactRepository> DEFAULTS = Set.of(DEFAULT);
+    public static final Set<ArtifactRepository> DEFAULTS = Set.of(DEFAULT, NAMAZU_STUDIOS);
 
     /**
      * Indicates if this is the default repository
