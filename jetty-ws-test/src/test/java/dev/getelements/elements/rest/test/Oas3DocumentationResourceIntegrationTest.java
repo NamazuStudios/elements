@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.Response;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -83,6 +84,39 @@ public class Oas3DocumentationResourceIntegrationTest {
 
         assertNotNull(servers, "servers list should be present");
         assertFalse(servers.isEmpty(), "at least one server URL should be defined");
+    }
+
+    @Test
+    public void testJsonSpecServersDoesNotAccumulateAcrossRequests() throws Exception {
+
+        final var mapper = new ObjectMapper();
+        final List<Integer> serverCounts = new ArrayList<>();
+
+        for (int i = 0; i < 3; i++) {
+
+            final var body = client
+                    .target(apiRoot + OPENAPI_JSON_URL)
+                    .request(MediaType.APPLICATION_JSON)
+                    .get(String.class);
+
+            final var spec = mapper.readValue(body, Map.class);
+            final var servers = (List<?>) spec.get("servers");
+
+            assertNotNull(servers, "servers list should be present");
+            serverCounts.add(servers.size());
+
+        }
+
+        assertEquals(
+                serverCounts.get(0), serverCounts.get(1),
+                "servers size changed between requests (was " + serverCounts.get(0) + ", now " + serverCounts.get(1) + ")"
+        );
+
+        assertEquals(
+                serverCounts.get(1), serverCounts.get(2),
+                "servers size changed between requests (was " + serverCounts.get(1) + ", now " + serverCounts.get(2) + ")"
+        );
+
     }
 
     @Test
