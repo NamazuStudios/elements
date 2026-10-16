@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.Attributes;
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.ElementPathLoader;
 import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.model.system.ElementArtifactRepository;
 import dev.getelements.elements.sdk.model.system.ElementDeployment;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
@@ -157,7 +158,7 @@ public class DeploymentContextTest {
     }
 
     private DeploymentContext createContext(final boolean useDefaultRepositories,
-                                            final List<dev.getelements.elements.sdk.model.system.ElementArtifactRepository> repositories) {
+                                            final List<ElementArtifactRepository> repositories) {
 
         final var deployment = mock(ElementDeployment.class);
         when(deployment.id()).thenReturn("deployment-1");
@@ -175,8 +176,7 @@ public class DeploymentContextTest {
 
     }
 
-    private static dev.getelements.elements.sdk.model.system.ElementArtifactRepository toElementArtifactRepository(
-            final ArtifactRepository repository) {
+    private static ElementArtifactRepository toElementArtifactRepository(final ArtifactRepository repository) {
         return new dev.getelements.elements.sdk.model.system.ElementArtifactRepository(
                 repository.id(), repository.url());
     }
