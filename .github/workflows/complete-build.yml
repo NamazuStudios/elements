@@ -8,7 +8,7 @@ name: Complete Build
 # resulting tag triggers tag-publish.yml instead, which does the real
 # Central/release publish and does not call this).
 #
-# Every branch attempts a Central-only snapshot deploy (make deploy) as
+# Every branch attempts a Central-only snapshot deploy (make deploy_central) as
 # part of its build/test step, even though Central rejects/ignores
 # -SNAPSHOT uploads and nothing actually ends up published there -- running
 # the real sign+deploy pipeline (not just `install`) catches signing/
