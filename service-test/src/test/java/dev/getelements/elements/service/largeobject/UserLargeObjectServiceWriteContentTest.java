@@ -18,6 +18,7 @@ import static dev.getelements.elements.service.largeobject.LargeObjectServiceTes
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertTrue;
 
@@ -36,21 +37,27 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
     @Test
     public void shouldWriteContent() throws IOException {
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.wildcardLargeObject()));
-        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
+        final var bucketStream = mock(FileOutputStream.class);
+        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> bucketStream);
 
         OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
-        assertTrue(outputStream instanceof FileOutputStream);
+        // The stream is wrapped by DeploymentElmReloader (#71); writes still reach the bucket stream.
+        outputStream.write(1);
+        verify(bucketStream).write(1);
     }
 
     @Test
     public void shouldNotAllowToWriteContent() throws IOException {
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(factory.wildcardLargeObject()));
-        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
+        final var bucketStream = mock(FileOutputStream.class);
+        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> bucketStream);
 
         OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
-        assertTrue(outputStream instanceof FileOutputStream);
+        // The stream is wrapped by DeploymentElmReloader (#71); writes still reach the bucket stream.
+        outputStream.write(1);
+        verify(bucketStream).write(1);
     }
 
     @Test
@@ -61,11 +68,14 @@ public class UserLargeObjectServiceWriteContentTest extends LargeObjectServiceTe
         LargeObject largeObject = factory.largeObjectWithUsersAccess(permittedReadAccess, permittedWriteAccess, emptyList());
 
         when(largeObjectDao.findLargeObject(TEST_ID)).then(a -> Optional.of(largeObject));
-        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
+        final var bucketStream = mock(FileOutputStream.class);
+        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> bucketStream);
 
         OutputStream outputStream = userLargeObjectService.writeLargeObjectContent(TEST_ID);
 
-        assertTrue(outputStream instanceof FileOutputStream);
+        // The stream is wrapped by DeploymentElmReloader (#71); writes still reach the bucket stream.
+        outputStream.write(1);
+        verify(bucketStream).write(1);
     }
 
     @Test(expectedExceptions = {ForbiddenException.class})
