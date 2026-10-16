@@ -25,6 +25,8 @@ public class UserLargeObjectService implements LargeObjectService {
 
     private LargeObjectBucket largeObjectBucket;
 
+    private DeploymentElmReloader deploymentElmReloader;
+
     private AccessPermissionsUtils accessPermissionsUtils;
 
     private ValidationHelper validationHelper;
@@ -112,7 +114,7 @@ public class UserLargeObjectService implements LargeObjectService {
             getLargeObjectDao().updateLargeObject(largeObject);
         }
 
-        return getLargeObjectBucket().writeObject(objectId);
+        return getDeploymentElmReloader().reloadOnClose(getLargeObjectBucket().writeObject(objectId), objectId);
     }
 
     @Override
@@ -143,6 +145,15 @@ public class UserLargeObjectService implements LargeObjectService {
     @Inject
     public void setLargeObjectBucket(LargeObjectBucket largeObjectBucket) {
         this.largeObjectBucket = largeObjectBucket;
+    }
+
+    public DeploymentElmReloader getDeploymentElmReloader() {
+        return deploymentElmReloader;
+    }
+
+    @Inject
+    public void setDeploymentElmReloader(DeploymentElmReloader deploymentElmReloader) {
+        this.deploymentElmReloader = deploymentElmReloader;
     }
 
     public ValidationHelper getValidationHelper() {
