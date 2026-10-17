@@ -21,8 +21,12 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
@@ -51,6 +55,8 @@ public abstract class StaticContentLoader implements Loader {
 
     private final String uriOverrideAttributeKey;
 
+    private final String directoryAttributeKey;
+
     private final String ruleNamespace;
 
     private final Lock lock = new ReentrantLock();
@@ -71,10 +77,12 @@ public abstract class StaticContentLoader implements Loader {
             final Function<ElementPathRecord, ElementStaticContentRecord> resolve,
             final String defaultContextPathFormat,
             final String uriOverrideAttributeKey,
+            final String directoryAttributeKey,
             final String ruleNamespace) {
         this.resolve = resolve;
         this.defaultContextPathFormat = defaultContextPathFormat;
         this.uriOverrideAttributeKey = uriOverrideAttributeKey;
+        this.directoryAttributeKey = directoryAttributeKey;
         this.ruleNamespace = ruleNamespace;
     }
 
@@ -90,7 +98,11 @@ public abstract class StaticContentLoader implements Loader {
             final var elementPathRecord = record.elementPathsByElement().get(element);
             if (elementPathRecord == null) return;
 
-            final var contentRecord = resolve.apply(elementPathRecord);
+            // An element-specific on-disk directory (#146) overrides the packaged content entirely, so UI
+            // and static changes can be previewed without repackaging the element.
+            final var contentRecord = resolveContentFromDisk(pending, element)
+                    .orElseGet(() -> resolve.apply(elementPathRecord));
+
             if (contentRecord == null || contentRecord.contents().isEmpty()) {
 
                 pending.logf("No static files found for %s; skipping static content handler.", element
@@ -425,13 +437,72 @@ public abstract class StaticContentLoader implements Loader {
     }
 
     /**
+     * Resolves static content from the on-disk directory named by the element's directory attribute
+     * ({@code dev.getelements.element.static.directory} or {@code dev.getelements.element.ui.directory}), when
+     * present and non-blank (#146). The packaged content is overridden entirely, so UI/static changes can be
+     * previewed without repackaging the element. A relative path resolves against the server's working
+     * directory. A missing directory falls back to the packaged content with a logged warning.
+     *
+     * @return the on-disk content record, or empty to use the element's packaged content
+     */
+    private Optional<ElementStaticContentRecord> resolveContentFromDisk(
+            final PendingDeployment pending,
+            final Element element) {
+
+        final var directory = element
+                .getElementRecord()
+                .attributes()
+                .getAttributeOptional(directoryAttributeKey)
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .map(String::strip)
+                .filter(Predicate.not(String::isBlank))
+                .map(Path::of)
+                .orElse(null);
+
+        if (directory == null) {
+            return Optional.empty();
+        }
+
+        if (!Files.isDirectory(directory)) {
+            pending.logWarningf(
+                    "WARNING: Static content directory '%s' (attribute %s) does not exist; falling back to " +
+                    "the content packaged in the element.",
+                    directory,
+                    directoryAttributeKey
+            );
+            return Optional.empty();
+        }
+
+        final List<Path> contents;
+
+        try (final var walk = Files.walk(directory)) {
+            contents = walk.filter(p -> !p.equals(directory)).toList();
+        } catch (final IOException ex) {
+            throw new InternalException(ex);
+        }
+
+        pending.logf("Serving static content for %s from disk: %s (overriding packaged content).",
+                element.getElementRecord().definition().name(),
+                directory
+        );
+
+        return Optional.of(new ElementStaticContentRecord(directory, contents));
+
+    }
+
+    /**
      * Loads the UI static content found at {@link dev.getelements.elements.sdk.ElementPathLoader#UI_DIR}.
      * Served under {@code /app/ui/{prefix}} by default.
      */
     public static class UI extends StaticContentLoader {
 
         public UI() {
-            super(ElementPathRecord::uiStaticContent, "/app/ui/%s", ElementContainerService.UI_CONTENT_URI, "ui");
+            super(ElementPathRecord::uiStaticContent,
+                    "/app/ui/%s",
+                    ElementContainerService.UI_CONTENT_URI,
+                    ElementContainerService.UI_CONTENT_DIRECTORY,
+                    "ui");
         }
 
     }
@@ -443,7 +514,11 @@ public abstract class StaticContentLoader implements Loader {
     public static class Standard extends StaticContentLoader {
 
         public Standard() {
-            super(ElementPathRecord::standardStaticContent, "/app/static/%s", ElementContainerService.STATIC_CONTENT_URI, "static");
+            super(ElementPathRecord::standardStaticContent,
+                    "/app/static/%s",
+                    ElementContainerService.STATIC_CONTENT_URI,
+                    ElementContainerService.STATIC_CONTENT_DIRECTORY,
+                    "static");
         }
 
     }

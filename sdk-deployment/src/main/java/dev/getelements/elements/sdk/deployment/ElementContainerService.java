@@ -85,6 +85,28 @@ public interface ElementContainerService {
     String UI_CONTENT_URI = "dev.getelements.element.ui.uri";
 
     /**
+     * Serves standard static content from a directory on disk instead of the content packaged in the element,
+     * overriding it entirely (#146). Intended for rapid iteration: UI/static changes can be previewed without
+     * repackaging the element. The value is a filesystem path; relative paths resolve against the server's
+     * working directory. If the directory does not exist, the packaged content is used and a warning logged.
+     */
+    @ElementDefaultAttribute(
+            value = "",
+            description = "Serve static content from this on-disk directory, overriding the packaged content."
+    )
+    String STATIC_CONTENT_DIRECTORY = "dev.getelements.element.static.directory";
+
+    /**
+     * Serves UI content from a directory on disk instead of the content packaged in the element, overriding it
+     * entirely (#146). Same behavior as {@link #STATIC_CONTENT_DIRECTORY}, for the UI content tree.
+     */
+    @ElementDefaultAttribute(
+            value = "",
+            description = "Serve UI content from this on-disk directory instead of the element's packaged UI content."
+    )
+    String UI_CONTENT_DIRECTORY = "dev.getelements.element.ui.directory";
+
+    /**
      * Sets the absolute REST endpoint root path (relative to the Elements HTTP root).
      * Used only when {@link #APPLICATION_PREFIX} is absent; if both are present,
      * {@link #APPLICATION_PREFIX} takes priority and this attribute is ignored.
