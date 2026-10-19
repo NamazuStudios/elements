@@ -1,52 +1,26 @@
+# Local developer commands: versioning, git helpers, and basic builds.
+# CI build/publish targets live in ci.mk (included below).
 
-.PHONY=help,patch,release,tag,commit,push,git,rollback,checkout,setup
-
-GIT_USER?="Continuous Integration"
-GIT_EMAIL?="ci@getelements.dev"
+.PHONY: help clean patch release version tag commit push push_tags detach checkout rollback
 
 help:
 	@echo "Manages Semantic Versioning for Elements using Maven and Git."
 	@echo "patch - Increments the revision (least significant) number (Snapshot Builds Only)"
 	@echo "release - Drops -SNAPSHOT from the current revision number (Snapshot Builds Only)"
-	@echo "commit - Commits all changes, including submodules with a message indicating release."
-	@echo "git - Configures git with email and name. Run this before all other git commands."
-	@echo "setup - Performs all pre-build setup and checks for all necessary build commands."
-	@echo "push - Pushes all changes, including submodules to the remotes."
-	@echo "tag - Tags the current Maven version in git."
-	@echo "checkout - Checks out the specified tag/revision/branch for the project as well as submodules."
+	@echo "version - Sets an explicit version (VERSION=x.y.z required)"
+	@echo "commit - Commits all changes with a message indicating release (COMMIT_MSG=... required)"
+	@echo "tag - Tags the current Maven version in git"
+	@echo "push - Pushes all changes to the remote"
+	@echo "push_tags - Pushes all tags to the remote"
+	@echo "checkout - Checks out the specified tag/revision/branch (BRANCH=... required)"
+	@echo "rollback - Restores all pom.xml files from git"
+	@echo ""
+	@echo "Build and publish targets (used by GitHub Actions) are defined in ci.mk."
 
 clean:
 	mvn --no-transfer-progress -B -q clean
 
-install_no_tests:
-	mvn -Darchetype.test.skip=true -DskipTests -Dmaven.javadoc.skip=true -Dskip.web-ui-build=true --no-transfer-progress -q install
-
-build:
-	mvn --no-transfer-progress -B -q install
-
-build_github:
-	mvn --no-transfer-progress -B -q -Pgithub-publish install
-
-build_central:
-	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish install
-
-deploy:
-	mvn --no-transfer-progress -B -q -Pcentral-publish deploy
-
-deploy_github:
-	mvn --no-transfer-progress -B -q -Pgithub-publish deploy
-
-deploy_central:
-	mvn --no-transfer-progress -B -q -Pcentral-publish,github-publish deploy
-
-deploy_maven_s3:
-	mvn --no-transfer-progress -B -q -Pgpg-sign deploy -DaltDeploymentRepository=staging::default::file:./staging
-
-docker:
-	make -C docker-config internal
-
-docker_hub:
-	make -C docker-config hub
+# --- Versioning ---
 
 # patch/release compute the next version the normal Maven way (letting versions:set's own
 # nextSnapshot/removeSnapshot semver logic decide it), then discard the literal per-module rewrite
@@ -76,29 +50,6 @@ tag:
 	@echo "Tagging Release"
 	git tag $(MAVEN_VERSION)
 
-git:
-	git config --global user.name $(GIT_USER)
-	git config --global user.email $(GIT_EMAIL)
-	git remote add github git@github.com:NamazuStudios/elements.git
-
-setup: git
-	export DOCKER_HOST=tcp://docker:2375
-	export DOCKER_BUILDKIT=1
-	export DOCKER_CLI_EXPERIMENTAL=enabled
-	ng
-	mvn -version
-	docker buildx create --use
-	echo $(DOCKER_HUB_ACCESS_TOKEN) | docker login --username $(DOCKER_HUB_USER) --password-stdin
-
-setup_release: setup
-	- mkdir "$(HOME)/.m2"
-	cp -f settings.xml "$(HOME)/.m2"
-	@echo "GPG Private Key Is"
-	@echo $$GPG_PRIVATE_KEY | base64 -d | head -n 1
-	@echo "redacted"
-	@echo $$GPG_PRIVATE_KEY | base64 -d | tail -n 1
-	@echo $$GPG_PRIVATE_KEY | base64 -d | gpg --batch --import
-
 commit: MAVEN_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 commit:
 
@@ -108,18 +59,13 @@ endif
 
 	git commit -a -m "\"$(COMMIT_MSG) $(MAVEN_VERSION)\""
 
+# --- Git ---
+
 push:
 	git push
 
 push_tags:
 	git push --tags
-
-publish_github: CURRENT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
-publish_github:
-	git push github $(CURRENT_BRANCH)
-
-publish_github_tags:
-	git push github --tags
 
 detach:
 	git checkout --detach
@@ -132,11 +78,7 @@ endif
 
 	git checkout $(BRANCH)
 
-javadoc: JAVADOC_VERSION?=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-javadoc:
-	mvn -Pcentral-publish javadoc:aggregate
-	find target
-	aws --delete s3 sync target/reports/apidocs s3://$(JAVADOC_S3_BUCKET)/$(JAVADOC_VERSION)
-
 rollback:
 	- find . -name "pom.xml" -exec git checkout {} \;
+
+include ci.mk
