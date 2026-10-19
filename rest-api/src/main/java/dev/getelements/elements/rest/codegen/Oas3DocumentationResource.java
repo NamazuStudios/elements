@@ -317,7 +317,7 @@ public class Oas3DocumentationResource extends BaseOpenApiResource {
             final var server = new Server();
             server.setUrl(getApiOutsideUrl().toString());
             server.setDescription("Elements Core API");
-            openAPI.addServersItem(server);
+            openAPI.setServers(List.of(server));
 
             final var components = openAPI.getComponents();
             components.addSchemas(errorResponseSchema.schema.getName(), errorResponseSchema.schema);
