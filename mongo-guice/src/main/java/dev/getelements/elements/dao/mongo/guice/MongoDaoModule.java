@@ -9,6 +9,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoPasswordResetTokenDao;
+import dev.getelements.elements.dao.mongo.MongoSuperUserInviteTokenDao;
 import dev.getelements.elements.dao.mongo.MongoUidVerificationTokenDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductBundleDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductSkuSchemaDao;
@@ -55,6 +56,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.dao.PasswordResetTokenDao;
+import dev.getelements.elements.sdk.dao.SuperUserInviteTokenDao;
 import dev.getelements.elements.sdk.dao.UidVerificationTokenDao;
 import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.ProductBundleDao;
@@ -149,6 +151,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProductSkuSchemaDao.class).to(MongoProductSkuSchemaDao.class);
         bind(UidVerificationTokenDao.class).to(MongoUidVerificationTokenDao.class);
         bind(PasswordResetTokenDao.class).to(MongoPasswordResetTokenDao.class);
+        bind(SuperUserInviteTokenDao.class).to(MongoSuperUserInviteTokenDao.class);
 
 
         bind(SecureRandom.class)
@@ -242,6 +245,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ProductSkuSchemaDao.class);
         expose(UidVerificationTokenDao.class);
         expose(PasswordResetTokenDao.class);
+        expose(SuperUserInviteTokenDao.class);
 
     }
 
