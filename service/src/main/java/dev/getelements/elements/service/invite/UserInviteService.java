@@ -1,74 +1,38 @@
 package dev.getelements.elements.service.invite;
 
-import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.UserDao;
-import dev.getelements.elements.sdk.model.invite.InviteViaPhonesRequest;
-import dev.getelements.elements.sdk.model.invite.InviteViaPhonesResponse;
-import dev.getelements.elements.sdk.model.invite.PhoneMatchedInvitation;
-import dev.getelements.elements.sdk.model.profile.Profile;
-import dev.getelements.elements.sdk.model.user.User;
+import dev.getelements.elements.sdk.model.exception.ForbiddenException;
+import dev.getelements.elements.sdk.model.invite.CreateSuperUserInviteRequest;
+import dev.getelements.elements.sdk.model.invite.RedeemSuperUserInviteRequest;
+import dev.getelements.elements.sdk.model.invite.SuperUserInvite;
+import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.service.invite.InviteService;
-import dev.getelements.elements.util.PhoneNormalizer;
 
-import jakarta.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import static java.util.stream.Collectors.toUnmodifiableList;
-
-public class UserInviteService implements InviteService {
-
-    private UserDao userDao;
-
-    private ProfileDao profileDao;
+/**
+ * User-level {@link InviteService}. Phone-based matching is available to any authenticated user.
+ * Issuing, listing, and revoking superuser invitations are superuser-only and are rejected here.
+ * Redemption is permitted: elevating an account is the entire point of the flow, so the invited
+ * account is, by definition, not yet a superuser when it redeems.
+ */
+public class UserInviteService extends AbstractSuperUserInviteService {
 
     @Override
-    public InviteViaPhonesResponse inviteViaPhoneNumbers(InviteViaPhonesRequest inviteRequest, int offset, int count) {
-
-        List<String> normalizedPhoneList = inviteRequest.getPhoneNumbers().stream()
-                .map(PhoneNormalizer::normalizePhoneNb)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(toUnmodifiableList());
-
-        List<PhoneMatchedInvitation> invitations = new ArrayList<>();
-
-        getUserDao().getUsersByPrimaryPhoneNumbers(0, USERS_PER_PHONE_LIMIT, normalizedPhoneList)
-                .forEach(matchedUser -> invitations.add(createInvitation(matchedUser)));
-
-        InviteViaPhonesResponse response = new InviteViaPhonesResponse();
-        response.setMatched(invitations);
-        return response;
+    public SuperUserInvite createSuperUserInvite(CreateSuperUserInviteRequest request) {
+        throw new ForbiddenException("Superuser privileges are required to issue invitations.");
     }
 
-    private PhoneMatchedInvitation createInvitation(User user) {
-        PhoneMatchedInvitation invitation = new PhoneMatchedInvitation();
-        invitation.setPhoneNumber(user.getPrimaryPhoneNb());
-
-        List<String> profileIds = getProfileDao()
-                .getActiveProfiles(0, PROFILES_PER_USER_LIMIT, null, user.getId(), null, null)
-                .getObjects().stream().map(Profile::getId).collect(toUnmodifiableList());
-        invitation.setProfileIds(profileIds);
-
-        return invitation;
+    @Override
+    public Pagination<SuperUserInvite> listSuperUserInvites(int offset, int count) {
+        throw new ForbiddenException("Superuser privileges are required to list invitations.");
     }
 
-    public UserDao getUserDao() {
-        return userDao;
+    @Override
+    public SuperUserInvite revokeSuperUserInvite(String token) {
+        throw new ForbiddenException("Superuser privileges are required to revoke invitations.");
     }
 
-    @Inject
-    public void setUserDao(UserDao userDao) {
-        this.userDao = userDao;
+    @Override
+    public SuperUserInvite redeemSuperUserInvite(RedeemSuperUserInviteRequest request) {
+        return doRedeemSuperUserInvite(request);
     }
 
-    public ProfileDao getProfileDao() {
-        return profileDao;
-    }
-
-    @Inject
-    public void setProfileDao(ProfileDao profileDao) {
-        this.profileDao = profileDao;
-    }
 }

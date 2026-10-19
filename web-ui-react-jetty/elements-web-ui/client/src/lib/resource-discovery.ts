@@ -11,6 +11,7 @@ const POTENTIAL_RESOURCES = [
   { name: 'Users', endpoint: '/api/rest/user', icon: 'Users', category: 'Accounts' },
   { name: 'Applications', endpoint: '/api/rest/application', icon: 'AppWindow', category: 'Accounts' },
   { name: 'Profiles', endpoint: '/api/rest/profile', icon: 'User', category: 'Accounts' },
+  { name: 'Superuser Invites', endpoint: '/api/rest/invite/superuser', icon: 'Mail', category: 'Accounts' },
 
   // Commerce Resources
   { name: 'Product Bundles', endpoint: '/api/rest/product/bundle', icon: 'ShoppingCart', category: 'Commerce' },
