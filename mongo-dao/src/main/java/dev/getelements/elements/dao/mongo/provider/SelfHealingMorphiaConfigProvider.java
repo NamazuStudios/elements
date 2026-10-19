@@ -10,12 +10,16 @@ import jakarta.inject.Provider;
 import java.util.List;
 
 /**
- * Provides the {@link MorphiaConfig} used by the migration tool. Index application is disabled here
- * ({@code applyIndexes(false)}) so that {@link SelfHealingAtomicReferenceDataStoreProvider} can apply
- * indexes itself, healing any conflict between a newly-declared index's options and a stale on-disk index
- * instead of aborting datastore construction.
+ * Provides the {@link MorphiaConfig} used by the migration tool path ({@code MongoDatastoreBootstrapModule}),
+ * which routes index application through {@link SelfHealingIndexApplier}. Index application is disabled here
+ * ({@code applyIndexes(false)}) so that {@link SelfHealingAtomicReferenceDataStoreProvider} can apply indexes
+ * itself, healing any conflict between a newly-declared index's options and a stale on-disk index instead of
+ * aborting datastore construction.
+ *
+ * <p>The server boot path uses {@link MorphiaConfigProvider} ({@code applyIndexes(true)}) and does not heal;
+ * see {@link SelfHealingAtomicReferenceDataStoreProvider}.</p>
  */
-public class MigrateMorphiaConfigProvider implements Provider<MorphiaConfig> {
+public class SelfHealingMorphiaConfigProvider implements Provider<MorphiaConfig> {
 
     @Inject
     @Named(MongoConfigurationService.DATABASE_NAME)
