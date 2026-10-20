@@ -9,7 +9,9 @@ import dev.getelements.elements.sdk.model.auth.BodyType;
 import dev.getelements.elements.sdk.model.auth.HttpMethod;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
+import dev.getelements.elements.sdk.model.exception.ErrorCode;
 import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.exception.auth.IdentityAlreadyLinkedException;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
@@ -86,7 +88,8 @@ public class UserOAuth2AuthServiceTest {
     }
 
     /**
-     * Authenticated user, uid/scheme already linked to a DIFFERENT user → throws AuthValidationException.
+     * Authenticated user, uid/scheme already linked to a DIFFERENT user → throws
+     * IdentityAlreadyLinkedException with a dedicated error code.
      */
     @Test
     public void testAuthenticated_uidFoundDifferentUser_throwsException() {
@@ -97,8 +100,11 @@ public class UserOAuth2AuthServiceTest {
                 .thenReturn(Optional.of(uidFor(EXT_USER_ID, SCHEME_NAME, "other-user-id")));
         when(userDao.getUser("other-user-id")).thenReturn(userWithId("other-user-id"));
 
-        assertThrows(AuthValidationException.class,
+        final var ex = expectThrows(IdentityAlreadyLinkedException.class,
                 () -> service.createSession(simpleRequest("scheme-user-2", EXT_USER_ID)));
+
+        assertEquals(ex.getCode(), ErrorCode.IDENTITY_ALREADY_LINKED);
+        assertTrue(ex instanceof AuthValidationException);
 
         verify(sessionDao, never()).create(any());
         verify(userUidDao, never()).createUserUidStrict(any());

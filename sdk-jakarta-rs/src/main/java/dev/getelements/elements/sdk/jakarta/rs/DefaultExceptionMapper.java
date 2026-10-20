@@ -37,6 +37,7 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         Map.entry(ErrorCode.DUPLICATE, Response.Status.CONFLICT),
         Map.entry(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED),
         Map.entry(ErrorCode.CONFLICT, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.IDENTITY_ALREADY_LINKED, Response.Status.CONFLICT),
         Map.entry(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN),
         Map.entry(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST),
         Map.entry(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST),
