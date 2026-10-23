@@ -5,6 +5,7 @@ import dev.getelements.elements.dao.mongo.provider.MongoAtomicReferenceDataStore
 import dev.getelements.elements.dao.mongo.provider.MorphiaConfigProvider;
 import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
 import dev.getelements.elements.sdk.dao.JwtSigningKeyDao;
+import dev.getelements.elements.sdk.dao.MachineTokenRevocationDao;
 import dev.getelements.elements.sdk.dao.OidcProviderDao;
 import dev.getelements.elements.sdk.guice.SharedElementModule;
 import dev.morphia.Datastore;
@@ -41,6 +42,9 @@ public class MongoDaoElementModule extends SharedElementModule {
         // authorization codes, grants, refresh tokens) and must not be visible to Elements. The nested
         // MongoDaoModule binds it; publishing it here makes it resolvable by the service-side modules.
         expose(OidcProviderDao.class);
+        // The machine-token revocation denylist is likewise internal server infrastructure. Publishing it
+        // here makes it resolvable by the service-side modules that back MachineTokenService.
+        expose(MachineTokenRevocationDao.class);
         // Expose to the outer scope so MongoSdkModule.DatastoreFromRef can inject it.
         expose(new TypeLiteral<AtomicReference<Datastore>>(){});
     }
