@@ -16,6 +16,7 @@ import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurat
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoCaptchaConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoJwtSigningKeyDao;
+import dev.getelements.elements.dao.mongo.auth.MongoMachineTokenRevocationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOAuth2AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpDao;
@@ -128,6 +129,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(OidcProviderConfigurationDao.class).to(MongoOidcProviderConfigurationDao.class);
         bind(OidcLoginAttemptDao.class).to(MongoOidcLoginAttemptDao.class);
         bind(OidcProviderDao.class).to(MongoOidcProviderDao.class);
+        bind(MachineTokenRevocationDao.class).to(MongoMachineTokenRevocationDao.class);
         bind(CaptchaConfigurationDao.class).to(MongoCaptchaConfigurationDao.class);
         bind(OAuth2AuthSchemeDao.class).to(MongoOAuth2AuthSchemeDao.class);
         bind(TotpConfigurationDao.class).to(MongoTotpConfigurationDao.class);
@@ -221,6 +223,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(OidcProviderConfigurationDao.class);
         expose(OidcLoginAttemptDao.class);
         expose(OidcProviderDao.class);
+        expose(MachineTokenRevocationDao.class);
         expose(CaptchaConfigurationDao.class);
         expose(OAuth2AuthSchemeDao.class);
         expose(TotpConfigurationDao.class);

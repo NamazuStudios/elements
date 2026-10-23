@@ -3,6 +3,7 @@ package dev.getelements.elements.service.guice;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.service.Constants;
 import dev.getelements.elements.sdk.service.advancement.AdvancementService;
+import dev.getelements.elements.sdk.service.auth.MachineTokenService;
 import dev.getelements.elements.sdk.service.auth.SessionService;
 import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.service.auth.SessionTokenVerifier;
@@ -11,6 +12,7 @@ import dev.getelements.elements.sdk.service.notification.NotificationService;
 import dev.getelements.elements.sdk.service.version.VersionService;
 import dev.getelements.elements.service.advancement.StandardAdvancementService;
 import dev.getelements.elements.service.auth.DefaultSessionService;
+import dev.getelements.elements.service.auth.StandardMachineTokenService;
 import dev.getelements.elements.service.auth.StandardSessionTokenIssuer;
 import dev.getelements.elements.service.auth.StandardSessionTokenVerifier;
 import dev.getelements.elements.service.name.SimpleAdjectiveAnimalNameService;
@@ -44,6 +46,9 @@ public class StandardServicesModule extends AbstractModule {
 
         bind(SessionTokenVerifier.class)
                 .to(StandardSessionTokenVerifier.class);
+
+        bind(MachineTokenService.class)
+                .to(StandardMachineTokenService.class);
 
         bind(VersionService.class)
                 .to(BuildPropertiesVersionService.class)
