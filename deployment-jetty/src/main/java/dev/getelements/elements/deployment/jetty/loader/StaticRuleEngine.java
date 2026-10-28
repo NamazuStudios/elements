@@ -102,6 +102,10 @@ class StaticRuleEngine {
 
         for (final var absolutePath : contentRecord.contents()) {
 
+            // Directory entries must never be served (#178): serving a directory fails with
+            // FileSystemException. Directories containing an index file are mapped to that file below.
+            if (Files.isDirectory(absolutePath)) continue;
+
             final var relPath = root.relativize(absolutePath);
             final var relPathStr = toForwardSlash(relPath);
             final var filename = absolutePath.getFileName().toString();
@@ -175,11 +179,25 @@ class StaticRuleEngine {
             }
         }
 
-        final var immutableIndex = Collections.unmodifiableMap(index);
-
-        // Resolve index file
+        // Resolve the configured index filename (root index), so directory requests can resolve to
+        // the index file within them using the same convention.
         final var rawIndex = attributes.getAttribute(indexAttr);
         final var indexPath = (rawIndex instanceof String s && !s.isBlank()) ? s.strip() : DEFAULT_INDEX;
+
+        // Map directory paths to the index file they contain (#178): a request for /schedule (an SPA
+        // deep link) serves schedule/<index file>, mirroring the root-index behavior. Directories
+        // without an index file are simply absent from the index (404 on request).
+        for (final var absolutePath : contentRecord.contents()) {
+            if (!Files.isDirectory(absolutePath)) continue;
+            final var dirRelStr = toForwardSlash(root.relativize(absolutePath));
+            final var dirIndexMeta = index.get(dirRelStr + "/" + indexPath);
+            if (dirIndexMeta == null) continue;
+            index.put(dirRelStr, dirIndexMeta);
+            index.put(dirRelStr + "/", dirIndexMeta);
+        }
+
+        final var immutableIndex = Collections.unmodifiableMap(index);
+
         final var indexFile = immutableIndex.get(indexPath);
         if (indexFile == null) {
             pending.logf("Index file '%s' not found in content tree; root requests will return 404.", indexPath);
