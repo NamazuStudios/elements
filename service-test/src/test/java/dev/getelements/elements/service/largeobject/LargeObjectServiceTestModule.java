@@ -35,6 +35,7 @@ public class LargeObjectServiceTestModule extends AbstractModule {
         bind(Validator.class).toInstance(mock(Validator.class));
         bind(Attributes.class).toInstance(mock(Attributes.class));
         bind(Client.class).toInstance(mock(Client.class));
+        bind(ElementDeploymentDao.class).toInstance(mock(ElementDeploymentDao.class));
 
         bind(String.class).annotatedWith(named(CDN_OUTSIDE_URL)).toInstance("https://cdn.example.com");
 
