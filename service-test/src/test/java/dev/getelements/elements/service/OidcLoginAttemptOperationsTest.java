@@ -132,6 +132,7 @@ public class OidcLoginAttemptOperationsTest {
         });
         oidcAuthServiceOperations.setSessionTokenIssuer(sessionTokenIssuer);
         oidcAuthServiceOperations.setSessionTimeoutSeconds(300L);
+        oidcAuthServiceOperations.setElementRegistry(mock(ElementRegistry.class));
 
         operations = new OidcLoginAttemptOperations();
         operations.setOidcProviderConfigurationDao(oidcProviderConfigurationDao);

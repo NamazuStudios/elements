@@ -2,11 +2,14 @@ package dev.getelements.elements.service.auth.oauth2;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OAuth2AuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
 import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.application.Application;
+import dev.getelements.elements.sdk.model.auth.OAuth2AuthLoginEvent;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
@@ -29,6 +32,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
+import static dev.getelements.elements.sdk.service.auth.OAuth2AuthService.OAUTH2_AUTH_LOGIN_EVENT;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -51,6 +55,8 @@ public class OAuth2AuthServiceOperations {
 
     private OAuth2AuthServiceRequestInvoker requestInvoker;
 
+    private ElementRegistry elementRegistry;
+
     public SessionCreation createOrUpdateUserWithToken(
             final OAuth2SessionRequest oAuth2SessionRequest,
             final BiFunction<String, String, User> userMapper) {
@@ -65,6 +71,7 @@ public class OAuth2AuthServiceOperations {
 
         final var externalId = resolveExternalUserId(scheme, resolved, parsed.json());
         final var user = userMapper.apply(scheme.getName(), externalId);
+        final var presentedCredentials = presentedCredentials(oAuth2SessionRequest);
         final var expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
 
         final var session = new Session();
@@ -106,7 +113,41 @@ public class OAuth2AuthServiceOperations {
 
         }
 
-        return getSessionTokenIssuer().issue(session);
+        final var sessionCreation = getSessionTokenIssuer().issue(session);
+
+        // Publishes OAUTH2_AUTH_LOGIN_EVENT for the successful authentication (#93). The payload is a
+        // single OAuth2AuthLoginEvent (event arguments must be non-null); the profile inside may be null
+        // when the login resolved no profile.
+        getElementRegistry().publish(Event.builder()
+                .argument(new OAuth2AuthLoginEvent(user, session.getProfile(), scheme, presentedCredentials))
+                .named(OAUTH2_AUTH_LOGIN_EVENT)
+                .build());
+
+        return sessionCreation;
+
+    }
+
+    /**
+     * Collects the credential material the client presented with the request -- the request parameters
+     * merged with the (deprecated) request headers -- as carried on the published login event.
+     *
+     * @param oAuth2SessionRequest the session request
+     * @return the merged, immutable credential map (empty when the request carried none)
+     */
+    private Map<String, String> presentedCredentials(final OAuth2SessionRequest oAuth2SessionRequest) {
+
+        final var presented = new LinkedHashMap<String, String>();
+
+        if (oAuth2SessionRequest.getRequestParameters() != null) {
+            presented.putAll(oAuth2SessionRequest.getRequestParameters());
+        }
+
+        if (oAuth2SessionRequest.getRequestHeaders() != null) {
+            presented.putAll(oAuth2SessionRequest.getRequestHeaders());
+        }
+
+        return Map.copyOf(presented);
+
     }
 
     private Profile autoCreatePrimaryProfileIfConfigured(final User user, final Application application) {
@@ -308,6 +349,15 @@ public class OAuth2AuthServiceOperations {
     @Inject
     public void setSessionTimeoutSeconds(@Named(SESSION_TIMEOUT_SECONDS) long sessionTimeoutSeconds) {
         this.sessionTimeoutSeconds = sessionTimeoutSeconds;
+    }
+
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
     }
 
     public OAuth2AuthSchemeDao getoAuth2AuthSchemeDao() {
