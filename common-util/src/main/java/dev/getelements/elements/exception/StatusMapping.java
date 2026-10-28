@@ -15,6 +15,8 @@ public class StatusMapping {
 
     public static final Map<ErrorCode, Integer> HTTP_STATUS_MAP = Map.ofEntries(
             Map.entry(DUPLICATE, SC_CONFLICT),
+            Map.entry(CONFLICT, SC_CONFLICT),
+            Map.entry(IDENTITY_ALREADY_LINKED, SC_CONFLICT),
             Map.entry(FORBIDDEN, SC_FORBIDDEN),
             Map.entry(UNAUTHORIZED, SC_UNAUTHORIZED),
             Map.entry(INVALID_DATA, SC_BAD_REQUEST),
