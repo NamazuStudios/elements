@@ -377,8 +377,10 @@ public class StaticContentLoaderDiskOverrideTest {
     }
 
     private static int walkedEntryCount(final Path dir) throws IOException {
+        // Directory entries are excluded from the serving index by the StaticRuleEngine (covered by
+        // StaticRuleEngineTest); only the regular files the loader will actually serve are counted.
         try (var walk = Files.walk(dir)) {
-            return (int) walk.filter(p -> !p.equals(dir)).count();
+            return (int) walk.filter(p -> !p.equals(dir)).filter(Files::isRegularFile).count();
         }
     }
 
