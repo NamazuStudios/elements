@@ -14,6 +14,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import Dashboard from "@/pages/Dashboard";
 import ResourceManager from "@/pages/ResourceManager";
 import LargeObjects from "@/pages/LargeObjects";
+import SuperuserInvites from "@/pages/SuperuserInvites";
 import EmailTemplates from "@/pages/EmailTemplates";
 import CaptchaConfiguration from "@/pages/CaptchaConfiguration";
 import TotpConfiguration from "@/pages/TotpConfiguration";
@@ -142,6 +143,9 @@ function Routes() {
         </Route>
         <Route path="/resource/large-objects">
           <LargeObjects />
+        </Route>
+        <Route path="/resource/superuser-invites">
+          <SuperuserInvites />
         </Route>
         <Route path="/resource/email-templates">
           <EmailTemplates />

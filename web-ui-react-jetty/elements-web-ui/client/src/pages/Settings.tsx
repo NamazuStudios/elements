@@ -32,6 +32,7 @@ const RESOURCE_CATEGORIES = [
 
 const RESOURCES_BY_CATEGORY: Record<string, string[]> = {
   Core: ['Users', 'Applications', 'Profiles'],
+  Accounts: ['Superuser Invites'],
   Game: ['Items', 'Missions', 'Schedules', 'Leaderboards', 'Matchmaking'],
   Auth: ['OIDC', 'OAuth2', 'Custom'],
   Metadata: ['Metadata', 'Metadata Spec'],
