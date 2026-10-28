@@ -9,8 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight, ChevronDown, Filter, Check, RefreshCw } from 'lucide-react';
+import { Upload, Download, Trash2, Link as LinkIcon, HardDrive, File, ExternalLink, Eye, Search, ChevronLeft, ChevronRight, ChevronDown, Filter, Check, RefreshCw, Shield } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { LargeObjectPermissionsDialog } from '@/components/LargeObjectPermissionsDialog';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { getApiPath } from '@/lib/config';
@@ -386,6 +387,8 @@ export default function LargeObjects() {
     return mimeType.startsWith('image/');
   };
 
+  const [permissionsDialog, setPermissionsDialog] = useState<{ open: boolean; object: LargeObject | null }>({ open: false, object: null });
+
   const [previewDialog, setPreviewDialog] = useState<{ open: boolean; object: LargeObject | null; imageUrl?: string }>({
     open: false,
     object: null,
@@ -629,6 +632,14 @@ export default function LargeObjects() {
                     </TableCell>
                     <TableCell className="w-[140px] sticky right-0 bg-background border-l z-10">
                       <div className="flex items-center justify-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setPermissionsDialog({ open: true, object: obj })}
+                          data-testid={`button-permissions-${obj.id}`}
+                        >
+                          <Shield className="w-4 h-4" />
+                        </Button>
                         {isImageType(obj.mimeType) && (
                           <Button
                             size="sm"
@@ -714,6 +725,12 @@ export default function LargeObjects() {
           )}
         </CardContent>
       </Card>
+
+      <LargeObjectPermissionsDialog
+        largeObject={permissionsDialog.object}
+        open={permissionsDialog.open}
+        onOpenChange={(open) => setPermissionsDialog(prev => ({ open, object: open ? prev.object : null }))}
+      />
 
       {/* Image Preview Dialog */}
       <Dialog open={previewDialog.open} onOpenChange={(open) => {
