@@ -66,6 +66,8 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
+    private MongoSessionDao mongoSessionDao;
+
     private BooleanQueryParser booleanQueryParser;
 
     private Consumer<Event> eventPublisher;
@@ -606,6 +608,11 @@ public class MongoProfileDao implements ProfileDao {
             throw new NotFoundException("application not found: " + profileId);
         }
 
+        // Clear the profile link from every session carrying it (#169). The auth filter resolves the request
+        // scope's current profile directly from the session's stored reference, so leaving the link in place
+        // kept the soft-deleted profile resolving as current on every subsequent request.
+        getMongoSessionDao().clearProfileReferences(mongoProfile);
+
         getEventPublisher().accept(Event.builder()
                 .argument(transform(mongoProfile))
                 .named(PROFILE_DELETED)
@@ -701,6 +708,15 @@ public class MongoProfileDao implements ProfileDao {
     @Inject
     public void setMongoConcurrentUtils(MongoConcurrentUtils mongoConcurrentUtils) {
         this.mongoConcurrentUtils = mongoConcurrentUtils;
+    }
+
+    public MongoSessionDao getMongoSessionDao() {
+        return mongoSessionDao;
+    }
+
+    @Inject
+    public void setMongoSessionDao(MongoSessionDao mongoSessionDao) {
+        this.mongoSessionDao = mongoSessionDao;
     }
 
     public MongoLargeObjectDao getMongoLargeObjectDao() {

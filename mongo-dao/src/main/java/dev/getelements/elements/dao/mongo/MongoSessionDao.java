@@ -40,6 +40,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.dao.mongo.model.MongoSession.Type.STANDARD_ELEMENTS;
 import static dev.morphia.query.filters.Filters.*;
 import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.unset;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoSessionDao implements SessionDao {
@@ -306,6 +307,42 @@ public class MongoSessionDao implements SessionDao {
                     .argument(deletedSession)
                     .named(SESSION_DELETED)
                     .build());
+        });
+
+    }
+
+    /**
+     * Clears the profile reference from every {@link MongoSession} linked to the supplied profile. Used when a
+     * profile is soft-deleted (#169) so that live sessions do not continue resolving the deleted profile as the
+     * request scope's current profile. Publishes a {@code SESSION_UPDATED} event for each modified session.
+     *
+     * @param mongoProfile the profile which was soft-deleted
+     */
+    public void clearProfileReferences(final MongoProfile mongoProfile) {
+
+        final List<MongoSession> sessions = getDatastore()
+                .find(MongoSession.class)
+                .filter(eq("profile", mongoProfile))
+                .iterator()
+                .toList();
+
+        sessions.forEach(mongoSession -> {
+
+            final var query = getDatastore().find(MongoSession.class)
+                    .filter(eq("_id", mongoSession.getSessionId()));
+
+            new UpdateBuilder()
+                    .with(unset("profile"))
+                    .execute(query, new UpdateOptions().upsert(false));
+
+            final var updatedSession = getMapper().map(mongoSession, Session.class);
+            updatedSession.setProfile(null);
+
+            getEventPublisher().accept(Event.builder()
+                    .argument(updatedSession)
+                    .named(SESSION_UPDATED)
+                    .build());
+
         });
 
     }
