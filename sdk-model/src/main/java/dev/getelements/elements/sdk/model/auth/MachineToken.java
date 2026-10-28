@@ -6,11 +6,11 @@ import java.util.Map;
 
 /**
  * A freshly minted signed machine token and the claims it carries. Returned by
- * {@link dev.getelements.elements.sdk.service.auth.MachineTokenService#issue(MachineTokenRequest)}.
+ * {@code MachineTokenService#issue(MachineTokenRequest)}.
  *
  * <p>The {@link #getToken() token} is the compact JOSE serialization to hand to the caller. The
  * {@link #getTokenId() token id} is the {@code jti} claim, which is what
- * {@link dev.getelements.elements.sdk.service.auth.MachineTokenService#revoke(String, long)} accepts.</p>
+ * {@code MachineTokenService#revoke(String, long)} accepts.</p>
  */
 @Schema(description = "A minted machine token and its decoded claims.")
 public class MachineToken {

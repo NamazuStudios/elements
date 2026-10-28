@@ -6,7 +6,7 @@ import java.util.Map;
 
 /**
  * The resolved claims of a verified signed machine token. Returned by
- * {@link dev.getelements.elements.sdk.service.auth.MachineTokenService#verify(String, String)}.
+ * {@code MachineTokenService#verify(String, String)}.
  *
  * <p>The standard claims are exposed as fields; {@link #getClaims()} contains exactly the
  * domain-specific claims the caller embedded at mint time.</p>

@@ -7,8 +7,7 @@ import jakarta.validation.constraints.Positive;
 import java.util.Map;
 
 /**
- * Parameters for minting a signed machine token through
- * {@link dev.getelements.elements.sdk.service.auth.MachineTokenService}.
+ * Parameters for minting a signed machine token through {@code MachineTokenService}.
  *
  * <p>A machine token is a deployment-signed JWT for a non-user principal (a service, worker, or
  * long-lived process). The caller supplies the subject, audience, lifetime, and any domain-specific
