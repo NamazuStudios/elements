@@ -152,7 +152,7 @@ public class MongoUserDao implements UserDao {
     @Override
     public Pagination<User> getUsers(final int offset, final int count) {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class)
-                .filter(exists("linkedAccounts"));
+                .filter(exists("name"));
 
         return paginationFromQuery(query, offset, count);
     }
@@ -169,7 +169,7 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(
-                exists("linkedAccounts"),
+                exists("name"),
                 or(
                         Filters.regex("name", Pattern.compile(queryString)),
                         Filters.regex("email", Pattern.compile(queryString))
