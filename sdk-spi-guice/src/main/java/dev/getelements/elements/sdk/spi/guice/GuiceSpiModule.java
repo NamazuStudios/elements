@@ -5,6 +5,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.google.inject.spi.Elements;
+import com.google.inject.spi.PrivateElements;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation.DefaultImplementation;
@@ -143,12 +144,7 @@ public class GuiceSpiModule extends PrivateModule {
             return Map.of();
         }
 
-        final var moduleBoundKeys = Elements
-                .getElements(guiceElementModules)
-                .stream()
-                .filter(element -> element instanceof Binding<?>)
-                .map(element -> ((Binding<?>) element).getKey())
-                .collect(toSet());
+        final var moduleBoundKeys = resolveModuleBoundKeys();
 
         final var ownBoundKeys = elementRecord
                 .services()
@@ -244,12 +240,7 @@ public class GuiceSpiModule extends PrivateModule {
             return;
         }
 
-        final var boundKeys = Elements
-                .getElements(guiceElementModules)
-                .stream()
-                .filter(element -> element instanceof Binding<?>)
-                .map(element -> ((Binding<?>) element).getKey())
-                .collect(toSet());
+        final var boundKeys = resolveModuleBoundKeys();
 
         final var unbound = deferredKeys
                 .stream()
@@ -264,6 +255,32 @@ public class GuiceSpiModule extends PrivateModule {
                     "@ElementServiceImplementation, or add a @GuiceElementModule that explicitly binds them."
             );
         }
+
+    }
+
+    /**
+     * Collects the keys visible to this module's private scope from the installed {@code @GuiceElementModule}s.
+     * {@link Elements#getElements(Module...)} flattens a {@link PrivateModule} into a single nested
+     * {@link PrivateElements} element whose inner {@link Binding}s are invisible to a naive top-level
+     * {@code instanceof Binding} filter -- which made every key bound by a private module falsely look unbound
+     * (both here and to {@link #validateDeferredKeysAreBound}). A private module's bindings are only usable by
+     * this module for keys it {@code expose()}s upward, so the exposed keys are what count as bound.
+     *
+     * @return the set of keys this module's own {@code expose()} can resolve
+     */
+    private Set<Key<?>> resolveModuleBoundKeys() {
+
+        final var keys = new HashSet<Key<?>>();
+
+        for (final var element : Elements.getElements(guiceElementModules)) {
+            if (element instanceof Binding<?> binding) {
+                keys.add(binding.getKey());
+            } else if (element instanceof PrivateElements privateElements) {
+                keys.addAll(privateElements.getExposedKeys());
+            }
+        }
+
+        return keys;
 
     }
 
