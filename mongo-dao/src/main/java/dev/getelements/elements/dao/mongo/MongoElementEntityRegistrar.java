@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.dao.EntityRegistry;
 import dev.morphia.Datastore;
 import dev.morphia.Morphia;
 import dev.morphia.config.MorphiaConfig;
+import dev.morphia.mapping.DiscriminatorFunction;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.slf4j.Logger;
@@ -211,21 +212,37 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
      * requiring a real MongoDB connection.
      */
     protected Datastore createDatastore() {
-
-        final var mongoClient = getMongoClientProvider().get();
-
-        final var morphiaConfig = withPlatformModelPackages(getMorphiaConfigProvider().get());
-
-        getPreDatastoreMigrationRunnerProvider().get().run(mongoClient, morphiaConfig);
-
-        return Morphia.createDatastore(mongoClient, morphiaConfig);
+        return createDatastore(getMongoClientProvider().get(),
+                getMorphiaConfigProvider().get(),
+                getPreDatastoreMigrationRunnerProvider().get());
     }
 
     /**
-     * Merges {@link #PLATFORM_MODEL_PACKAGES} into the supplied config's package set (preserving any
-     * element-contributed packages). Package-private for testing.
+     * Creates a fresh, empty {@link Datastore} from the supplied parts, guaranteeing that the platform's
+     * own DAO model packages are mapped (see {@link #withPlatformModelPackages(MorphiaConfig)}) before the
+     * pre-datastore migrations run. Public so the boot datastore provider
+     * ({@code MongoAtomicReferenceDataStoreProvider}) and tests can build through the same merge.
      */
-    static MorphiaConfig withPlatformModelPackages(final MorphiaConfig morphiaConfig) {
+    public Datastore createDatastore(final MongoClient mongoClient,
+                                        final MorphiaConfig morphiaConfig,
+                                        final PreDatastoreMigrationRunner preDatastoreMigrationRunner) {
+
+        final var mergedConfig = withPlatformModelPackages(morphiaConfig);
+
+        preDatastoreMigrationRunner.run(mongoClient, mergedConfig);
+
+        return Morphia.createDatastore(mongoClient, mergedConfig);
+    }
+
+    /**
+     * Merges the platform's own DAO model packages into the supplied config's package set (preserving any
+     * element-contributed packages) and normalizes the discriminator to the platform's convention
+     * ({@code DiscriminatorFunction.className()} — fully-qualified, so eager mapping of the model tree can
+     * never collide on duplicate simple names). Public: the boot datastore provider
+     * ({@code MongoAtomicReferenceDataStoreProvider}) applies the same merge so the first datastore
+     * constructed is grounded in the platform's model packages too.
+     */
+    public static MorphiaConfig withPlatformModelPackages(final MorphiaConfig morphiaConfig) {
 
         final var packages = new ArrayList<>(morphiaConfig.packages());
 
@@ -233,7 +250,9 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
                 .filter(p -> !packages.contains(p))
                 .forEach(packages::add);
 
-        return morphiaConfig.packages(List.copyOf(packages));
+        return morphiaConfig
+                .discriminator(DiscriminatorFunction.className())
+                .packages(List.copyOf(packages));
 
     }
 
