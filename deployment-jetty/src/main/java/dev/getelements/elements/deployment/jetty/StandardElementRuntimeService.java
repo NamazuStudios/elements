@@ -405,7 +405,12 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         recordInitialLoadResult(deploymentId, record, nowNanos);
                         logger.info("Loaded deployment: {}", deploymentId);
                     } catch (Exception ex) {
+                        // A throw (vs. a FAILED record) still consumed this poll's load attempt: record it
+                        // so the deployment retries under the same exponential backoff as any other
+                        // failure. Without this, the active==null branch re-enters every poll and
+                        // hot-loops a deterministically-throwing load at full cadence.
                         logger.error("Failed to load deployment: {}", deploymentId, ex);
+                        recordInitialLoadResult(deploymentId, null, nowNanos);
                     }
                 } else if (active.deployment().version() != deployment.version()) {
                     // Version changed - reload
@@ -421,7 +426,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         logger.info("Reloaded deployment: {} (version {} -> {})",
                                 deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
+                        // Same as above: a throwing reload must back off like a FAILED one, or a broken
+                        // deployment hammers the reload path on every poll.
                         logger.error("Failed to reload deployment: {}", deploymentId, ex);
+                        recordInitialLoadResult(deploymentId, null, nowNanos);
                     }
                 } else if (active.status() == RuntimeStatus.FAILED) {
                     // Previously failed at the current version - retry with backoff (issue #147)
@@ -1035,7 +1043,9 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
         if (record != null && record.status() != RuntimeStatus.FAILED && record.status() != null) {
             // Recovered - make this the active deployment and let the container service mount it.
+            // Clear the retry state as documented: a deployment that recovered is no longer retrying.
             loadedRecords.add(record);
+            retryStates.remove(deploymentId);
             logger.info("Deployment {} recovered after {} failed attempt(s)", deploymentId, attempt);
         } else {
             // Still failing - reschedule with backoff. doUnloadDeployment above cleared the prior state.
