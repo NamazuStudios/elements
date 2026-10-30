@@ -1,0 +1,43 @@
+#!/bin/sh
+# namazu-elements postinst: create the service user and runtime directories,
+# seed the operator-owned /etc/elements/elements.properties (only if absent),
+# then enable+start on first install / restart-on-upgrade if it was running.
+#
+# /etc/elements/elements.properties is deliberately NOT a conffile: postinst
+# seeds it once and never touches it again, so cloud-init and deployment
+# tooling can rewrite it freely without an upgrade prompt.
+
+set -e
+
+if [ "$1" != "configure" ]; then
+  exit 0
+fi
+
+# Service user + runtime directories (idempotent across install and upgrade).
+if command -v systemd-sysusers >/dev/null 2>&1; then
+  systemd-sysusers /usr/lib/sysusers.d/namazu-elements.conf || true
+fi
+systemd-tmpfiles --create /usr/lib/tmpfiles.d/namazu-elements.conf || true
+
+if [ ! -e /etc/elements/elements.properties ]; then
+  install -d -m 0755 /etc/elements
+  install -o elements -g elements -m 0640 \
+    /usr/share/namazu-elements/elements.properties.example \
+    /etc/elements/elements.properties
+fi
+chown root:root /etc/elements/classpath 2>/dev/null || true
+
+if [ -d /run/systemd/system ]; then
+  systemctl daemon-reload || true
+  if [ -z "${2:-}" ]; then
+    # First install: enable and start.
+    systemctl enable namazu-elements.service || true
+    systemctl start namazu-elements.service || true
+  else
+    # Upgrade: restart only if it was running. Never start a service the
+    # operator deliberately stopped.
+    systemctl try-restart namazu-elements.service || true
+  fi
+fi
+
+exit 0

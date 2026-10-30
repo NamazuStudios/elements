@@ -1,0 +1,15 @@
+Package: namazu-elements
+Version: @@VERSION@@
+Architecture: all
+Section: java
+Priority: optional
+Maintainer: Namazu Studios <engineering@namazustudios.com>
+Homepage: https://namazustudios.com
+Depends: default-jre-headless | java21-runtime-headless, systemd, systemd-sysusers
+Recommends: ca-certificates
+Description: Namazu Elements game backend
+ The open-source backend server for connected games: REST APIs, WebSocket
+ endpoints, realtime multiplayer, a content CDN, and the plugin ("Element")
+ system. This package runs the Jetty-based server as the
+ namazu-elements.service systemd unit under a dedicated elements user, with
+ configuration in /etc/elements and state in /var/lib/namazu-elements.

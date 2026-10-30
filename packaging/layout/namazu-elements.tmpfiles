@@ -1,0 +1,7 @@
+# Persistent state and logs for the namazu-elements service (FHS 5.4 / 5.8).
+d /var/lib/namazu-elements                 0755 elements elements -
+d /var/lib/namazu-elements/cdn-repos       0755 elements elements -
+d /var/lib/namazu-elements/script-repos    0755 elements elements -
+d /var/lib/namazu-elements/script-storage  0755 elements elements -
+d /var/lib/namazu-elements/tmp             0755 elements elements -
+d /var/log/namazu-elements                 0755 elements elements -

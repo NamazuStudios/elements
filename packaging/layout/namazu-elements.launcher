@@ -1,0 +1,34 @@
+#!/bin/sh
+# namazu-elements launcher.
+#
+# Default: the jetty-ws server - the same `java jettyws` entrypoint the Docker
+# image uses. `namazu-elements migrate ...` runs the database migration tool
+# (the migrate jar's default-package main), so an installed host can migrate
+# without a container.
+#
+# Deployment configuration reaches the JVM through the environment (systemd
+# drop-ins, /etc/default/namazu-elements): underscore keys such as
+# dev_getelements_elements_mongo_uri translate to dotted properties. Values
+# in /etc/elements/elements.properties take precedence over the environment,
+# so that file stays free of deployment-specific keys by design.
+
+set -e
+
+ELEMENTS_HOME="${ELEMENTS_HOME:-/usr/share/namazu-elements}"
+ELEMENTS_LIB="${ELEMENTS_LIB:-$ELEMENTS_HOME/lib}"
+ELEMENTS_CLASSPATH="${ELEMENTS_CLASSPATH:-/etc/elements/classpath:$ELEMENTS_HOME/classpath}"
+
+CLASSPATH="$ELEMENTS_CLASSPATH:$ELEMENTS_LIB/*"
+export CLASSPATH
+
+PROPS="-Ddev.getelements.elements.configuration.properties=/etc/elements/elements.properties"
+
+case "${1:-}" in
+  migrate)
+    shift
+    exec java $JAVA_OPTS $PROPS -cp "$CLASSPATH" migrate "$@"
+    ;;
+  *)
+    exec java $JAVA_OPTS $PROPS -cp "$CLASSPATH" jettyws "$@"
+    ;;
+esac

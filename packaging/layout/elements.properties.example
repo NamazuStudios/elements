@@ -1,0 +1,12 @@
+# Namazu Elements configuration.
+#
+# This file is created from the packaged example on first install and is then
+# operator-owned: upgrades never overwrite it.
+#
+# Keep deployment-specific values OUT of this file (Mongo URI, public URLs,
+# bootstrap admin credentials). Supply them through the environment instead -
+# systemd drop-ins under /etc/systemd/system/namazu-elements.service.d/, with
+# underscore keys (dev_getelements_elements_mongo_uri) that translate to the
+# dotted properties - because values in this file take precedence over
+# environment variables, and a value pinned here would silently shadow the
+# deployment's settings.

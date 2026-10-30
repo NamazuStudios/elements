@@ -1,0 +1,39 @@
+[Unit]
+Description=Namazu Elements game backend
+Documentation=https://namazustudios.com/docs
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=elements
+Group=elements
+Environment=ELEMENTS_HOME=/usr/share/namazu-elements
+Environment=ELEMENTS_LIB=/usr/share/namazu-elements/lib
+Environment=ELEMENTS_CLASSPATH=/etc/elements/classpath:/usr/share/namazu-elements/classpath
+Environment=ELEMENTS_TEMP=/var/lib/namazu-elements/tmp
+Environment=ELEMENTS_CDN_REPOS=/var/lib/namazu-elements/cdn-repos
+Environment=ELEMENTS_SCRIPT_REPOS=/var/lib/namazu-elements/script-repos
+Environment=ELEMENTS_SCRIPT_STORAGE=/var/lib/namazu-elements/script-storage
+EnvironmentFile=-/etc/default/namazu-elements
+WorkingDirectory=/var/lib/namazu-elements
+ExecStart=/usr/bin/namazu-elements
+Restart=on-failure
+RestartSec=5
+TimeoutStartSec=0
+TimeoutStopSec=120
+LimitNOFILE=65536
+
+# Hardening: everything the service writes lives under its own state and log
+# directories. Relax a directive only with a comment naming the feature that
+# needed it.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/namazu-elements /var/log/namazu-elements
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
+Alias=elements.service
