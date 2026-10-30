@@ -34,6 +34,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -72,7 +73,8 @@ public class MongoSessionDao implements SessionDao {
 
     @Override
     public Session getBySessionSecret(final String sessionSecret) {
-        return getByLegacySessionSecret(sessionSecret);
+        return toSessionId(sessionSecret).map(this::findValidSessionById)
+                .orElseGet(() -> getByLegacySessionSecret(sessionSecret));
     }
 
     @Override
@@ -95,8 +97,33 @@ public class MongoSessionDao implements SessionDao {
 
     }
 
-    private Session getByLegacySessionSecret(final String sessionSecret) {
+    /**
+     * Returns the keyed session id ({@code _id}) for the supplied credential if it is a bare
+     * server-side session id — the 32-hex shape minted by {@link #create} since sessions moved to
+     * signed tokens — or empty if the credential is the legacy self-describing secret (which must
+     * still resolve through the user-context digest path). Garbage input is likewise empty so the
+     * legacy path raises its usual {@link BadSessionSecretException}.
+     */
+    private Optional<String> toSessionId(final String sessionSecret) {
+        return isBareSessionId(sessionSecret) ? Optional.of(sessionSecret) : Optional.empty();
+    }
 
+    private static boolean isBareSessionId(final String sessionSecret) {
+
+        if (sessionSecret == null || sessionSecret.length() != SESSION_ID_LENGTH * 2) {
+            return false;
+        }
+
+        try {
+            Hex.decode(sessionSecret);
+            return true;
+        } catch (final IllegalArgumentException ex) {
+            return false;
+        }
+
+    }
+
+    private Session getByLegacySessionSecret(final String sessionSecret) {
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
 
@@ -117,6 +144,14 @@ public class MongoSessionDao implements SessionDao {
 
     @Override
     public Session refresh(final String sessionSecret, final long expiry) {
+
+        // A bare server-side session id (the shape minted by create since the signed-token change)
+        // carries no user context to salt the digest with: it is already the keyed _id, so refresh it
+        // directly.
+
+        if (isBareSessionId(sessionSecret)) {
+            return doRefresh(sessionSecret, expiry);
+        }
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
@@ -232,6 +267,14 @@ public class MongoSessionDao implements SessionDao {
 
     @Override
     public void blacklist(final String sessionSecret) {
+
+        // A bare server-side session id resolves directly; only the legacy self-describing secret
+        // carries the user context needed to scope the delete to the secret's own user.
+
+        if (isBareSessionId(sessionSecret)) {
+            deleteLegacySession(sessionSecret, null);
+            return;
+        }
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
