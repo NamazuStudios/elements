@@ -146,7 +146,11 @@ public class OAuth2AuthServiceOperations {
             presented.putAll(oAuth2SessionRequest.getRequestHeaders());
         }
 
-        return Map.copyOf(presented);
+        // Null-valued parameters are legal in the wire format (Jackson maps {"x":null} straight through).
+        // Map.copyOf rejects null values, so copying through it would turn a benign request into an NPE
+        // and a 500 on the login path; an unmodifiable view preserves the nulls instead.
+
+        return Collections.unmodifiableMap(presented);
 
     }
 

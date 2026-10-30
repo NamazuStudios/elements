@@ -240,6 +240,30 @@ public class OAuth2AuthServiceOperationsTest {
                 Map.of("access_token", "t0k3n", "authorization", "Bearer hdr-token"));
     }
 
+    /**
+     * A null-valued parameter is legal in the wire format (Jackson maps {"x":null} straight through).
+     * The credential map must tolerate it: Map.copyOf would throw an NPE here and surface a 500 on the
+     * login path.
+     */
+    @Test
+    public void nullValuedRequestParametersAreTolerated() {
+        stubResolution(200, json("active", true), "external-1");
+
+        final var request = baseRequest();
+        final var parameters = new java.util.LinkedHashMap<String, String>();
+        parameters.put("access_token", "t0k3n");
+        parameters.put("client_state", null);
+        request.setRequestParameters(parameters);
+
+        authenticate(request, "user-1");
+
+        assertEquals(publishedEvents.size(), 1, "the login must succeed and publish its event");
+        final var event = publishedEvents.get(0).getEventArgument(0, OAuth2AuthLoginEvent.class);
+        assertEquals(event.requestParameters().get("access_token"), "t0k3n");
+        assertTrue(event.requestParameters().containsKey("client_state"));
+        assertNull(event.requestParameters().get("client_state"));
+    }
+
     @Test
     public void eventCarriesTheMapperResolvedUser() {
         // The mapper identity is the only distinction between the anon (login) and user (account-link)
