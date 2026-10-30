@@ -9,6 +9,7 @@ import org.jboss.shrinkwrap.resolver.api.ResolvedArtifact;
 import org.jboss.shrinkwrap.resolver.api.maven.ConfigurableMavenResolverSystem;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 import org.jboss.shrinkwrap.resolver.api.maven.MavenResolvedArtifact;
+import org.jboss.shrinkwrap.resolver.api.maven.MavenStrategyStage;
 import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,14 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLoader {
@@ -32,7 +39,9 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         // metadata — e.g. JitPack (added by elements that use JitPack libraries) will 404 for
         // dev.getelements.elements:sdk-spi and other non-JitPack artifacts.  The failures are
         // already caught and handled by isNotFound(); raising the log threshold to SEVERE
-        // eliminates the noise without hiding real problems.
+        // eliminates the noise. Genuine transfer/connection failures are surfaced separately by
+        // this class at WARN through SLF4J (see resolveArtifacts), so the raised threshold does
+        // not hide them.
         java.util.logging.Logger
                 .getLogger("org.jboss.shrinkwrap.resolver.impl.maven.logging.LogTransferListener")
                 .setLevel(java.util.logging.Level.SEVERE);
@@ -66,6 +75,25 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         "org.eclipse.aether.transfer.MetadataNotFoundException"
     );
 
+    /**
+     * Exception types indicating that a configured repository could not be contacted, as opposed to the artifact
+     * simply not existing. Matched by class name along the cause chain, like {@link #NOT_FOUND_EXCEPTIONS}. Note
+     * that {@code ArtifactNotFoundException} is a subclass of {@code ArtifactTransferException}, but class-name
+     * matching on exact types distinguishes them, and {@link #isUnreachable(Throwable)} is checked first so a
+     * mixed failure (404 from one repository, connection refused from another) is treated as unreachable.
+     */
+    private static final Set<String> UNREACHABLE_EXCEPTIONS = Set.of(
+        "org.eclipse.aether.transfer.ArtifactTransferException",
+        "org.eclipse.aether.transfer.MetadataTransferException",
+        "org.eclipse.aether.transfer.NoRepositoryConnectorException",
+        "org.eclipse.aether.transfer.RepositoryOfflineException",
+        "java.net.ConnectException",
+        "java.net.NoRouteToHostException",
+        "java.net.SocketException",
+        "java.net.SocketTimeoutException",
+        "java.net.UnknownHostException"
+    );
+
     private static final Set<ScopeType> PERMITTED_SCOPES = Set.of(ScopeType.COMPILE, ScopeType.RUNTIME);
 
     @Override
@@ -73,35 +101,20 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
                                                  final Set<ArtifactRepository> repositories,
                                                  final Set<String> coordinates) {
 
-        final File[] files;
+        final MavenResolvedArtifact[] artifacts;
 
         try {
-
-            final var artifacts = configurableSystem(repositories)
-                    .resolve(coordinates)
-                    .withTransitivity()
-                    .asResolvedArtifact();
-
-            files = Stream.of(artifacts)
-                    .filter(a -> !a.isOptional())
-                    .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
-                    .map(ResolvedArtifact::asFile)
-                        .toArray(File[]::new);
-
-        } catch (RuntimeException ex) {
-            if (isNotFound(ex)) {
-
-                logger.info("Unable to resolve artifact coordinates: [{}]",
-                        String.join(",", coordinates),
-                        ex
-                );
-
-                return Optional.empty();
-
-            } else {
-                throw new SdkException(ex);
-            }
+            artifacts = resolveArtifacts(
+                    repositories, coordinates, resolve -> resolve.withTransitivity().asResolvedArtifact());
+        } catch (ArtifactNotResolved ex) {
+            return Optional.empty();
         }
+
+        final var files = Stream.of(artifacts)
+                .filter(a -> !a.isOptional())
+                .filter(a -> PERMITTED_SCOPES.contains(a.getScope()))
+                .map(ResolvedArtifact::asFile)
+                    .toArray(File[]::new);
 
         final var classpath = Stream.of(files)
                 .map(f -> {
@@ -121,23 +134,10 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         final MavenResolvedArtifact[] resolvedArtifacts;
 
         try {
-            resolvedArtifacts = configurableSystem(repositories)
-                    .resolve(coordinates)
-                    .withTransitivity()
-                    .asResolvedArtifact();
-        } catch (RuntimeException ex) {
-            if (isNotFound(ex)) {
-
-                logger.info("Unable to resolve artifact coordinates: [{}]",
-                        String.join(",", coordinates),
-                        ex
-                );
-
-                throw new SdkArtifactNotFoundException(ex);
-
-            } else {
-                throw new SdkException(ex);
-            }
+            resolvedArtifacts = resolveArtifacts(
+                    repositories, List.of(coordinates), resolve -> resolve.withTransitivity().asResolvedArtifact());
+        } catch (ArtifactNotResolved ex) {
+            throw new SdkArtifactNotFoundException(ex.getCause());
         }
 
         return Stream
@@ -154,27 +154,13 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
         final MavenResolvedArtifact resolvedArtifact;
 
         try {
-            resolvedArtifact = configurableSystem(repositories)
-                    .resolve(coordinates)
-                    .withoutTransitivity()
-                    .asSingleResolvedArtifact();
-        } catch (RuntimeException ex) {
-            if (isNotFound(ex)) {
-
-                logger.info("Unable to resolve artifact coordinates: [{}]",
-                        String.join(",", coordinates),
-                        ex
-                );
-
-                return Optional.empty();
-
-            } else {
-                throw new SdkException(ex);
-            }
+            resolvedArtifact = resolveArtifacts(repositories, List.of(coordinates),
+                    resolve -> resolve.withoutTransitivity().asSingleResolvedArtifact());
+        } catch (ArtifactNotResolved ex) {
+            return Optional.empty();
         }
 
-        final var artifact = toArtifact(resolvedArtifact);
-        return Optional.of(artifact);
+        return Optional.of(toArtifact(resolvedArtifact));
 
     }
 
@@ -220,19 +206,151 @@ public class CachingShrinkwrapElementArtifactLoader implements ElementArtifactLo
 
     }
 
-    private static boolean isNotFound(Throwable t) {
+    /**
+     * Resolves the given coordinates against the configured repositories, translating every failure into one of
+     * three outcomes: the extracted result on success; an {@link ArtifactNotResolved} signal when the artifact
+     * does not exist; or an {@link SdkException} carrying the underlying cause and the configured repositories
+     * when resolution fails for any other reason.
+     * <p>
+     * When resolution fails because a repository is unreachable (connection refused, DNS failure, timeout, a
+     * missing repository connector), the resolution is retried fully offline against the local Maven repository,
+     * and the cached copy is used when present (#148). Aether's enhanced local repository manager gates cache
+     * hits on the availability of the repository recorded in {@code _remote.repositories}, so the retry also
+     * switches to the legacy local repository manager, which considers any artifact present on disk available
+     * regardless of where it was originally downloaded from.
+     *
+     * @param repositories the configured repositories
+     * @param coordinates  the coordinates to resolve
+     * @param extract      applies the desired transitivity/shape to the strategy stage
+     * @param <T>          the resolved shape ({@code MavenResolvedArtifact[]} or {@code MavenResolvedArtifact})
+     * @return the extracted result
+     */
+    private <T> T resolveArtifacts(final Set<ArtifactRepository> repositories,
+                                   final Collection<String> coordinates,
+                                   final Function<MavenStrategyStage, T> extract) {
 
-        for (Throwable c = t; c != null; c = c.getCause()) {
+        final var joined = String.join(",", coordinates);
 
-            final var name = c.getClass().getName();
+        try {
+            return extract.apply(resolveStage(repositories, coordinates, false));
+        } catch (RuntimeException onlineFailure) {
 
-            if (NOT_FOUND_EXCEPTIONS.contains(name)) {
-                return true;
+            // An unreachable repository is not the same as a missing artifact: fall back to whatever the local
+            // Maven repository already holds before giving up (#148).
+            if (isUnreachable(onlineFailure)) {
+
+                logger.warn(
+                        "Artifact repository unreachable while resolving [{}]; trying the locally cached copy. "
+                                + "Configured repositories: [{}]",
+                        joined,
+                        describeRepositories(repositories),
+                        onlineFailure
+                );
+
+                try {
+                    final var cached = extract.apply(resolveStage(repositories, coordinates, true));
+                    logger.warn("Resolved [{}] from the local Maven repository.", joined);
+                    return cached;
+                } catch (RuntimeException offlineFailure) {
+                    throw new SdkException(
+                            "Unable to resolve artifact coordinates [" + joined
+                                    + "]: a configured repository is unreachable (" + rootCause(onlineFailure)
+                                    + ") and the artifacts are not available in the local Maven repository ("
+                                    + rootCause(offlineFailure)
+                                    + "). Configured repositories: [" + describeRepositories(repositories) + "]",
+                            onlineFailure);
+                }
+
             }
 
+            if (isNotFound(onlineFailure)) {
+                logger.info("Unable to resolve artifact coordinates: [{}]", joined, onlineFailure);
+                throw new ArtifactNotResolved(onlineFailure);
+            }
+
+            throw new SdkException(
+                    "Unable to resolve artifact coordinates [" + joined + "]. Configured repositories: ["
+                            + describeRepositories(repositories) + "]",
+                    onlineFailure);
+
+        }
+    }
+
+    /**
+     * Builds the resolution for the given repositories, optionally restricted to the local Maven repository.
+     *
+     * @param repositories the configured repositories
+     * @param coordinates  the coordinates to resolve
+     * @param offline      true to resolve without contacting any repository, ignoring
+     *                     {@code _remote.repositories} tracking
+     * @return the strategy stage for the requested resolution
+     */
+    private MavenStrategyStage resolveStage(final Set<ArtifactRepository> repositories,
+                                            final Collection<String> coordinates,
+                                            final boolean offline) {
+
+        final var config = configurableSystem(repositories);
+
+        if (offline) {
+            return config.workOffline().useLegacyLocalRepo(true).resolve(coordinates);
+        }
+
+        return config.resolve(coordinates);
+
+    }
+
+    private static String describeRepositories(final Set<ArtifactRepository> repositories) {
+
+        if (repositories == null || repositories.isEmpty()) {
+            return "none";
+        }
+
+        return repositories.stream()
+                .map(r -> r.isDefault() ? "central(default)" : r.id() + "(" + r.url() + ")")
+                .sorted()
+                .collect(Collectors.joining(", "));
+
+    }
+
+    private static Throwable rootCause(final Throwable throwable) {
+        var cause = throwable;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
+
+    private static boolean chainContains(final Throwable throwable, final Set<String> classNames) {
+
+        final var seen = Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+
+        for (var cause = throwable; cause != null && seen.add(cause); cause = cause.getCause()) {
+            if (classNames.contains(cause.getClass().getName())) {
+                return true;
+            }
         }
 
         return false;
+
+    }
+
+    private static boolean isNotFound(final Throwable throwable) {
+        return chainContains(throwable, NOT_FOUND_EXCEPTIONS);
+    }
+
+    private static boolean isUnreachable(final Throwable throwable) {
+        return chainContains(throwable, UNREACHABLE_EXCEPTIONS);
+    }
+
+    /**
+     * Internal signal that resolution failed because the artifact does not exist, letting each
+     * {@link ElementArtifactLoader} method translate that outcome into its own contract.
+     */
+    private static final class ArtifactNotResolved extends RuntimeException {
+
+        private ArtifactNotResolved(final Throwable cause) {
+            super(cause);
+        }
 
     }
 

@@ -5,6 +5,7 @@ import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.google.inject.spi.Elements;
+import com.google.inject.spi.PrivateElements;
 import dev.getelements.elements.sdk.Element;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.annotation.ElementServiceImplementation.DefaultImplementation;
@@ -15,9 +16,12 @@ import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.getelements.elements.sdk.record.ElementServiceRecord;
 import jakarta.inject.Provider;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
@@ -37,6 +41,8 @@ public class GuiceSpiModule extends PrivateModule {
     private final GuiceOptionsRecord options;
 
     private final List<Module> guiceElementModules;
+
+    private final Map<Key<?>, Provider<Object>> parentFallbackProviders;
 
     public GuiceSpiModule(
             final ElementRegistry parent,
@@ -62,9 +68,19 @@ public class GuiceSpiModule extends PrivateModule {
             validateDeferredKeysAreBound(elementPackage);
         }
 
+        // Same rationale: deferred keys that no installed @GuiceElementModule (nor this module's own
+        // @ElementServiceImplementation) binds are resolved against the parent element registry here, eagerly,
+        // so a missing provider surfaces as a clean SdkException rather than Guice's [Guice/ExposedButNotBound]
+        // CreationException (issue #32). GUICE_MODULE_ONLY opts out entirely -- it defers to the author's own
+        // modules per GuiceOptions' documented contract.
+        this.parentFallbackProviders = options.strategy() != GUICE_MODULE_ONLY && !options.strict()
+                ? resolveParentFallbackProviders()
+                : Map.of();
+
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void configure() {
 
         final var attributes = elementRecord.attributes().asProperties();
@@ -106,6 +122,86 @@ public class GuiceSpiModule extends PrivateModule {
 
         guiceElementModules.forEach(this::install);
 
+        parentFallbackProviders.forEach((key, provider) -> bind((Key<Object>) key).toProvider(provider));
+
+    }
+
+    /**
+     * Resolves deferred keys (see {@link #computeDeferredKeys()}) that neither an installed
+     * {@code @GuiceElementModule} nor this module's own {@code @ElementServiceImplementation} binds: the key is
+     * delegated to the ServiceLocator of a parent element that exports it -- mirroring {@link #bindDependentService}
+     * -- so an unbound expose-only service no longer surfaces as Guice's generic {@code [Guice/ExposedButNotBound]}
+     * error (issue #32). If no parent element provides it either, a clear {@link SdkException} names the exact
+     * unresolvable service.
+     *
+     * @return providers for each deferred key that only a parent element provides
+     */
+    private Map<Key<?>, Provider<Object>> resolveParentFallbackProviders() {
+
+        final var deferredKeys = computeDeferredKeys();
+
+        if (deferredKeys.isEmpty()) {
+            return Map.of();
+        }
+
+        final var moduleBoundKeys = resolveModuleBoundKeys();
+
+        final var ownBoundKeys = elementRecord
+                .services()
+                .stream()
+                .filter(esr -> !DefaultImplementation.class.equals(esr.implementation().type()))
+                .flatMap(esr -> {
+                    final Stream<Key<?>> exportedKeys = exportedKeys(esr).stream();
+                    return Stream.concat(Stream.<Key<?>>of(Key.get(esr.implementation().type())), exportedKeys);
+                })
+                .collect(toSet());
+
+        final var providers = new HashMap<Key<?>, Provider<Object>>();
+
+        deferredKeys
+                .stream()
+                .filter(key -> !moduleBoundKeys.contains(key))
+                .filter(key -> !ownBoundKeys.contains(key))
+                .forEach(key -> providers.put(key, findParentProvider(key)));
+
+        return providers;
+
+    }
+
+    @SuppressWarnings("unchecked")
+    private Provider<Object> findParentProvider(final Key<?> key) {
+
+        for (final Element element : parent.stream().toList()) {
+
+            final var export = element
+                    .getElementRecord()
+                    .services()
+                    .stream()
+                    .filter(esr -> esr.export().expose())
+                    .filter(esr -> exportedKeys(esr).contains(key))
+                    .map(ElementServiceRecord::export)
+                    .findFirst();
+
+            if (export.isEmpty()) continue;
+
+            final var locator = element.getServiceLocator();
+            final var type = (Class<Object>) key.getTypeLiteral().getRawType();
+
+            if (export.orElseThrow().isNamed()) {
+                return () -> locator.getInstance(type, export.orElseThrow().name());
+            } else {
+                return () -> locator.getInstance(type);
+            }
+
+        }
+
+        throw new SdkException(
+                "Element package '" + elementRecord.definition().pkg().getName() + "' exports " + key +
+                " with no @ElementServiceImplementation, no installed @GuiceElementModule binds it, and no " +
+                "Element in the parent registry provides it. Provide an @ElementServiceImplementation, add a " +
+                "@GuiceElementModule that binds it, or depend on an Element that provides it."
+        );
+
     }
 
     /**
@@ -144,12 +240,7 @@ public class GuiceSpiModule extends PrivateModule {
             return;
         }
 
-        final var boundKeys = Elements
-                .getElements(guiceElementModules)
-                .stream()
-                .filter(element -> element instanceof Binding<?>)
-                .map(element -> ((Binding<?>) element).getKey())
-                .collect(toSet());
+        final var boundKeys = resolveModuleBoundKeys();
 
         final var unbound = deferredKeys
                 .stream()
@@ -164,6 +255,32 @@ public class GuiceSpiModule extends PrivateModule {
                     "@ElementServiceImplementation, or add a @GuiceElementModule that explicitly binds them."
             );
         }
+
+    }
+
+    /**
+     * Collects the keys visible to this module's private scope from the installed {@code @GuiceElementModule}s.
+     * {@link Elements#getElements(Module...)} flattens a {@link PrivateModule} into a single nested
+     * {@link PrivateElements} element whose inner {@link Binding}s are invisible to a naive top-level
+     * {@code instanceof Binding} filter -- which made every key bound by a private module falsely look unbound
+     * (both here and to {@link #validateDeferredKeysAreBound}). A private module's bindings are only usable by
+     * this module for keys it {@code expose()}s upward, so the exposed keys are what count as bound.
+     *
+     * @return the set of keys this module's own {@code expose()} can resolve
+     */
+    private Set<Key<?>> resolveModuleBoundKeys() {
+
+        final var keys = new HashSet<Key<?>>();
+
+        for (final var element : Elements.getElements(guiceElementModules)) {
+            if (element instanceof Binding<?> binding) {
+                keys.add(binding.getKey());
+            } else if (element instanceof PrivateElements privateElements) {
+                keys.addAll(privateElements.getExposedKeys());
+            }
+        }
+
+        return keys;
 
     }
 
@@ -254,6 +371,7 @@ public class GuiceSpiModule extends PrivateModule {
                             : element.getServiceLocator().getInstance(aClass);
 
                     bind(key).toProvider(provider);
+                    expose(key);
 
                 });
     }

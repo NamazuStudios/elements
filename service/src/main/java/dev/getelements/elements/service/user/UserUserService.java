@@ -3,7 +3,7 @@ package dev.getelements.elements.service.user;
 import com.google.common.collect.Lists;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.session.Session;
@@ -27,7 +27,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public class UserUserService extends AnonUserService implements UserService {
 
-    private SessionDao sessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
+
+    private dev.getelements.elements.sdk.dao.SessionDao sessionDao;
 
     private long sessionTimeoutSeconds;
 
@@ -117,12 +119,19 @@ public class UserUserService extends AnonUserService implements UserService {
 
         getUserDao().updateUser(user, newPassword, oldPassword);
 
+        // Rotate credentials for every outstanding session -- signed tokens included -- so that a
+        // compromised session does not survive a password change, then issue the fresh one LAST so it
+        // survives the revocation. Mirrors the password-reset path (MongoUserDao.setPassword), which
+        // has always revoked; the UI copy on the change-password card promises this behavior.
+
+        getSessionDao().deleteSessionsForUser(userId);
+
         getElementRegistry().publish(Event.builder()
                 .argument(user)
                 .named(USER_UPDATED_EVENT)
                 .build());
 
-        return getSessionDao().create(session);
+        return getSessionTokenIssuer().issue(session);
 
     }
 
@@ -138,12 +147,21 @@ public class UserUserService extends AnonUserService implements UserService {
                 .build());
     }
 
-    public SessionDao getSessionDao() {
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
+    }
+
+    @Inject
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
+    }
+
+    public dev.getelements.elements.sdk.dao.SessionDao getSessionDao() {
         return sessionDao;
     }
 
     @Inject
-    public void setSessionDao(SessionDao sessionDao) {
+    public void setSessionDao(dev.getelements.elements.sdk.dao.SessionDao sessionDao) {
         this.sessionDao = sessionDao;
     }
 

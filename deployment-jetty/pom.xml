@@ -108,6 +108,11 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

@@ -9,13 +9,15 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
 import dev.getelements.elements.dao.mongo.*;
 import dev.getelements.elements.dao.mongo.MongoPasswordResetTokenDao;
+import dev.getelements.elements.dao.mongo.MongoSuperUserInviteTokenDao;
 import dev.getelements.elements.dao.mongo.MongoUidVerificationTokenDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductBundleDao;
 import dev.getelements.elements.dao.mongo.goods.MongoProductSkuSchemaDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationConfigurationDao;
 import dev.getelements.elements.dao.mongo.application.MongoApplicationDao;
-import dev.getelements.elements.dao.mongo.auth.MongoAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoCaptchaConfigurationDao;
+import dev.getelements.elements.dao.mongo.auth.MongoJwtSigningKeyDao;
+import dev.getelements.elements.dao.mongo.auth.MongoMachineTokenRevocationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOAuth2AuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoTotpDao;
@@ -23,6 +25,7 @@ import dev.getelements.elements.dao.mongo.auth.MongoTotpLoginChallengeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcAuthSchemeDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcProviderConfigurationDao;
 import dev.getelements.elements.dao.mongo.auth.MongoOidcLoginAttemptDao;
+import dev.getelements.elements.dao.mongo.auth.MongoOidcProviderDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoSmartContractDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoVaultDao;
 import dev.getelements.elements.dao.mongo.blockchain.MongoWalletDao;
@@ -54,6 +57,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.dao.PasswordResetTokenDao;
+import dev.getelements.elements.sdk.dao.SuperUserInviteTokenDao;
 import dev.getelements.elements.sdk.dao.UidVerificationTokenDao;
 import dev.getelements.elements.sdk.dao.ItemLedgerDao;
 import dev.getelements.elements.sdk.dao.ProductBundleDao;
@@ -101,6 +105,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(MatchDao.class).to(MongoMatchDao.class);
         bind(MultiMatchDao.class).to(MongoMultiMatchDao.class);
         bind(SessionDao.class).to(MongoSessionDao.class);
+        bind(JwtSigningKeyDao.class).to(MongoJwtSigningKeyDao.class);
         bind(FCMRegistrationDao.class).to(MongoFCMRegistrationDao.class);
         bind(LeaderboardDao.class).to(MongoLeaderboardDao.class);
         bind(ScoreDao.class).to(MongoScoreDao.class);
@@ -122,10 +127,11 @@ public class MongoDaoModule extends PrivateModule {
         bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
         bind(EmailTemplateDao.class).to(MongoEmailTemplateDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
-        bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(OidcAuthSchemeDao.class).to(MongoOidcAuthSchemeDao.class);
         bind(OidcProviderConfigurationDao.class).to(MongoOidcProviderConfigurationDao.class);
         bind(OidcLoginAttemptDao.class).to(MongoOidcLoginAttemptDao.class);
+        bind(OidcProviderDao.class).to(MongoOidcProviderDao.class);
+        bind(MachineTokenRevocationDao.class).to(MongoMachineTokenRevocationDao.class);
         bind(CaptchaConfigurationDao.class).to(MongoCaptchaConfigurationDao.class);
         bind(OAuth2AuthSchemeDao.class).to(MongoOAuth2AuthSchemeDao.class);
         bind(TotpConfigurationDao.class).to(MongoTotpConfigurationDao.class);
@@ -147,6 +153,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(ProductSkuSchemaDao.class).to(MongoProductSkuSchemaDao.class);
         bind(UidVerificationTokenDao.class).to(MongoUidVerificationTokenDao.class);
         bind(PasswordResetTokenDao.class).to(MongoPasswordResetTokenDao.class);
+        bind(SuperUserInviteTokenDao.class).to(MongoSuperUserInviteTokenDao.class);
 
 
         bind(SecureRandom.class)
@@ -195,6 +202,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MultiMatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
+        expose(JwtSigningKeyDao.class);
         expose(LeaderboardDao.class);
         expose(ScoreDao.class);
         expose(RankDao.class);
@@ -214,10 +222,11 @@ public class MongoDaoModule extends PrivateModule {
         expose(MetadataSpecDao.class);
         expose(EmailTemplateDao.class);
         expose(SaveDataDocumentDao.class);
-        expose(AuthSchemeDao.class);
         expose(OidcAuthSchemeDao.class);
         expose(OidcProviderConfigurationDao.class);
         expose(OidcLoginAttemptDao.class);
+        expose(OidcProviderDao.class);
+        expose(MachineTokenRevocationDao.class);
         expose(CaptchaConfigurationDao.class);
         expose(OAuth2AuthSchemeDao.class);
         expose(TotpConfigurationDao.class);
@@ -239,6 +248,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(ProductSkuSchemaDao.class);
         expose(UidVerificationTokenDao.class);
         expose(PasswordResetTokenDao.class);
+        expose(SuperUserInviteTokenDao.class);
 
     }
 

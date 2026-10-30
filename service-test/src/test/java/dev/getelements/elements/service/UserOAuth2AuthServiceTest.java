@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import dev.getelements.elements.sdk.dao.*;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.model.auth.BodyType;
 import dev.getelements.elements.sdk.model.auth.HttpMethod;
 import dev.getelements.elements.sdk.model.auth.OAuth2AuthScheme;
 import dev.getelements.elements.sdk.model.auth.OAuth2RequestKeyValue;
+import dev.getelements.elements.sdk.model.exception.ErrorCode;
 import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.exception.auth.IdentityAlreadyLinkedException;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
@@ -51,6 +54,7 @@ public class UserOAuth2AuthServiceTest {
     @Inject private OAuth2AuthSchemeDao schemeDao;
     @Inject private OAuth2AuthServiceRequestInvoker invoker;
     @Inject private SessionDao sessionDao;
+    @Inject private SessionTokenIssuer sessionTokenIssuer;
 
     @BeforeMethod
     public void setup() {
@@ -79,12 +83,13 @@ public class UserOAuth2AuthServiceTest {
         verify(userDao, never()).createUser(any());
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getUser().getId(), CURRENT_USER_ID);
     }
 
     /**
-     * Authenticated user, uid/scheme already linked to a DIFFERENT user → throws AuthValidationException.
+     * Authenticated user, uid/scheme already linked to a DIFFERENT user → throws
+     * IdentityAlreadyLinkedException with a dedicated error code.
      */
     @Test
     public void testAuthenticated_uidFoundDifferentUser_throwsException() {
@@ -95,8 +100,11 @@ public class UserOAuth2AuthServiceTest {
                 .thenReturn(Optional.of(uidFor(EXT_USER_ID, SCHEME_NAME, "other-user-id")));
         when(userDao.getUser("other-user-id")).thenReturn(userWithId("other-user-id"));
 
-        assertThrows(AuthValidationException.class,
+        final var ex = expectThrows(IdentityAlreadyLinkedException.class,
                 () -> service.createSession(simpleRequest("scheme-user-2", EXT_USER_ID)));
+
+        assertEquals(ex.getCode(), ErrorCode.IDENTITY_ALREADY_LINKED);
+        assertTrue(ex instanceof AuthValidationException);
 
         verify(sessionDao, never()).create(any());
         verify(userUidDao, never()).createUserUidStrict(any());
@@ -133,7 +141,7 @@ public class UserOAuth2AuthServiceTest {
         assertEquals(uidCaptor.getValue().getUserId(), CURRENT_USER_ID);
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getUser().getId(), CURRENT_USER_ID);
     }
 
@@ -158,7 +166,7 @@ public class UserOAuth2AuthServiceTest {
         assertEquals(uidCaptor.getValue().getUserId(), CURRENT_USER_ID);
 
         final var sessionCaptor = ArgumentCaptor.forClass(Session.class);
-        verify(sessionDao).create(sessionCaptor.capture());
+        verify(sessionTokenIssuer).issue(sessionCaptor.capture());
         assertEquals(sessionCaptor.getValue().getUser().getId(), CURRENT_USER_ID);
     }
 
@@ -211,6 +219,7 @@ public class UserOAuth2AuthServiceTest {
             bind(UserDao.class).toInstance(mock(UserDao.class));
             bind(OAuth2AuthSchemeDao.class).toInstance(mock(OAuth2AuthSchemeDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bind(ProfileDao.class).toInstance(mock(ProfileDao.class));
             bind(NameService.class).toInstance(mock(NameService.class));
             bind(ApplicationDao.class).toInstance(mock(ApplicationDao.class));

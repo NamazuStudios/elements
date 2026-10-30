@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { TagsInput } from '@/components/TagsInput';
 import { OAuth2HeaderParamEditor } from '@/components/OAuth2HeaderParamEditor';
 import { JwkListEditor } from '@/components/JwkListEditor';
+import { KeyValueMapEditor } from '@/components/KeyValueMapEditor';
 import { type FieldSchema } from '@/lib/schema-parser';
 import { type UseFormReturn } from 'react-hook-form';
 import { Copy } from 'lucide-react';
@@ -245,6 +246,17 @@ function renderInput(
   
   // Handle objects/maps with JSON textarea (after array check)
   if (schema.type === 'object' || schema.isMap) {
+    // Special handling for OIDC Provider extraAuthorizeParams: structured key/value
+    // editor over the Map<String, String> the backend expects, instead of hand-typed JSON
+    if (schema.name === 'extraAuthorizeParams' && schema.isMap) {
+      return (
+        <KeyValueMapEditor
+          value={formField.value}
+          onChange={formField.onChange}
+        />
+      );
+    }
+
     return (
       <Textarea
         placeholder={`Enter JSON for ${formatLabel(schema.name).toLowerCase()}`}

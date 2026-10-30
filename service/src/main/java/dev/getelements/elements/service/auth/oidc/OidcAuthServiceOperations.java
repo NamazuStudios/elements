@@ -10,10 +10,15 @@ import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.util.Base64URL;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.OidcAuthSchemeDao;
 import dev.getelements.elements.sdk.dao.ProfileDao;
-import dev.getelements.elements.sdk.dao.SessionDao;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
+import dev.getelements.elements.sdk.model.auth.OidcAuthLoginEvent;
+import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
+import dev.getelements.elements.sdk.model.auth.OidcProviderConfiguration;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
@@ -45,6 +50,7 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static dev.getelements.elements.sdk.service.Constants.OIDC_JWKS_REFRESH_SECONDS;
+import static dev.getelements.elements.sdk.service.auth.OidcAuthService.OIDC_AUTH_LOGIN_EVENT;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -64,11 +70,13 @@ public class OidcAuthServiceOperations {
 
     private ProfileDao profileDao;
 
-    private SessionDao SessionDao;
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private ApplicationDao applicationDao;
 
     private OidcAuthSchemeDao oidcAuthSchemeDao;
+
+    private ElementRegistry elementRegistry;
 
     private long sessionTimeoutSeconds;
 
@@ -102,7 +110,7 @@ public class OidcAuthServiceOperations {
         // and today's schemes carry no client id to check the audience against.
         verify(decodedJWT, scheme, null, null);
 
-        return buildSession(decodedJWT, scheme, userMapper, oidcSessionRequest.getApplicationNameOrId());
+        return buildSession(decodedJWT, scheme, userMapper, oidcSessionRequest.getApplicationNameOrId(), null);
     }
 
     /**
@@ -166,7 +174,28 @@ public class OidcAuthServiceOperations {
             final OidcAuthScheme scheme,
             final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
             final String requestedApplicationNameOrId) {
-        return buildSession(decodedJWT, scheme, userMapper, requestedApplicationNameOrId);
+        return createOrUpdateUserWithVerifiedToken(decodedJWT, scheme, userMapper, requestedApplicationNameOrId, null);
+    }
+
+    /**
+     * Same as {@link #createOrUpdateUserWithVerifiedToken(DecodedJWT, OidcAuthScheme, BiFunction, String)},
+     * additionally carrying the resolved {@link OidcProviderConfiguration} into the published login event.
+     *
+     * @param decodedJWT the already-validated, decoded JWT
+     * @param scheme the scheme the token was validated against
+     * @param userMapper resolves/creates the {@link User} for the token
+     * @param requestedApplicationNameOrId the application name/ID to attach, or {@code null} for the legacy
+     *                                      JWT aud-claim-driven, ungated behavior
+     * @param provider the provider configuration the login went through, or {@code null} if none applies
+     * @return the created session
+     */
+    public SessionCreation createOrUpdateUserWithVerifiedToken(
+            final DecodedJWT decodedJWT,
+            final OidcAuthScheme scheme,
+            final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
+            final String requestedApplicationNameOrId,
+            final OidcProviderConfiguration provider) {
+        return buildSession(decodedJWT, scheme, userMapper, requestedApplicationNameOrId, provider);
     }
 
     /**
@@ -188,12 +217,31 @@ public class OidcAuthServiceOperations {
     public SessionCreation createSessionForResolvedUser(final User user,
                                                           final String applicationNameOrId,
                                                           final boolean explicitlyRequested) {
+        return createSessionForResolvedUser(user, applicationNameOrId, explicitlyRequested, null);
+    }
+
+    /**
+     * Same as {@link #createSessionForResolvedUser(User, String, boolean)}, additionally carrying the
+     * resolved {@link OidcProviderConfiguration} into the published login event.
+     *
+     * @param user the already-resolved user
+     * @param applicationNameOrId the application name/ID to attach, or {@code null} for none
+     * @param explicitlyRequested whether {@code applicationNameOrId} came from an explicit request value
+     * @param provider the provider configuration the login went through, or {@code null} if none applies
+     * @return the created session
+     */
+    public SessionCreation createSessionForResolvedUser(final User user,
+                                                          final String applicationNameOrId,
+                                                          final boolean explicitlyRequested,
+                                                          final OidcProviderConfiguration provider) {
         final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
         final var session = new Session();
         session.setUser(user);
         session.setExpiry(expiry);
         attachApplicationProfile(session, user, applicationNameOrId, explicitlyRequested);
-        return getSessionDao().create(session);
+        final var sessionCreation = getSessionTokenIssuer().issue(session);
+        publishLoginEvent(session, null, null, provider);
+        return sessionCreation;
     }
 
     /**
@@ -211,7 +259,8 @@ public class OidcAuthServiceOperations {
     private SessionCreation buildSession(final DecodedJWT decodedJWT,
                                           final OidcAuthScheme scheme,
                                           final BiFunction<DecodedJWT, OidcAuthScheme, User> userMapper,
-                                          final String requestedApplicationNameOrId) {
+                                          final String requestedApplicationNameOrId,
+                                          final OidcProviderConfiguration provider) {
 
         // Maps the user, writing it to the database.
         final User user = userMapper.apply(decodedJWT, scheme);
@@ -230,7 +279,30 @@ public class OidcAuthServiceOperations {
 
         attachApplicationProfile(session, user, applicationId, requestedApplicationNameOrId != null);
 
-        return getSessionDao().create(session);
+        final var sessionCreation = getSessionTokenIssuer().issue(session);
+        publishLoginEvent(session, decodedJWT.getToken(), scheme, provider);
+        return sessionCreation;
+    }
+
+    /**
+     * Publishes {@code OIDC_AUTH_LOGIN_EVENT} for a successful authentication. The payload is a single
+     * {@link OidcAuthLoginEvent} (event arguments must be non-null), whose individual fields may be null
+     * when the flow cannot know them.
+     *
+     * @param session the issued session, carrying the user and the attached profile (if any)
+     * @param idToken the raw validated id_token, or {@code null} if the flow has no live token
+     * @param scheme the scheme the token was validated against, or {@code null} if unavailable
+     * @param provider the provider configuration used, or {@code null} if unavailable
+     */
+    private void publishLoginEvent(final Session session,
+                                   final String idToken,
+                                   final OidcAuthScheme scheme,
+                                   final OidcProviderConfiguration provider) {
+        getElementRegistry().publish(Event.builder()
+                .argument(new OidcAuthLoginEvent(
+                        session.getUser(), session.getProfile(), idToken, scheme, provider))
+                .named(OIDC_AUTH_LOGIN_EVENT)
+                .build());
     }
 
     /**
@@ -446,6 +518,15 @@ public class OidcAuthServiceOperations {
         return client;
     }
 
+    public ElementRegistry getElementRegistry() {
+        return elementRegistry;
+    }
+
+    @Inject
+    public void setElementRegistry(ElementRegistry elementRegistry) {
+        this.elementRegistry = elementRegistry;
+    }
+
     @Inject
     public void setClient(Client client) {
         this.client = client;
@@ -469,13 +550,13 @@ public class OidcAuthServiceOperations {
         this.profileDao = profileDao;
     }
 
-    public SessionDao getSessionDao() {
-        return SessionDao;
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
     }
 
     @Inject
-    public void setSessionDao(SessionDao SessionDao) {
-        this.SessionDao = SessionDao;
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public ApplicationDao getApplicationDao() {

@@ -39,6 +39,13 @@ public class UserLinkResource {
             summary = "Link OAuth2 Identity",
             description = "Links an external OAuth2 identity to the currently authenticated user. " +
                     "Requires an active user session. Returns the updated session information.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "The identity was linked (or already was); the " +
+                    "resulting session is returned."),
+            @ApiResponse(responseCode = "403", description = "No active USER/SUPERUSER session."),
+            @ApiResponse(responseCode = "409", description = "The external identity is already linked to a " +
+                    "different user (error code IDENTITY_ALREADY_LINKED).")
+    })
     public SessionCreation linkOAuth2(final OAuth2SessionRequest request) {
         return getOAuth2LinkService().createSession(request);
     }
@@ -64,8 +71,9 @@ public class UserLinkResource {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "The identity was linked (or already was); the " +
                     "resulting session is returned."),
-            @ApiResponse(responseCode = "403", description = "No active USER/SUPERUSER session, or the external " +
-                    "identity is already linked to a different user.")
+            @ApiResponse(responseCode = "403", description = "No active USER/SUPERUSER session."),
+            @ApiResponse(responseCode = "409", description = "The external identity is already linked to a " +
+                    "different user (error code IDENTITY_ALREADY_LINKED).")
     })
     public SessionCreation linkOidc(final OidcSessionRequest request) {
         return getOidcLinkService().createSession(request);

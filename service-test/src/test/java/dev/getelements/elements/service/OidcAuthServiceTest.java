@@ -6,6 +6,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.inject.AbstractModule;
 import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.exception.ForbiddenException;
 import dev.getelements.elements.sdk.model.application.Application;
@@ -268,6 +269,7 @@ public class OidcAuthServiceTest {
             bind(UserDao.class).toInstance(mock(UserDao.class));
             bind(UserUidDao.class).toInstance(mock(UserUidDao.class));
             bind(SessionDao.class).toInstance(mock(SessionDao.class));
+            bind(SessionTokenIssuer.class).toInstance(mock(SessionTokenIssuer.class));
             bind(OidcAuthSchemeDao.class).toInstance(mock(OidcAuthSchemeDao.class));
             bind(CryptoKeyPairUtility.class).toInstance(mock(CryptoKeyPairUtility.class));
             bind(OidcAuthSchemeService.class).toInstance(mock(OidcAuthSchemeService.class));

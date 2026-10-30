@@ -6,7 +6,7 @@ import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
 import dev.getelements.elements.sdk.model.auth.OidcAuthScheme;
-import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.exception.auth.IdentityAlreadyLinkedException;
 import dev.getelements.elements.sdk.model.session.OidcSessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
@@ -106,7 +106,8 @@ public class UserOidcAuthService implements OidcAuthService, OidcLinkService {
         if (existingOidcUid.isPresent()) {
             final var linkedUserId = existingOidcUid.get().getUserId();
             if (linkedUserId != null && !linkedUserId.equals(targetUser.getId())) {
-                throw new AuthValidationException("External OIDC identity is already linked to a different user.");
+                throw new IdentityAlreadyLinkedException(
+                        "External OIDC identity is already linked to a different user.");
             }
             // Already linked to current user — idempotent, fall through
         } else {

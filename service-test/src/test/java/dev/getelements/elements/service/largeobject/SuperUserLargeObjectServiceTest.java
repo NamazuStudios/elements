@@ -127,10 +127,17 @@ public class SuperUserLargeObjectServiceTest extends LargeObjectServiceTestBase 
 
     @Test
     public void shouldWriteLargeObjectContent() throws IOException {
-        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> mock(FileOutputStream.class));
+        final var fileOutputStream = mock(FileOutputStream.class);
+        when(largeObjectBucket.writeObject(TEST_ID)).then(a -> fileOutputStream);
 
         OutputStream result = superUserLargeObjectService.writeLargeObjectContent(TEST_ID);
 
-        assertTrue(result instanceof FileOutputStream);
+        // The stream is wrapped by DeploymentElmReloader (#71) so that closing it triggers a reload of
+        // deployments whose ELM references this object; writes still reach the bucket stream.
+        result.write(1);
+        verify(fileOutputStream).write(1);
+
+        result.close();
+        verify(fileOutputStream).close();
     }
 }

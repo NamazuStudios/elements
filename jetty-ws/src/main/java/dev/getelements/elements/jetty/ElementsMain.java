@@ -3,6 +3,7 @@ package dev.getelements.elements.jetty;
 import com.google.inject.Guice;
 import dev.getelements.elements.deployment.jetty.guice.JettySdkElementModule;
 import dev.getelements.elements.sdk.SystemVersion;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.service.version.BuildPropertiesVersionService;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -49,6 +50,7 @@ public class ElementsMain {
         final var services = servicesOptionSpec.values(options);
 
         final var injector = Guice.createInjector(
+                GuiceStages.get(),
                 new JettyServerModule(),
                 new ElementsCoreModule(),
                 new JettySdkElementModule(),

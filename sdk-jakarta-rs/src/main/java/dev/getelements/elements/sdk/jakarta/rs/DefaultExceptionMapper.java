@@ -5,7 +5,9 @@ import dev.getelements.elements.sdk.model.ValidationErrorResponse;
 import dev.getelements.elements.sdk.model.auth.MfaChallengeErrorResponse;
 import dev.getelements.elements.sdk.model.exception.*;
 import dev.getelements.elements.sdk.model.exception.auth.MfaChallengeRequiredException;
+import dev.getelements.elements.sdk.model.exception.auth.OAuth2Exception;
 import dev.getelements.elements.sdk.model.health.HealthErrorResponse;
+import dev.getelements.elements.sdk.model.oidc.OAuth2ErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +37,13 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         Map.entry(ErrorCode.DUPLICATE, Response.Status.CONFLICT),
         Map.entry(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED),
         Map.entry(ErrorCode.CONFLICT, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.IDENTITY_ALREADY_LINKED, Response.Status.CONFLICT),
         Map.entry(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN),
         Map.entry(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST),
         Map.entry(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST),
         Map.entry(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND),
         Map.entry(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE),
+        Map.entry(ErrorCode.RATE_LIMITED, Response.Status.TOO_MANY_REQUESTS),
         Map.entry(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR),
         Map.entry(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED),
         Map.entry(ErrorCode.MFA_REQUIRED, Response.Status.UNAUTHORIZED)
@@ -48,6 +52,21 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
     public static final Response.Status getStatusForCode(final Object code) {
         final Response.Status status = HTTP_STATUS_MAP.get(code);
         return status == null ? Response.Status.INTERNAL_SERVER_ERROR : status;
+    }
+
+    /**
+     * Maps an RFC 6749 OAuth 2.0 error code to its HTTP status, per section 5.2 and related specifications.
+     *
+     * @param error the OAuth 2.0 error code
+     * @return the HTTP status to return
+     */
+    public static final Response.Status getStatusForOAuth2Error(final String error) {
+        return switch (error == null ? "" : error) {
+            case "invalid_client" -> Response.Status.UNAUTHORIZED;
+            case "server_error" -> Response.Status.INTERNAL_SERVER_ERROR;
+            case "temporarily_unavailable" -> Response.Status.SERVICE_UNAVAILABLE;
+            default -> Response.Status.BAD_REQUEST;
+        };
     }
 
     private static String fieldName(final String propertyPath) {
@@ -145,10 +164,27 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
                     .type(MediaType.APPLICATION_JSON)
                     .build();
 
+        } catch (OAuth2Exception ex) {
+
+            LOG.debug("Caught OAuth 2.0 provider exception while processing request.", ex);
+
+            final var errorResponse = new OAuth2ErrorResponse();
+            errorResponse.setError(ex.getError());
+            errorResponse.setErrorDescription(ex.getErrorDescription());
+
+            final var response = Response.status(getStatusForOAuth2Error(ex.getError()))
+                    .entity(errorResponse)
+                    .type(MediaType.APPLICATION_JSON);
+
+            if ("invalid_client".equals(ex.getError())) {
+                response.header(WWW_AUTHENTICATE, "Basic realm=\"elements\"");
+            }
+
+            return response.build();
+
         } catch (BaseException ex) {
 
             final ErrorResponse errorResponse = new ErrorResponse();
-
             LOG.debug("Caught expected exception while processing request.", ex);
 
             errorResponse.setMessage(ex.getMessage());

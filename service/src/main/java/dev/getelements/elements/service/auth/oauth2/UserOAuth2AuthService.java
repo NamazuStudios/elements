@@ -4,7 +4,7 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.dao.UserUidDao;
-import dev.getelements.elements.sdk.model.exception.auth.AuthValidationException;
+import dev.getelements.elements.sdk.model.exception.auth.IdentityAlreadyLinkedException;
 import dev.getelements.elements.sdk.model.session.OAuth2SessionRequest;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.User;
@@ -44,7 +44,7 @@ public class UserOAuth2AuthService implements OAuth2AuthService, OAuth2LinkServi
         if (existingUser.isPresent()) {
             final var found = existingUser.get();
             if (!found.getId().equals(user.getId())) {
-                throw new AuthValidationException("External uid is already linked to a different user.");
+                throw new IdentityAlreadyLinkedException("External uid is already linked to a different user.");
             }
             return found;
         }

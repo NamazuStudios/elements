@@ -10,7 +10,7 @@ public class CreateOrUpdateOAuth2AuthSchemeResponse {
     public CreateOrUpdateOAuth2AuthSchemeResponse() {}
 
     /** The created or updated OAuth2 auth scheme. */
-    @Schema(description = "The full JSON response as described in AuthScheme")
+    @Schema(description = "The full OAuth2 auth scheme as described in OAuth2AuthScheme")
     public OAuth2AuthScheme scheme;
 
     /**

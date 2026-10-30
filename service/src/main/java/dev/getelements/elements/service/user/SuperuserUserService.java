@@ -6,10 +6,12 @@ import dev.getelements.elements.sdk.dao.SessionDao;
 import dev.getelements.elements.sdk.dao.UserDao;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.session.Session;
 import dev.getelements.elements.sdk.model.session.SessionCreation;
 import dev.getelements.elements.sdk.model.user.*;
 import dev.getelements.elements.rt.exception.BadRequestException;
 import dev.getelements.elements.sdk.model.security.PasswordGenerator;
+import dev.getelements.elements.sdk.service.auth.SessionTokenIssuer;
 import dev.getelements.elements.sdk.service.name.NameService;
 import dev.getelements.elements.sdk.service.user.UserService;
 import jakarta.inject.Inject;
@@ -25,6 +27,9 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static dev.getelements.elements.sdk.service.Constants.SESSION_TIMEOUT_SECONDS;
 import static dev.getelements.elements.sdk.service.Constants.UNSCOPED;
 import static dev.getelements.elements.util.PhoneNormalizer.normalizePhoneNb;
+import static java.lang.System.currentTimeMillis;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  *
@@ -40,6 +45,8 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     private SessionDao sessionDao;
 
     private NameService nameService;
+
+    private SessionTokenIssuer sessionTokenIssuer;
 
     private PasswordGenerator passwordGenerator;
 
@@ -152,7 +159,43 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     public SessionCreation updateUserPassword(
             final String userId,
             final UserUpdatePasswordRequest userUpdatePasswordRequest) {
-        throw new BadRequestException("Not implemented.");
+
+        // Self-service password change: the admin dashboard is superuser-only, so this is the path the
+        // change-password card actually hits. Changing another user's password goes through
+        // updateUser(user, password), which needs no old-password verification.
+
+        checkForCurrentUser(userId);
+
+        final var user = getUserDao().getUser(userId);
+        final var oldPassword = nullToEmpty(userUpdatePasswordRequest.getOldPassword()).trim();
+        final var newPassword = nullToEmpty(userUpdatePasswordRequest.getNewPassword()).trim();
+
+        getPasswordPolicyValidator().validate(newPassword);
+
+        // The DAO update matches on the old password and throws NotFound when it doesn't, so a wrong
+        // old password fails before anything is revoked.
+
+        getUserDao().updateUser(user, newPassword, oldPassword);
+
+        // Rotate credentials for every outstanding session -- including the caller's other signed
+        // session tokens -- then issue the fresh one LAST so it survives the revocation. The dashboard
+        // adopts the returned secret, keeping the caller signed in under the rotated credential.
+
+        getSessionDao().deleteSessionsForUser(userId);
+
+        final long expiry = MILLISECONDS.convert(getSessionTimeoutSeconds(), SECONDS) + currentTimeMillis();
+
+        final var session = new Session();
+        session.setExpiry(expiry);
+        session.setUser(user);
+
+        getElementRegistry().publish(Event.builder()
+                .argument(user)
+                .named(USER_UPDATED_EVENT)
+                .build());
+
+        return getSessionTokenIssuer().issue(session);
+
     }
 
     @Override
@@ -199,6 +242,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Inject
     public void setNameService(@Named(UNSCOPED) NameService nameService) {
         this.nameService = nameService;
+    }
+
+    public SessionTokenIssuer getSessionTokenIssuer() {
+        return sessionTokenIssuer;
+    }
+
+    @Inject
+    public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
+        this.sessionTokenIssuer = sessionTokenIssuer;
     }
 
     public PasswordGenerator getPasswordGenerator() {

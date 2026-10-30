@@ -11,7 +11,7 @@ Elements is licensed under the **Mozilla Public License 2.0 (MPL 2.0)**. Startin
 For core-codebase contributors specifically:
 
 - **Modifications to existing Elements source files stay under MPL 2.0.** MPL 2.0 is file-level copyleft, so any file you change in the core remains under the project's license. Contributions submitted via pull request must keep that licensing.
-- **A Contributor License Agreement is required.** Please fill it out and [submit it via this form](https://share.hsforms.com/2-N76EKCiRBaYb1w2UwtxyAckwr1) before submitting your first PR. The CLA is what made the 3.8 relicense from AGPLv3 to MPL 2.0 possible in the first place; without it, every past contributor would have had to individually consent. It preserves the project's ability to evolve its license in the future if circumstances warrant.
+- **A Contributor License Agreement is required.** Read the canonical text at [CLA.md](./CLA.md), then fill it out and [submit it via this form](https://share.hsforms.com/2-N76EKCiRBaYb1w2UwtxyAckwr1) before submitting your first PR. The CLA is what made the 3.8 relicense from AGPLv3 to MPL 2.0 possible in the first place; without it, every past contributor would have had to individually consent. It preserves the project's ability to evolve its license in the future if circumstances warrant.
 
 We gladly accept:
 

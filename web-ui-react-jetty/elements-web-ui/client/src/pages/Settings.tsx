@@ -9,6 +9,7 @@ import { Settings as SettingsIcon, Eye, EyeOff, Sun, Moon } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useTheme } from '@/components/ThemeProvider';
 import { TwoFactorAuthCard } from '@/components/TwoFactorAuthCard';
+import { ChangePasswordCard } from '@/components/ChangePasswordCard';
 
 interface VisibilitySettings {
   resources: Record<string, boolean>;
@@ -31,6 +32,7 @@ const RESOURCE_CATEGORIES = [
 
 const RESOURCES_BY_CATEGORY: Record<string, string[]> = {
   Core: ['Users', 'Applications', 'Profiles'],
+  Accounts: ['Superuser Invites'],
   Game: ['Items', 'Missions', 'Schedules', 'Leaderboards', 'Matchmaking'],
   Auth: ['OIDC', 'OAuth2', 'Custom'],
   Metadata: ['Metadata', 'Metadata Spec'],
@@ -188,6 +190,8 @@ export default function Settings() {
             </div>
           </CardContent>
         </Card>
+
+        <ChangePasswordCard />
 
         <TwoFactorAuthCard />
 

@@ -8,6 +8,7 @@ import dev.getelements.elements.dao.mongo.guice.MongoMigrationModule;
 import dev.getelements.elements.dao.mongo.migration.MigrationRunner;
 import dev.getelements.elements.guice.ConfigurationModule;
 import dev.getelements.elements.sdk.SystemVersion;
+import dev.getelements.elements.sdk.guice.GuiceStages;
 import dev.getelements.elements.sdk.mongo.guice.MongoSdkModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -21,6 +22,11 @@ import ru.vyarus.guice.validator.ValidationModule;
  * server, no cluster/JeroMQ wiring -- so it can run as a one-shot ops task, either as a second entry class
  * alongside {@code jettyws} on the {@code elements-jetty-ws} Docker image, or standalone (e.g. from a
  * {@code .deb}/systemd unit with no container to piggyback on).
+ *
+ * <p>Its datastore bootstrap ({@code MongoDatastoreBootstrapModule}) also self-heals stale index-option
+ * conflicts (dropping the divergent on-disk index and recreating the declared spec), so running
+ * {@code migrate} before deploying resolves index conflicts the server would otherwise fail fast on at boot.
+ * The server itself does not heal at boot: index builds there would stall health checks during scaling.</p>
  */
 public class Migrate {
 
@@ -58,6 +64,7 @@ public class Migrate {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final var injector = Guice.createInjector(
+                GuiceStages.get(),
                 new ConfigurationModule(defaultConfigurationSupplier::get, defaultConfigurationSupplier::getExplicitProperties),
                 new MongoDatastoreBootstrapModule(),
                 new MongoSdkModule(),

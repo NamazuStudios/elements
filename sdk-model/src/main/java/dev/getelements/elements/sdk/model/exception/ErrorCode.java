@@ -38,6 +38,12 @@ public enum  ErrorCode {
     CONFLICT,
 
     /**
+     * The external identity presented by the request (e.g. an OIDC/OAuth2 subject) is already linked to a
+     * different user than the one it is being linked to.
+     */
+    IDENTITY_ALREADY_LINKED,
+
+    /**
      * Invalid data or input was provided.
      */
     INVALID_DATA,
@@ -46,6 +52,11 @@ public enum  ErrorCode {
      * A particular resource is overloaded at the moment.
      */
     OVERLOAD,
+
+    /**
+     * The caller has exceeded a rate limit and should retry later.
+     */
+    RATE_LIMITED,
 
     /**
      * The particular feature is not implemented or is currently unavailable.

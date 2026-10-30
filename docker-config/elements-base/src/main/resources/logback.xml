@@ -18,4 +18,8 @@
 
     <logger name="com.github.sidhant92.boolparser" level="OFF"/>
 
+    <logger name="dev.morphia.mapping.Mapper" level="error" additivity="false">
+        <appender-ref ref="STDOUT" />
+    </logger>
+
 </configuration>

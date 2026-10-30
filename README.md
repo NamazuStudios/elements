@@ -100,7 +100,7 @@ We also offer **commercial support and custom development** for studios that wan
 
 ## Build pipeline
 
-Elements is actively **migrating its build pipeline to GitHub Actions** from Bitbucket Pipelines. In the meantime, builds are managed through our internal CI system. Local builds use Maven.
+Elements builds and publishes on **GitHub Actions**. Local builds use Maven.
 
 **First, always do an initial build skipping tests:**
 
@@ -130,7 +130,6 @@ If you want to work on the Elements core codebase, see **[HACKING.md](./HACKING.
 
 ### 🙏 Immediate help wanted
 
-- **GitHub Actions migration:** we're currently on Bitbucket Pipelines and actively working to migrate to GitHub Actions. If you can figure this out, you will be a friend of this project forever. Seriously.
 - **UI enhancements and fixes:** improvements to the CMS and admin dashboard are always appreciated.
 - **Bug reports:** if you find something broken, [open an issue](https://github.com/NamazuStudios/elements/issues). Clear reproduction steps go a long way.
 
