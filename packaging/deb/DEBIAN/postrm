@@ -1,0 +1,36 @@
+#!/bin/sh
+# namazu-elements postrm: on remove, disable the unit. On purge, remove state
+# and logs only when they are empty - never delete operator data silently -
+# and take /etc/elements with it the same way.
+
+set -e
+
+case "$1" in
+  remove)
+    if [ -d /run/systemd/system ]; then
+      systemctl disable namazu-elements.service || true
+    fi
+    ;;
+  purge)
+    for dir in /var/lib/namazu-elements /var/log/namazu-elements; do
+      if [ -d "$dir" ]; then
+        # Drop our own (empty) scaffolding first: rmdir refuses non-empty
+        # directories, so anything holding real content still guards $dir.
+        rmdir "$dir"/cdn-repos "$dir"/script-repos "$dir"/script-storage "$dir"/tmp 2>/dev/null || true
+        if [ -n "$(find "$dir" -mindepth 1 -print -quit 2>/dev/null)" ]; then
+          echo "namazu-elements: $dir is not empty; leaving it in place." >&2
+        else
+          rmdir "$dir" 2>/dev/null || true
+        fi
+      fi
+    done
+    rm -f /etc/elements/elements.properties 2>/dev/null || true
+    rmdir /etc/elements/classpath /etc/elements 2>/dev/null || true
+    ;;
+esac
+
+if [ "$1" = "purge" ] && [ -d /run/systemd/system ]; then
+  systemctl daemon-reload || true
+fi
+
+exit 0
