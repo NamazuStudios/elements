@@ -194,6 +194,18 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     }
 
     /**
+     * The platform's own DAO model packages. Whatever MorphiaConfig is in play when this registrar builds
+     * the shared {@link Datastore}, these must be mapped: core DAOs ({@code MongoMissionDao},
+     * {@code MongoUserDao}, ...) decode documents of these types on the shared datastore regardless of
+     * which element triggered its construction. Legacy documents also carry Morphia discriminators for
+     * embedded types (e.g. {@code steps[n]._t: "MongoStep"}), which decode only when the concrete class
+     * is registered on the mapper — without this, reading any pre-existing row 500s with a
+     * {@code CodecConfigurationException} even though the reading element never touched those types.
+     */
+    private static final List<String> PLATFORM_MODEL_PACKAGES =
+            List.of("dev.getelements.elements.dao.mongo.model.*");
+
+    /**
      * Creates a fresh, empty {@link Datastore}. Exposed as a protected method (rather than inlining the
      * {@link Morphia#createDatastore} call in {@link #rebuildDatastore()}) so tests can override it to avoid
      * requiring a real MongoDB connection.
@@ -201,11 +213,28 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     protected Datastore createDatastore() {
 
         final var mongoClient = getMongoClientProvider().get();
-        final var morphiaConfig = getMorphiaConfigProvider().get();
+
+        final var morphiaConfig = withPlatformModelPackages(getMorphiaConfigProvider().get());
 
         getPreDatastoreMigrationRunnerProvider().get().run(mongoClient, morphiaConfig);
 
         return Morphia.createDatastore(mongoClient, morphiaConfig);
+    }
+
+    /**
+     * Merges {@link #PLATFORM_MODEL_PACKAGES} into the supplied config's package set (preserving any
+     * element-contributed packages). Package-private for testing.
+     */
+    static MorphiaConfig withPlatformModelPackages(final MorphiaConfig morphiaConfig) {
+
+        final var packages = new ArrayList<>(morphiaConfig.packages());
+
+        PLATFORM_MODEL_PACKAGES.stream()
+                .filter(p -> !packages.contains(p))
+                .forEach(packages::add);
+
+        return morphiaConfig.packages(List.copyOf(packages));
+
     }
 
     private void applyChanges(final Element element,
