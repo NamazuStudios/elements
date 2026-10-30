@@ -265,6 +265,75 @@ public class MongoSuperUserInviteTokenDaoTest {
         assertNotNull(invite.getRedeemedAt());
     }
 
+    /**
+     * The pending → redeemed/revoked transition must be an atomic status-guarded find-and-modify. A
+     * read-then-merge here let two concurrent redemptions of the same token both succeed (double
+     * elevation), and let an in-flight redemption overwrite a concurrent revocation. Exactly one
+     * contender may win.
+     */
+    @Test
+    public void redeemToken_concurrentRedemptionsExactlyOneWins() throws Exception {
+
+        final var rounds = 8;
+
+        for (var round = 0; round < rounds; round++) {
+
+            final var token = superUserInviteTokenDao.createInvite(
+                    issuer, EMAIL, new Timestamp(hourFromNow), new Timestamp(System.currentTimeMillis()));
+
+            final var contenders = 8;
+            final var startLatch = new java.util.concurrent.CountDownLatch(1);
+            final var pool = java.util.concurrent.Executors.newFixedThreadPool(contenders);
+            final var successes = new java.util.concurrent.atomic.AtomicInteger();
+
+            final var futures = new java.util.ArrayList<java.util.concurrent.Future<Boolean>>();
+            for (var i = 0; i < contenders; i++) {
+                futures.add(pool.submit(() -> {
+                    startLatch.await();
+                    return superUserInviteTokenDao.redeemToken(
+                            token, new Timestamp(System.currentTimeMillis()));
+                }));
+            }
+
+            startLatch.countDown();
+
+            for (final var future : futures) {
+                if (future.get()) successes.incrementAndGet();
+            }
+
+            pool.shutdown();
+            assertTrue(pool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS));
+
+            assertEquals(successes.get(), 1,
+                    "Exactly one concurrent redemption may win (round " + round + ").");
+
+            final var invite = superUserInviteTokenDao.findTokenAnyState(token).orElseThrow();
+            assertEquals(invite.getStatus(), SuperUserInvite.Status.REDEEMED);
+        }
+
+    }
+
+    /**
+     * A revocation must not be overwritable by an in-flight redemption: once revoked, a redeem must
+     * observe the status change and fail, never resurrect the invite as REDEEMED.
+     */
+    @Test
+    public void redeemToken_cannotOverwriteAConcurrentRevocation() {
+
+        final var token = superUserInviteTokenDao.createInvite(
+                issuer, EMAIL, new Timestamp(hourFromNow), new Timestamp(System.currentTimeMillis()));
+
+        assertTrue(superUserInviteTokenDao.revokeToken(token, new Timestamp(System.currentTimeMillis())));
+        assertFalse(superUserInviteTokenDao.redeemToken(token, new Timestamp(System.currentTimeMillis())),
+                "A revoked invitation must not be redeemable.");
+
+        final var invite = superUserInviteTokenDao.findTokenAnyState(token).orElseThrow();
+        assertEquals(invite.getStatus(), SuperUserInvite.Status.REVOKED);
+        assertNotNull(invite.getRevokedAt());
+        assertNull(invite.getRedeemedAt());
+
+    }
+
     @Test
     public void redeemToken_failsForUnknownExpiredOrNonPending() {
         assertFalse(superUserInviteTokenDao.redeemToken("no-such-token", new Timestamp(System.currentTimeMillis())));
