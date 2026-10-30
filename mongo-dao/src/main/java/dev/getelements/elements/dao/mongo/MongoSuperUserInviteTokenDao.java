@@ -2,6 +2,7 @@ package dev.getelements.elements.dao.mongo;
 
 import dev.getelements.elements.dao.mongo.model.MongoUser;
 import dev.getelements.elements.dao.mongo.model.invite.MongoSuperUserInviteToken;
+import dev.getelements.elements.dao.mongo.MongoDBUtils;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.SuperUserInviteTokenDao;
 import dev.getelements.elements.sdk.model.Pagination;
@@ -9,6 +10,7 @@ import dev.getelements.elements.sdk.model.invite.SuperUserInvite;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import jakarta.inject.Inject;
@@ -18,13 +20,20 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.Sort.descending;
+import static dev.morphia.query.filters.Filters.and;
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.filters.Filters.gt;
+import static dev.morphia.query.filters.Filters.or;
+import static dev.morphia.query.updates.UpdateOperators.set;
+import static java.lang.System.currentTimeMillis;
 
 public class MongoSuperUserInviteTokenDao implements SuperUserInviteTokenDao {
 
     private Datastore datastore;
+
+    private MongoDBUtils mongoDBUtils;
 
     private MongoUserDao mongoUserDao;
 
@@ -149,29 +158,29 @@ public class MongoSuperUserInviteTokenDao implements SuperUserInviteTokenDao {
             return false;
         }
 
-        final var entity = getDatastore().find(MongoSuperUserInviteToken.class)
-                .filter(eq("_id", token))
-                .first();
+        final var now = new Timestamp(currentTimeMillis());
 
-        if (entity == null || !SuperUserInvite.Status.PENDING.name().equals(entity.getStatus())) {
+        // Atomic status-guarded transition: the conditional find-and-modify matches only a still-PENDING,
+        // unexpired token, so exactly one of redeem/revoke can ever win. A read-then-merge here would let
+        // two concurrent redemptions both succeed (double elevation) or let an in-flight redemption
+        // overwrite a concurrent revocation. Same one-shot pattern as MongoOidcLoginAttempt.
+
+        final var entity = getMongoDBUtils().perform(ds -> getDatastore()
+                .find(MongoSuperUserInviteToken.class)
+                .filter(and(
+                        eq("_id", token),
+                        eq("status", SuperUserInvite.Status.PENDING.name()),
+                        or(eq("expiry", null), gt("expiry", now))))
+                .modify(
+                        set("status", targetStatus.name()),
+                        targetStatus == SuperUserInvite.Status.REDEEMED
+                                ? set("redeemedAt", at)
+                                : set("revokedAt", at)
+                ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER)));
+
+        if (entity == null) {
             return false;
         }
-
-        final var now = new Timestamp(System.currentTimeMillis());
-
-        if (entity.getExpiry() != null && entity.getExpiry().before(now)) {
-            return false;
-        }
-
-        entity.setStatus(targetStatus.name());
-
-        if (targetStatus == SuperUserInvite.Status.REDEEMED) {
-            entity.setRedeemedAt(at);
-        } else {
-            entity.setRevokedAt(at);
-        }
-
-        getDatastore().merge(entity);
 
         final var invite = getMapperRegistry().map(entity, SuperUserInvite.class);
 
@@ -181,6 +190,7 @@ public class MongoSuperUserInviteTokenDao implements SuperUserInviteTokenDao {
                 .build());
 
         return true;
+
     }
 
     private boolean isRedeemable(final SuperUserInvite invite) {
@@ -196,6 +206,15 @@ public class MongoSuperUserInviteTokenDao implements SuperUserInviteTokenDao {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
     }
 
     public MongoUserDao getMongoUserDao() {

@@ -29,6 +29,8 @@ public class UserUserService extends AnonUserService implements UserService {
 
     private SessionTokenIssuer sessionTokenIssuer;
 
+    private dev.getelements.elements.sdk.dao.SessionDao sessionDao;
+
     private long sessionTimeoutSeconds;
 
     @Override
@@ -117,6 +119,13 @@ public class UserUserService extends AnonUserService implements UserService {
 
         getUserDao().updateUser(user, newPassword, oldPassword);
 
+        // Rotate credentials for every outstanding session -- signed tokens included -- so that a
+        // compromised session does not survive a password change, then issue the fresh one LAST so it
+        // survives the revocation. Mirrors the password-reset path (MongoUserDao.setPassword), which
+        // has always revoked; the UI copy on the change-password card promises this behavior.
+
+        getSessionDao().deleteSessionsForUser(userId);
+
         getElementRegistry().publish(Event.builder()
                 .argument(user)
                 .named(USER_UPDATED_EVENT)
@@ -145,6 +154,15 @@ public class UserUserService extends AnonUserService implements UserService {
     @Inject
     public void setSessionTokenIssuer(SessionTokenIssuer sessionTokenIssuer) {
         this.sessionTokenIssuer = sessionTokenIssuer;
+    }
+
+    public dev.getelements.elements.sdk.dao.SessionDao getSessionDao() {
+        return sessionDao;
+    }
+
+    @Inject
+    public void setSessionDao(dev.getelements.elements.sdk.dao.SessionDao sessionDao) {
+        this.sessionDao = sessionDao;
     }
 
     public long getSessionTimeoutSeconds() {
