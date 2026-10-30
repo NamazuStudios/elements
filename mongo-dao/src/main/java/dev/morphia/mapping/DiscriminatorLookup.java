@@ -60,6 +60,12 @@ public final class DiscriminatorLookup {
                     extant.getName(),
                     entityModel.getType().getName()));
         }
+        // Record the model's package so legacy documents carrying SIMPLE-NAME discriminators (written by
+        // older Morphia versions whose default discriminator was the bare class name) resolve through
+        // {@link #searchPackages}. Current Morphia keys models by their fully-qualified discriminator, so
+        // without this the packages set stays empty and any legacy row 500s with
+        // CodecConfigurationException even when its class is mapped.
+        packages.add(entityModel.getType().getPackageName());
     }
 
     public Class<?> lookup(final String discriminator) {
