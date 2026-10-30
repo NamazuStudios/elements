@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.assertThrows;
 
 public class MongoElementEntityRegistrarTest {
@@ -60,6 +61,39 @@ public class MongoElementEntityRegistrarTest {
         }
 
         assertEquals(rebuildCount.get(), 1, "A batch of multiple elements should trigger exactly one rebuild.");
+    }
+
+    /**
+     * Whatever MorphiaConfig an element deployment supplies, the datastore this registrar builds must also
+     * map the platform's own DAO model packages: core DAOs decode those types (including legacy rows with
+     * embedded discriminators like {@code steps[n]._t: "MongoStep"}) on the shared datastore regardless of
+     * which element triggered the build.
+     */
+    @Test
+    public void platformModelPackagesAreAlwaysMergedIntoTheConfig() {
+
+        final var elementOnlyConfig = dev.morphia.config.MorphiaConfig.load()
+                .packages(List.of("com.example.element.documents"));
+
+        final var merged = MongoElementEntityRegistrar.withPlatformModelPackages(elementOnlyConfig);
+
+        assertTrue(merged.packages().contains("dev.getelements.elements.dao.mongo.model.*"),
+                "the platform model packages must be mapped");
+        assertTrue(merged.packages().contains("com.example.element.documents"),
+                "element-contributed packages must be preserved");
+
+        // Idempotent: rebuilding from an already-merged config must not duplicate the entry.
+
+        final var mergedAgain = MongoElementEntityRegistrar.withPlatformModelPackages(merged);
+
+        assertEquals(
+                mergedAgain.packages().stream()
+                        .filter(p -> p.equals("dev.getelements.elements.dao.mongo.model.*"))
+                        .count(),
+                1,
+                "the platform model packages must not be duplicated"
+        );
+
     }
 
     @Test
