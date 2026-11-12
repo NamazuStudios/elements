@@ -113,17 +113,19 @@ public class MongoElementEntityRegistrarTest {
     }
 
     @Test
-    public void unregisterUnknownElement_throwsInSingleCallAndBatch() {
+    public void unregisterUnknownElement_isIdempotentNoOp() {
 
         final var unknown = mockElementWithEntity("unknown", DummyEntityA.class);
 
-        assertThrows(IllegalStateException.class, () -> registrar.unregisterEntityClasses(unknown));
+        // Deregistering an unknown element must not throw: on a hot reload the runtime service unloads the
+        // element synchronously (#209) and the container service's event-driven unmount then repeats the call
+        // for the same element. The batch still closes (and rebuilds), which is harmless.
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(unknown);
+        }
 
-        assertThrows(IllegalStateException.class, () -> {
-            try (var batch = registrar.beginBatch()) {
-                batch.unregisterEntityClasses(unknown);
-            }
-        });
+        assertEquals(rebuildCount.get(), 1, "the batch close still rebuilds exactly once");
+
     }
 
     @Test
@@ -139,8 +141,10 @@ public class MongoElementEntityRegistrarTest {
 
         assertEquals(rebuildCount.get(), 1);
 
-        // Now unregistered, so a second unregister should fail again.
-        assertThrows(IllegalStateException.class, () -> registrar.unregisterEntityClasses(elementA));
+        // Now unregistered: a second unregister is an idempotent no-op (#209), not a failure.
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(elementA);
+        }
     }
 
     private static Element mockElementWithEntity(final String name, final Class<?> entityClass) {

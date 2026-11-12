@@ -4,6 +4,8 @@ import dev.getelements.elements.sdk.*;
 import dev.getelements.elements.sdk.annotation.ElementEventConsumer;
 import dev.getelements.elements.sdk.annotation.ElementServiceReference;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
+import dev.getelements.elements.sdk.dao.ElementEntityRegistrar;
+import dev.getelements.elements.sdk.dao.EntityRegistry;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.record.ElementManifestRecord;
@@ -122,7 +124,7 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private LongSupplier ticker = System::nanoTime;
 
-    private final ElementPathLoader pathLoader = ElementPathLoader.newDefaultInstance();
+    private final ElementPathLoader pathLoader;
 
     private Attributes systemAttributes;
 
@@ -130,7 +132,21 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
     private ValidationHelper validationHelper;
 
+    private ElementEntityRegistrar elementEntityRegistrar;
+
     private ScheduledExecutorService scheduler;
+
+    /**
+     * Sets the platform {@link ElementEntityRegistrar}, used to deregister a deployment's entity classes when
+     * the deployment unloads. Optional: when unbound (no database module installed), entity deregistration is
+     * skipped.
+     *
+     * @param elementEntityRegistrar the registrar, or null when unbound
+     */
+    @Inject
+    public void setElementEntityRegistrar(final ElementEntityRegistrar elementEntityRegistrar) {
+        this.elementEntityRegistrar = elementEntityRegistrar;
+    }
 
     @Inject
     public StandardElementRuntimeService() {
@@ -144,7 +160,20 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * @param elementArtifactLoader the artifact loader to use
      */
     StandardElementRuntimeService(final ElementArtifactLoader elementArtifactLoader) {
+        this(elementArtifactLoader, ElementPathLoader.newDefaultInstance());
+    }
+
+    /**
+     * Test seam that accepts a pre-built {@link ElementPathLoader}, avoiding the real classloader-based loader.
+     * Package-private on purpose: production always uses the default instance.
+     *
+     * @param elementArtifactLoader the artifact loader
+     * @param pathLoader            the element path loader
+     */
+    StandardElementRuntimeService(final ElementArtifactLoader elementArtifactLoader,
+                                  final ElementPathLoader pathLoader) {
         this.elementArtifactLoader = requireNonNull(elementArtifactLoader, "elementArtifactLoader");
+        this.pathLoader = requireNonNull(pathLoader, "pathLoader");
     }
 
     @Override
@@ -419,12 +448,19 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         unloadedDeploymentIds.add(deploymentId);
 
                         final var record = doLoadDeployment(deployment, false);  // Not transient
-                        if (record != null) {
+                        if (record != null && record.status() != RuntimeStatus.FAILED) {
                             loadedRecords.add(record);
+                            logger.info("Reloaded deployment: {} (version {} -> {})",
+                                    deploymentId, active.deployment().version(), deployment.version());
+                        } else {
+                            // A failed reload must be announced as a failure (#209): the previous version is
+                            // no longer serving (it was unloaded above), so the deployment is DOWN, not stale.
+                            logger.error("Reload FAILED for deployment: {} (version {} -> {}); the previous "
+                                            + "version is no longer serving and the deployment will be retried "
+                                            + "with backoff",
+                                    deploymentId, active.deployment().version(), deployment.version());
                         }
                         recordInitialLoadResult(deploymentId, record, nowNanos);
-                        logger.info("Reloaded deployment: {} (version {} -> {})",
-                                deploymentId, active.deployment().version(), deployment.version());
                     } catch (Exception ex) {
                         // Same as above: a throwing reload must back off like a FAILED one, or a broken
                         // deployment hammers the reload path on every poll.
@@ -971,8 +1007,38 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         final var active = activeDeployments.remove(deploymentId);
         retryStates.remove(deploymentId);
         if (active != null) {
+            unregisterEntities(active);
             active.close();
         }
+    }
+
+    /**
+     * Deregisters the deployment's entity classes with the platform {@link ElementEntityRegistrar}, before the
+     * deployment's elements are closed (#209). The registrar is JVM-global and caches entity models by FQCN;
+     * its deregistration used to be deferred to the container service's event-driven unmount, which runs only
+     * after a reload has already built the new deployment's injector — so the new injector observed the old
+     * (closed) classloader's classes for identical class names and failed with
+     * {@code ClassCastException: X cannot be cast to X}. Deregistering here — synchronously, before the new
+     * load — guarantees the shared datastore is rebuilt without the old entities first.
+     * <p>
+     * This must run while the elements are still alive: deregistration resolves each element's
+     * {@link EntityRegistry} exports through its service locator.
+     *
+     * @param active the deployment being unloaded
+     */
+    private void unregisterEntities(final ActiveDeployment active) {
+
+        final var registrar = elementEntityRegistrar;
+        if (registrar == null) {
+            return;
+        }
+
+        try (var batch = registrar.beginBatch()) {
+            active.elements().forEach(batch::unregisterEntityClasses);
+        } catch (Exception ex) {
+            logger.error("Failed to deregister entity classes for deployment {}", active.deployment().id(), ex);
+        }
+
     }
 
     /**

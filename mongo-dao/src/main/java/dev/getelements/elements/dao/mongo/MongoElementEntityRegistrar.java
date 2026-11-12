@@ -127,10 +127,13 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
                         return;
                     }
 
+                    // Idempotent (#209): an element may legitimately be deregistered twice — the runtime
+                    // service unloads synchronously during a hot reload, and the container service's
+                    // event-driven unmount then repeats the call for the same element. Deregistering an
+                    // unknown element is therefore a no-op, not a failure.
                     if (!elements.remove(element)) {
-                        throw new IllegalStateException("Element not registered: " +
-                                element.getElementRecord().classLoader().getName()
-                        );
+                        logger.debug("Element not registered; ignoring duplicate deregistration: {}",
+                                element.getElementRecord().classLoader().getName());
                     }
 
                 });
