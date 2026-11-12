@@ -1034,6 +1034,8 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         }
 
         try (var batch = registrar.beginBatch()) {
+            logger.info("Deregistering entity classes for deployment: {} ({} element(s))",
+                    active.deployment().id(), active.elements().size());
             active.elements().forEach(batch::unregisterEntityClasses);
         } catch (Exception ex) {
             logger.error("Failed to deregister entity classes for deployment {}", active.deployment().id(), ex);
