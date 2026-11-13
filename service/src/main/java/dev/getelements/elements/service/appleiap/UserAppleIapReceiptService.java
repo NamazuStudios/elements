@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.receipt.Receipt;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.user.User;
 import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
@@ -61,13 +62,16 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         receipt.setSchema(APPLE_IAP_SCHEME);
         receipt.setOriginalTransactionId(appleIapReceipt.getOriginalTransactionId());
         receipt.setUser(user);
-        receipt.setPurchaseTime(appleIapReceipt.getOriginalPurchaseDate().getTime());
+
+        // Apple may omit original_purchase_date, in which case default to the current time.
+        final var originalPurchaseDate = appleIapReceipt.getOriginalPurchaseDate();
+        receipt.setPurchaseTime(originalPurchaseDate != null ? originalPurchaseDate.getTime() : System.currentTimeMillis());
 
         try {
             final String body = getObjectMapper().writeValueAsString(appleIapReceipt);
             receipt.setBody(body);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to serialize Apple IAP receipt: " + e.getMessage(), e);
         }
 
         final var createdReceipt = getTransactionProvider().get().performAndClose(tx -> {
@@ -103,7 +107,14 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
 
             final var resultAppleIapReceipts = new ArrayList<AppleIapReceipt>();
 
-            for (final var appleIapGrandUnifiedReceiptPurchase : appleIapGrandUnifiedReceipt.getInApp()) {
+            final var inAppPurchases = appleIapGrandUnifiedReceipt.getInApp();
+
+            // Apple may omit the in_app array entirely when the receipt carries no purchases.
+            if (inAppPurchases == null) {
+                return resultAppleIapReceipts;
+            }
+
+            for (final var appleIapGrandUnifiedReceiptPurchase : inAppPurchases) {
                 // map the grand unified receipt and the purchase entities into a single model for db insertion
                 final var appleIapReceipt = getDozerMapper().map(appleIapGrandUnifiedReceipt, AppleIapReceipt.class);
                 getDozerMapper().map(appleIapGrandUnifiedReceiptPurchase, appleIapReceipt);
@@ -138,7 +149,7 @@ public class UserAppleIapReceiptService implements AppleIapReceiptService {
         try {
             return getObjectMapper().readValue(receipt.getBody(), AppleIapReceipt.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to deserialize Apple IAP receipt: " + e.getMessage(), e);
         }
     }
 

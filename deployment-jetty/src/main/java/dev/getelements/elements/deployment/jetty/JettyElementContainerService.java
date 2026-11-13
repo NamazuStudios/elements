@@ -237,9 +237,7 @@ public class JettyElementContainerService implements ElementContainerService {
         // in the runtime service. If it is, the deployment was reloaded (not truly removed),
         // and the RuntimeUnloaded event is the "old version" notification from reconcile().
         // In that case we must not unmount the freshly-loaded container.
-        final var stillActive = getElementRuntimeService().getActiveRuntimes()
-                .stream()
-                .anyMatch(r -> r.deployment().id().equals(deploymentId));
+        final var stillActive = stillActive(getElementRuntimeService().getActiveRuntimes(), deploymentId);
 
         try (var mon = Monitor.enter(lock)) {
             logger.info("Received RuntimeUnloaded event for deployment: {}", deploymentId);
@@ -271,6 +269,24 @@ public class JettyElementContainerService implements ElementContainerService {
     }
 
     /**
+     * Whether a {@code RUNTIME_UNLOADED} event for the given deployment should leave the currently mounted
+     * container in place: true when the runtime service still holds a live (non-failed) runtime for it, i.e.
+     * the deployment was reloaded rather than removed. A {@code FAILED} record must not count as still active —
+     * on a failed reload the old container's elements were already closed, so the stale container must be
+     * unmounted rather than kept serving (#209).
+     *
+     * @param activeRuntimes the runtime service's current records
+     * @param deploymentId   the deployment ID from the unload event
+     * @return true if the mounted container should be left in place
+     */
+    static boolean stillActive(final List<RuntimeRecord> activeRuntimes, final String deploymentId) {
+        return activeRuntimes
+                .stream()
+                .anyMatch(r -> r.deployment().id().equals(deploymentId)
+                        && r.status() != ElementRuntimeService.RuntimeStatus.FAILED);
+    }
+
+    /**
      * Synchronizes container state with runtime state.
      */
     private void sync() {
@@ -288,9 +304,18 @@ public class JettyElementContainerService implements ElementContainerService {
                 return;
             }
 
-            // Build set of deployment IDs from runtimes
+            // Build set of deployment IDs from runtimes. FAILED runtimes are excluded: their container (if any
+            // survived from a previous version) must be unmounted below, since the reload path already closed
+            // the old elements — keeping the container mounted would serve stale classes (#209).
             final var runtimeDeploymentIds = new HashSet<String>();
             for (final var runtime : activeRuntimes) {
+
+                // Skip failed runtimes
+                if (runtime.status() == ElementRuntimeService.RuntimeStatus.FAILED) {
+                    logger.debug("Skipping failed runtime: {}", runtime.deployment().id());
+                    continue;
+                }
+
                 runtimeDeploymentIds.add(runtime.deployment().id());
             }
 
@@ -300,7 +325,6 @@ public class JettyElementContainerService implements ElementContainerService {
 
                 // Skip failed runtimes
                 if (runtime.status() == ElementRuntimeService.RuntimeStatus.FAILED) {
-                    logger.debug("Skipping failed runtime: {}", deploymentId);
                     continue;
                 }
 

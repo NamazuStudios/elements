@@ -1,5 +1,6 @@
 package dev.getelements.elements.service.appleiap.client.invoker.builder;
 
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.*;
 import dev.getelements.elements.service.appleiap.client.invoker.invoker.DefaultAppleIapVerifyReceiptInvoker;
@@ -30,11 +31,11 @@ public class DefaultAppleIapVerifyReceiptInvokerBuilder implements Builder {
     public AppleIapVerifyReceiptInvoker build() {
 
         if (receiptData == null) {
-            throw new IllegalStateException("receiptData is null.");
+            throw new InvalidDataException("receiptData is null.");
         }
 
         if (receiptData.trim().isEmpty()) {
-            throw new IllegalStateException("receiptData is empty.");
+            throw new InvalidDataException("receiptData is empty.");
         }
 
         return new DefaultAppleIapVerifyReceiptInvoker(getClient(), appleIapVerifyReceiptEnvironment, receiptData);

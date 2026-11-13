@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.*;
 import dev.getelements.elements.sdk.model.meta.facebookiapreceipt.FacebookIapReceipt;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.profile.Profile;
@@ -72,7 +73,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
             final var body = getObjectMapper().writeValueAsString(facebookIapReceipt);
             receipt.setBody(body);
         } catch (JsonProcessingException e) {
-            throw new InternalError("Unable to serialize receipt: " + e.getMessage());
+            throw new InternalException("Unable to serialize Facebook IAP receipt: " + e.getMessage(), e);
         }
 
         receipt.setOriginalTransactionId(facebookIapReceipt.getPurchaseId());
@@ -134,7 +135,7 @@ public class UserFacebookIapReceiptService implements FacebookIapReceiptService 
         try {
             return getObjectMapper().readValue(receipt.getBody(), FacebookIapReceipt.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to deserialize Facebook IAP receipt: " + e.getMessage(), e);
         }
     }
 

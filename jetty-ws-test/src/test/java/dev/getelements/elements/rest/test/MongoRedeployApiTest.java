@@ -70,6 +70,16 @@ public class MongoRedeployApiTest {
     }
 
     private Class<?> entityClassOf(final ElementRuntimeService.RuntimeRecord runtimeRecord) {
+
+        // Fail with the deployment's own diagnostics rather than a bare NoSuchElementException when the
+        // element failed to load (e.g. a Morphia entity FQCN collision with another live deployment).
+        Assert.assertFalse(
+                runtimeRecord.elements().isEmpty(),
+                "Deployment " + runtimeRecord.deployment().id() + " loaded no elements (status "
+                        + runtimeRecord.status() + "); logs: " + runtimeRecord.logs()
+                        + "; errors: " + runtimeRecord.errors()
+        );
+
         final var element = runtimeRecord.elements().getFirst();
         final var entityRegistry = element.getServiceLocator().getInstance(EntityRegistry.class);
         return entityRegistry.entityClasses().getFirst();
