@@ -1,0 +1,30 @@
+Namazu Elements for Debian and derived distributions
+====================================================
+
+The server runs as the `namazu-elements.service` systemd unit (alias:
+`elements.service`) under the dedicated `elements` system user.
+
+    systemctl status namazu-elements
+
+Layout:
+
+    /usr/share/namazu-elements/     application (lib/, classpath/)
+    /etc/elements/                  elements.properties (operator-owned),
+                                    classpath/ (classpath overrides)
+    /etc/default/namazu-elements    JVM options (JAVA_OPTS); a conffile
+    /var/lib/namazu-elements/       state (cdn-repos, script-repos,
+                                    script-storage, tmp)
+    /var/log/namazu-elements/       logs (rotated via logrotate)
+
+Configuration precedence: values in /etc/elements/elements.properties take
+precedence over environment variables, so keep deployment-specific settings
+(Mongo URI, public URLs, bootstrap credentials) in systemd drop-ins under
+/etc/systemd/system/namazu-elements.service.d/, using the underscore key
+form (e.g. dev_getelements_elements_mongo_uri).
+
+Database migrations run without a container:
+
+    namazu-elements migrate --help
+
+Upgrades preserve /etc/elements and /var/lib/namazu-elements; `apt purge`
+removes them only when they are empty.

@@ -1,0 +1,13 @@
+#!/bin/sh
+# namazu-elements prerm: stop the service on remove. On upgrade the service
+# keeps running and postinst restarts it onto the new jars.
+
+set -e
+
+if [ "$1" = "remove" ]; then
+  if [ -d /run/systemd/system ]; then
+    systemctl stop namazu-elements.service || true
+  fi
+fi
+
+exit 0

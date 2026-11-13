@@ -1,0 +1,21 @@
+#!/bin/sh
+# namazu-elements preinst: create the service user BEFORE the files land, so
+# any tmpfiles.d pass run by a co-installed package's triggers (a systemd
+# upgrade in the same transaction, for instance) can already resolve it.
+# postinst still reconciles from the shipped sysusers.d fragment; both are
+# idempotent.
+
+set -e
+
+if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
+  if ! getent group elements >/dev/null; then
+    groupadd --system elements
+  fi
+  if ! getent passwd elements >/dev/null; then
+    useradd --system --gid elements \
+            --home-dir /var/lib/namazu-elements --no-create-home \
+            --shell /usr/sbin/nologin --comment "Namazu Elements" elements
+  fi
+fi
+
+exit 0

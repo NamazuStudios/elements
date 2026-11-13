@@ -1,0 +1,5 @@
+namazu-elements (@@VERSION@@) unstable; urgency=medium
+
+  * Initial packaging of the Elements jetty-ws server (elements#12, elements#199).
+
+ -- Namazu Studios <engineering@namazustudios.com>  Fri, 30 Oct 2026 07:00:00 +0000

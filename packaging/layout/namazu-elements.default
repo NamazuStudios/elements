@@ -1,0 +1,9 @@
+# Process-level settings for the namazu-elements service. This file is a
+# conffile: upgrades preserve local edits.
+#
+# Deployment configuration (Mongo URI, public URLs, bootstrap admin
+# credentials) does NOT belong here - it goes in systemd drop-ins under
+# /etc/systemd/system/namazu-elements.service.d/ or in
+# /etc/elements/elements.properties.
+
+JAVA_OPTS=""
