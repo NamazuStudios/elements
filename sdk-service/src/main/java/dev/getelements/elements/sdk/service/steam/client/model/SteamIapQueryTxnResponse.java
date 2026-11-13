@@ -312,6 +312,162 @@ public class SteamIapQueryTxnResponse {
             this.vat = vat;
         }
 
+        @JsonProperty("items")
+        private List<Item> items;
+
+        /**
+         * Returns the line items for this transaction (QueryTxn v3 returns them here, under
+         * response.params.items[] -- NOT under response.lineitems[]).
+         *
+         * @return the line items
+         */
+        public List<Item> getItems() {
+            return items;
+        }
+
+        /**
+         * Sets the line items for this transaction.
+         *
+         * @param items the line items
+         */
+        public void setItems(List<Item> items) {
+            this.items = items;
+        }
+
+    }
+
+    /**
+     * A line item from the QueryTxn v3 response (response.params.items[]).
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Item {
+
+        @JsonProperty("itemid")
+        private String itemId;
+
+        @JsonProperty("qty")
+        private String quantity;
+
+        @JsonProperty("amount")
+        private String amount;
+
+        @JsonProperty("vat")
+        private String vat;
+
+        @JsonProperty("itemstatus")
+        private String itemStatus;
+
+        @JsonProperty("description")
+        private String description;
+
+        /**
+         * Returns the item ID for this line item.
+         *
+         * @return the item ID
+         */
+        public String getItemId() {
+            return itemId;
+        }
+
+        /**
+         * Sets the item ID.
+         *
+         * @param itemId the item ID
+         */
+        public void setItemId(String itemId) {
+            this.itemId = itemId;
+        }
+
+        /**
+         * Returns the quantity purchased.
+         *
+         * @return the quantity
+         */
+        public String getQuantity() {
+            return quantity;
+        }
+
+        /**
+         * Sets the quantity.
+         *
+         * @param quantity the quantity
+         */
+        public void setQuantity(String quantity) {
+            this.quantity = quantity;
+        }
+
+        /**
+         * Returns the line item amount in the smallest currency unit.
+         *
+         * @return the amount
+         */
+        public String getAmount() {
+            return amount;
+        }
+
+        /**
+         * Sets the amount.
+         *
+         * @param amount the amount
+         */
+        public void setAmount(String amount) {
+            this.amount = amount;
+        }
+
+        /**
+         * Returns the VAT amount for this line item.
+         *
+         * @return the vat
+         */
+        public String getVat() {
+            return vat;
+        }
+
+        /**
+         * Sets the VAT amount.
+         *
+         * @param vat the vat
+         */
+        public void setVat(String vat) {
+            this.vat = vat;
+        }
+
+        /**
+         * Returns the item status (e.g. Succeeded).
+         *
+         * @return the item status
+         */
+        public String getItemStatus() {
+            return itemStatus;
+        }
+
+        /**
+         * Sets the item status.
+         *
+         * @param itemStatus the item status
+         */
+        public void setItemStatus(String itemStatus) {
+            this.itemStatus = itemStatus;
+        }
+
+        /**
+         * Returns the description of the item.
+         *
+         * @return the description
+         */
+        public String getDescription() {
+            return description;
+        }
+
+        /**
+         * Sets the description.
+         *
+         * @param description the description
+         */
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
