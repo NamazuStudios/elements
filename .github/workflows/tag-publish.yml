@@ -114,6 +114,24 @@ jobs:
         # to already be installed before the real (tests-enabled) pass runs.
         run: make install_no_tests
 
+      - name: Build OS packages (.deb and .rpm)
+        # Builds namazu-elements from the same staged runtime tree the Docker
+        # images use. Artifacts are attached to the GitHub Release for
+        # releases and uploaded as workflow artifacts for rc builds; apt/yum
+        # repository publishing (packages.namazustudios.com) lands with the
+        # repository infrastructure ticket and is intentionally not wired
+        # here yet.
+        run: make package
+
+      - name: Upload OS packages as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: os-packages-${{ needs.guard.outputs.version }}
+          path: |
+            build/packaging/dist/*.deb
+            build/packaging/dist/*.rpm
+          if-no-files-found: error
+
       - name: Assume AWS role for S3 publishing
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -174,4 +192,6 @@ jobs:
         if: needs.guard.outputs.is_release == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${{ needs.guard.outputs.version }}" --title "${{ needs.guard.outputs.version }}" --generate-notes
+        run: |
+          gh release create "${{ needs.guard.outputs.version }}" --title "${{ needs.guard.outputs.version }}" --generate-notes
+          gh release upload "${{ needs.guard.outputs.version }}" build/packaging/dist/*.deb build/packaging/dist/*.rpm --clobber

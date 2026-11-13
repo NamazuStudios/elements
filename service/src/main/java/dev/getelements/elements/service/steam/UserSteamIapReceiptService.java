@@ -188,7 +188,7 @@ public class UserSteamIapReceiptService implements SteamIapReceiptService {
         try {
             return getObjectMapper().readValue(receipt.getBody(), SteamIapReceipt.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to deserialize Steam IAP receipt: " + e.getMessage(), e);
         }
     }
 

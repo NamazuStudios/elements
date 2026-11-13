@@ -1,0 +1,83 @@
+%global debug_package %{nil}
+
+Name:           namazu-elements
+Version:        @@VERSION@@
+Release:        @@RELEASE@@%{?dist}
+Summary:        Namazu Elements game backend
+License:        MPL-2.0
+URL:            https://namazustudios.com
+BuildArch:      noarch
+Source0:        namazu-elements-%{version}.tar.gz
+Requires:       java-21-headless
+Requires:       ca-certificates
+Requires(pre):  shadow-utils
+Requires(post): systemd
+Requires(preun): systemd
+Requires(postun): systemd
+
+%description
+The open-source backend server for connected games: REST APIs, WebSocket
+endpoints, realtime multiplayer, a content CDN, and the plugin ("Element")
+system. This package runs the Jetty-based server as the
+namazu-elements.service systemd unit under a dedicated elements user, with
+configuration in /etc/elements and state in /var/lib/namazu-elements.
+
+%prep
+%setup -q -n root
+
+%build
+# Nothing to compile: the jars are staged by packaging/stage.sh from the same
+# Maven build the Docker images use.
+
+%install
+rm -rf %{buildroot}
+mkdir -p %{buildroot}
+cp -a usr etc %{buildroot}/
+
+%files
+%defattr(-,root,root,-)
+%dir /etc/elements
+%dir /etc/elements/classpath
+%config(noreplace) /etc/default/namazu-elements
+%config(noreplace) /etc/logrotate.d/namazu-elements
+/usr/bin/namazu-elements
+%dir /usr/share/namazu-elements
+/usr/share/namazu-elements/lib/*.jar
+/usr/share/namazu-elements/classpath/*
+/usr/share/namazu-elements/elements.properties.example
+%dir /usr/share/doc/namazu-elements
+/usr/share/doc/namazu-elements/copyright
+/usr/lib/systemd/system/namazu-elements.service
+/usr/lib/sysusers.d/namazu-elements.conf
+/usr/lib/tmpfiles.d/namazu-elements.conf
+
+%pre
+# The sysusers.d fragment only exists on disk after this transaction, so the
+# user/group is created directly here; %post reconciles from the fragment.
+getent group elements >/dev/null || groupadd -r elements || :
+getent passwd elements >/dev/null || useradd -r -g elements -d /var/lib/namazu-elements -s /usr/sbin/nologin -c 'Namazu Elements' elements || :
+
+%post
+systemd-tmpfiles --create /usr/lib/tmpfiles.d/namazu-elements.conf >/dev/null 2>&1 || :
+if [ -x /usr/bin/systemd-sysusers ]; then
+  systemd-sysusers /usr/lib/sysusers.d/namazu-elements.conf >/dev/null 2>&1 || :
+fi
+%{?systemd_post:%systemd_post namazu-elements.service}
+# /etc/elements/elements.properties is operator-owned, not %config: seed it
+# once on first install, never overwrite (first-boot tooling rewrites it).
+if [ "$1" = "1" ] && [ ! -e /etc/elements/elements.properties ]; then
+    install -d -m 0755 /etc/elements
+    install -o elements -g elements -m 0640 \
+        /usr/share/namazu-elements/elements.properties.example \
+        /etc/elements/elements.properties
+fi
+
+%preun
+%{?systemd_preun:%systemd_preun namazu-elements.service}
+
+%postun
+%{?systemd_postun_with_restart:%systemd_postun_with_restart namazu-elements.service}
+
+%changelog
+* Fri Oct 30 2026 Namazu Studios <engineering@namazustudios.com> - @@VERSION@@-@@RELEASE@@
+- Initial packaging of the Elements jetty-ws server (elements#12, elements#199).

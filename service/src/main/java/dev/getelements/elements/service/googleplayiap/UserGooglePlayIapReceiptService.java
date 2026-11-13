@@ -3,6 +3,7 @@ package dev.getelements.elements.service.googleplayiap;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -88,7 +89,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         try {
             body = getObjectMapper().writeValueAsString(googlePlayIapReceipt);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to serialize Google Play IAP receipt: " + e.getMessage(), e);
         }
         receipt.setBody(body);
 
@@ -148,8 +149,20 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
                     .execute();
         }
         catch (Exception e) {
+
             logger.error("Communication with the Google Play services was not successful: ", e);
-            throw new InternalException("Communication with the Google Play services was not successful:\n\n" + e);
+
+            // A 4xx from Google Play (other than auth failures, which indicate a server-side
+            // configuration problem) means the purchase token, product id or package name was
+            // rejected. This is client error data and must not surface as a 500.
+            if (e instanceof GoogleJsonResponseException googleJsonResponseException) {
+                final var statusCode = googleJsonResponseException.getStatusCode();
+                if (statusCode >= 400 && statusCode < 500 && statusCode != 401 && statusCode != 403) {
+                    throw new InvalidDataException("Google Play rejected the purchase: " + e.getMessage());
+                }
+            }
+
+            throw new InternalException("Communication with the Google Play services was not successful: " + e.getMessage(), e);
         }
 
         final GooglePlayIapReceipt googlePlayIapReceipt =
@@ -243,7 +256,7 @@ public class UserGooglePlayIapReceiptService implements GooglePlayIapReceiptServ
         try {
             return getObjectMapper().readValue(receipt.getBody(), GooglePlayIapReceipt.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to deserialize Google Play IAP receipt: " + e.getMessage(), e);
         }
     }
 

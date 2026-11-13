@@ -8,6 +8,7 @@ import dev.getelements.elements.sdk.dao.*;
 import dev.getelements.elements.sdk.model.Pagination;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
+import dev.getelements.elements.sdk.model.exception.InternalException;
 import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.exception.NotFoundException;
 import dev.getelements.elements.sdk.model.meta.oculusiapreceipt.OculusIapReceipt;
@@ -74,7 +75,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
             final var body = getObjectMapper().writeValueAsString(oculusIapReceipt);
             receipt.setBody(body);
         } catch (JsonProcessingException e) {
-            throw new InternalError("Unable to serialize receipt: " + e.getMessage());
+            throw new InternalException("Unable to serialize Oculus IAP receipt: " + e.getMessage(), e);
         }
 
         receipt.setOriginalTransactionId(oculusIapReceipt.getPurchaseId());
@@ -173,7 +174,7 @@ public class UserOculusIapReceiptService implements OculusIapReceiptService {
         try {
             return getObjectMapper().readValue(receipt.getBody(), OculusIapReceipt.class);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new InternalException("Unable to deserialize Oculus IAP receipt: " + e.getMessage(), e);
         }
     }
 

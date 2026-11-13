@@ -47,12 +47,16 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
 
             response = doInvoke(PRODUCTION);
 
-            if (response.getStatus() == USE_SANDBOX_INSTEAD) {
+            if (Integer.valueOf(USE_SANDBOX_INSTEAD).equals(response.getStatus())) {
                 response = doInvoke(SANDBOX);
             }
 
         } else {
             response = doInvoke(appleIapVerifyReceiptEnvironment);
+        }
+
+        if (response.getStatus() == null) {
+            throw new InternalException("Apple IAP receipt verification response did not contain a status.");
         }
 
         final int status = response.getStatus();
@@ -83,21 +87,28 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
                 throw new IllegalArgumentException("Invalid environment: " + appleIapVerifyReceiptEnvironment);
         }
 
-        final Response response = client
-                .target(baseApi)
-                .path(VERIFY_RECEIPT_PATH_COMPONENT)
-                .request(APPLICATION_JSON_TYPE)
-                .post(entity(requestBody, APPLICATION_JSON_TYPE));
+        Response response = null;
 
-        if (OK.getStatusCode() != response.getStatus()) {
-            logger.error("Apple {} server returned error status {}", appleIapVerifyReceiptEnvironment, response.getStatus());
-            throw new InternalException("Failed to make API call with Apple IAP Receipt Verification servers: " + response.getStatus());
+        try {
+
+            response = client
+                    .target(baseApi)
+                    .path(VERIFY_RECEIPT_PATH_COMPONENT)
+                    .request(APPLICATION_JSON_TYPE)
+                    .post(entity(requestBody, APPLICATION_JSON_TYPE));
+
+            if (OK.getStatusCode() != response.getStatus()) {
+                logger.error("Apple {} server returned error status {}", appleIapVerifyReceiptEnvironment, response.getStatus());
+                throw new InternalException("Failed to make API call with Apple IAP Receipt Verification servers: " + response.getStatus());
+            }
+
+            return response.readEntity(AppleIapVerifyReceiptResponse.class);
+
+        } finally {
+            if (response != null) {
+                response.close();
+            }
         }
-
-        final AppleIapVerifyReceiptResponse appleIapVerifyReceiptResponse;
-        appleIapVerifyReceiptResponse = response.readEntity(AppleIapVerifyReceiptResponse.class);
-
-        return appleIapVerifyReceiptResponse;
 
     }
 

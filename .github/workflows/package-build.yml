@@ -1,0 +1,72 @@
+name: Package Build
+
+# PR validation for the OS packaging under packaging/: builds the .deb and the
+# .rpm from the staged runtime tree, then smoke-installs each in its matching
+# container (ubuntu:24.04 / amazonlinux:2023). Full boot + health verification
+# against MongoDB belongs to the AMI work, not to this check.
+
+on:
+  pull_request:
+    paths:
+      - 'packaging/**'
+      - 'docker-config/elements-jetty-ws/**'
+      - 'docker-config/elements-base/src/main/resources/**'
+      - 'ci.mk'
+      - '.github/workflows/package-build.yml'
+  workflow_dispatch:
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build setup
+        id: setup
+        uses: ./.github/actions/build-setup
+
+      - name: Build .deb
+        run: make package_deb
+
+      - name: Build .rpm (inside amazonlinux:2023)
+        run: make package_rpm
+
+      - name: Lint .deb (informational)
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lintian
+          lintian --pedantic --info build/packaging/dist/namazu-elements_*.deb || true
+
+      - name: Smoke install .deb (ubuntu:24.04)
+        run: |
+          docker run --rm -v "$PWD:/ws" ubuntu:24.04 bash -ec '
+            apt-get update -qq
+            apt-get install -y -qq /ws/build/packaging/dist/namazu-elements_*.deb
+            dpkg -s namazu-elements >/dev/null
+            test -x /usr/bin/namazu-elements
+            test -f /usr/lib/systemd/system/namazu-elements.service
+            test -f /usr/lib/sysusers.d/namazu-elements.conf
+            test -f /etc/elements/elements.properties
+            id elements
+          '
+
+      - name: Smoke install .rpm (amazonlinux:2023)
+        run: |
+          docker run --rm -v "$PWD:/ws" amazonlinux:2023 bash -ec '
+            dnf install -y /ws/build/packaging/dist/namazu-elements-*.rpm
+            rpm -q namazu-elements >/dev/null
+            test -x /usr/bin/namazu-elements
+            test -f /usr/lib/systemd/system/namazu-elements.service
+            test -e /etc/elements/elements.properties
+            id elements
+          '
+
+      - name: Lint .rpm (informational, in the target distro)
+        # Ubuntu's rpmlint is too old to parse the zstd payload; the target
+        # distribution's rpmlint is the one that matters. Skipped silently if
+        # the target does not package rpmlint.
+        run: |
+          docker run --rm -v "$PWD:/ws" amazonlinux:2023 bash -ec '
+            dnf install -y rpmlint >/dev/null 2>&1 || exit 0
+            rpmlint /ws/build/packaging/dist/namazu-elements-*.rpm || true
+          '
