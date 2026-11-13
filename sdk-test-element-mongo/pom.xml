@@ -61,6 +61,25 @@
             <artifactId>mongodb-driver-core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--
+            provided: Guice classes must come from the platform (parent classloader), never bundled into
+            the Element. Needed at compile time only for TestRedeployGuiceModule.
+        -->
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--
+            provided: compile-time only, for the @GuiceElementModule annotation on the package-info. The
+            spi-guice loader itself is platform-provided at runtime.
+        -->
+        <dependency>
+            <groupId>dev.getelements.elements</groupId>
+            <artifactId>sdk-spi-guice</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>

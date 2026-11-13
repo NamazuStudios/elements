@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.morphia.Datastore;
 import dev.morphia.mapping.Mapper;
+import org.mockito.InOrder;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -113,17 +114,19 @@ public class MongoElementEntityRegistrarTest {
     }
 
     @Test
-    public void unregisterUnknownElement_throwsInSingleCallAndBatch() {
+    public void unregisterUnknownElement_isIdempotentNoOp() {
 
         final var unknown = mockElementWithEntity("unknown", DummyEntityA.class);
 
-        assertThrows(IllegalStateException.class, () -> registrar.unregisterEntityClasses(unknown));
+        // Deregistering an unknown element must not throw: on a hot reload the runtime service unloads the
+        // element synchronously (#209) and the container service's event-driven unmount then repeats the call
+        // for the same element. The batch still closes (and rebuilds), which is harmless.
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(unknown);
+        }
 
-        assertThrows(IllegalStateException.class, () -> {
-            try (var batch = registrar.beginBatch()) {
-                batch.unregisterEntityClasses(unknown);
-            }
-        });
+        assertEquals(rebuildCount.get(), 1, "the batch close still rebuilds exactly once");
+
     }
 
     @Test
@@ -139,8 +142,35 @@ public class MongoElementEntityRegistrarTest {
 
         assertEquals(rebuildCount.get(), 1);
 
-        // Now unregistered, so a second unregister should fail again.
-        assertThrows(IllegalStateException.class, () -> registrar.unregisterEntityClasses(elementA));
+        // Now unregistered: a second unregister is an idempotent no-op (#209), not a failure.
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(elementA);
+        }
+    }
+
+    /**
+     * Regression test: Morphia's mapper keeps the first model registered per FQCN, so a rebuild must map
+     * the most recently registered element's entity classes FIRST. Otherwise, when two live elements
+     * declare the same entity class name (e.g. a long-lived deployment still active while a transient one
+     * loads), the FQCN binds to the stale element's classloader and a freshly-loaded element resolves the
+     * entity through the shared mapper into the old loader's class, crashing its injector with
+     * {@code ClassCastException: X cannot be cast to X}.
+     */
+    @Test
+    public void rebuildMapsNewestRegisteredElementsEntityClassesFirst() {
+
+        final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
+        final var elementB = mockElementWithEntity("elementB", DummyEntityB.class);
+
+        registrar.registerEntityClasses(elementA);
+        registrar.registerEntityClasses(elementB);
+
+        final var mapper = datastoreRef.get().getMapper();
+
+        final InOrder inOrder = inOrder(mapper);
+        inOrder.verify(mapper).map(DummyEntityB.class);
+        inOrder.verify(mapper).map(DummyEntityA.class);
+
     }
 
     private static Element mockElementWithEntity(final String name, final Class<?> entityClass) {
