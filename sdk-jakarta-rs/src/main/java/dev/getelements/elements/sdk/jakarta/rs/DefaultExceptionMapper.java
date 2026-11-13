@@ -29,17 +29,18 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
-    public static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Map.of(
-        ErrorCode.DUPLICATE, Response.Status.CONFLICT,
-        ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED,
-        ErrorCode.CONFLICT, Response.Status.CONFLICT,
-        ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN,
-        ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST,
-        ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST,
-        ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND,
-        ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE,
-        ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR,
-        ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED
+    public static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Map.ofEntries(
+        Map.entry(ErrorCode.DUPLICATE, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED),
+        Map.entry(ErrorCode.CONFLICT, Response.Status.CONFLICT),
+        Map.entry(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN),
+        Map.entry(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST),
+        Map.entry(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST),
+        Map.entry(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND),
+        Map.entry(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE),
+        Map.entry(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR),
+        Map.entry(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED),
+        Map.entry(ErrorCode.EXTERNAL_RESOURCE_FAILED, Response.Status.BAD_GATEWAY)
     );
 
     public static final Response.Status getStatusForCode(final Object code) {
@@ -131,12 +132,19 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
             final ErrorResponse errorResponse = new ErrorResponse();
 
-            LOG.info("Caught expected exception while processing request.", ex);
+            final var status = getStatusForCode(ex.getCode());
+
+            if (status.getFamily() == Response.Status.Family.SERVER_ERROR) {
+                // A 5xx outcome must always leave a server-side trail at standard log levels.
+                LOG.warn("Caught server-level exception while processing request.", ex);
+            } else {
+                LOG.info("Caught expected exception while processing request.", ex);
+            }
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
 
-            return Response.status(getStatusForCode(ex.getCode()))
+            return Response.status(status)
                            .entity(errorResponse)
                            .type(MediaType.APPLICATION_JSON)
                            .build();
@@ -148,6 +156,13 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             final ErrorResponse errorResponse = new ErrorResponse();
             errorResponse.setMessage(wex.getMessage());
             errorResponse.setCode(ErrorCode.UNKNOWN.toString());
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR) {
+                // A 5xx outcome must always leave a server-side trail at standard log levels.
+                LOG.warn("Caught server-level web application exception while processing request.", wex);
+            } else {
+                LOG.debug("Caught web application exception while processing request.", wex);
+            }
 
             return Response.fromResponse(response)
                            .entity(errorResponse)
