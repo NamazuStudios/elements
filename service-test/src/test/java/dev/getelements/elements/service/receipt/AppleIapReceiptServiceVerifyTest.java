@@ -2,14 +2,13 @@ package dev.getelements.elements.service.receipt;
 
 import dev.getelements.elements.sdk.dao.ReceiptDao;
 import dev.getelements.elements.sdk.dao.Transaction;
-import dev.getelements.elements.sdk.model.appleiapreceipt.AppleIapReceipt;
 import dev.getelements.elements.sdk.model.user.User;
-import dev.getelements.elements.sdk.model.util.MapperRegistry;
 import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import dev.getelements.elements.sdk.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
 import dev.getelements.elements.sdk.service.appleiap.client.model.AppleIapGrandUnifiedReceiptPurchase;
 import dev.getelements.elements.service.appleiap.UserAppleIapReceiptService;
+import dev.getelements.elements.service.util.ServicesMapperRegistryProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,6 @@ import java.util.function.Function;
 
 import static dev.getelements.elements.sdk.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment.SANDBOX;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
@@ -53,14 +51,22 @@ public class AppleIapReceiptServiceVerifyTest {
 
     /**
      * A verified receipt whose in_app purchase lacks original_purchase_date must still be stored,
-     * defaulting the purchase time (mirroring the Steam service), not NPE.
+     * defaulting the purchase time (mirroring the Steam service), not NPE. Uses the real
+     * {@link dev.getelements.elements.service.util.ServicesMapperRegistryProvider} mapper set, so a
+     * missing GrandUnifiedReceipt-to-AppleIapReceipt mapping (which broke every receipt upload with
+     * "No mapping exists from ... AppleIapGrandUnifiedReceipt to ... AppleIapReceipt") fails here.
      */
     @Test
     public void testVerifyWithMissingOriginalPurchaseDateDoesNotThrow() {
 
         final var grandUnifiedReceipt = new AppleIapGrandUnifiedReceipt();
         // original_purchase_date deliberately left null.
-        grandUnifiedReceipt.setInApp(List.of(new AppleIapGrandUnifiedReceiptPurchase()));
+        grandUnifiedReceipt.setBundleId("com.example.app");
+
+        final var purchase = new AppleIapGrandUnifiedReceiptPurchase();
+        purchase.setOriginalTransactionId("1000000123456789");
+        purchase.setProductId("com.example.coins");
+        grandUnifiedReceipt.setInApp(List.of(purchase));
 
         final var service = newService(grandUnifiedReceipt);
 
@@ -68,6 +74,8 @@ public class AppleIapReceiptServiceVerifyTest {
 
         assertNotNull(result);
         assertEquals(result.size(), 1);
+        assertEquals(result.getFirst().getBundleId(), "com.example.app");
+        assertEquals(result.getFirst().getOriginalTransactionId(), "1000000123456789");
 
     }
 
@@ -84,14 +92,8 @@ public class AppleIapReceiptServiceVerifyTest {
         final var user = new User();
         user.setId("user.0");
 
-        final var appleIapReceipt = new AppleIapReceipt();
-        appleIapReceipt.setOriginalTransactionId("originalTransactionId.0");
-        appleIapReceipt.setProductId("productId.0");
-        appleIapReceipt.setBundleId("dev.getelements.test_app");
-        appleIapReceipt.setUser(user);
-
-        final var dozerMapperRegistry = mock(MapperRegistry.class);
-        when(dozerMapperRegistry.map(any(), eq(AppleIapReceipt.class))).thenReturn(appleIapReceipt);
+        final var servicesMapperRegistryProvider = new ServicesMapperRegistryProvider();
+        servicesMapperRegistryProvider.setApiOutsideUrlProvider(() -> "http://localhost:8080/api/rest");
 
         final var receiptDao = mock(ReceiptDao.class);
         when(receiptDao.createReceipt(any())).thenAnswer(inv -> inv.getArgument(0));
@@ -108,7 +110,7 @@ public class AppleIapReceiptServiceVerifyTest {
         final var service = new UserAppleIapReceiptService();
         service.setUser(user);
         service.setAppleIapVerifyReceiptInvokerBuilderProvider(() -> builder);
-        service.setDozerMapper(dozerMapperRegistry);
+        service.setDozerMapper(servicesMapperRegistryProvider.get());
         service.setObjectMapper(new ObjectMapper());
         service.setReceiptDao(receiptDao);
         service.setTransactionProvider(() -> transaction);
