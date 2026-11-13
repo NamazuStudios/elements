@@ -17,6 +17,7 @@ import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
@@ -54,6 +55,55 @@ public class ElementHotReloadApiTest {
         };
     }
 
+    /**
+     * The id of the deployment created by the test method, if it got that far. Cleared in the after-method
+     * below once the deployment is deleted.
+     */
+    private String createdDeploymentId;
+
+    /**
+     * Deletes the deployment created by the test, if any, and waits for its runtime to unload. Without
+     * this, the deployment (whose element declares a Morphia entity) stays registered in the JVM-global
+     * {@code MongoElementEntityRegistrar} for the rest of the suite: every subsequent deployment load
+     * rebuilds the shared Morphia mapper mapping this element's entity classes as well, and since Morphia
+     * keeps the first model per FQCN, a later deployment declaring the same entity class name resolves the
+     * entity through the stale element's classloader and crashes with
+     * {@code ClassCastException: X cannot be cast to X}.
+     */
+    @AfterMethod
+    public void deleteDeploymentAndWaitForUnload() throws InterruptedException {
+
+        if (createdDeploymentId == null) {
+            return;
+        }
+
+        try {
+            elementDeploymentDao.deleteDeployment(createdDeploymentId);
+
+            final var deadline = System.currentTimeMillis() + 60_000;
+
+            while (System.currentTimeMillis() < deadline) {
+
+                final var stillActive = runtimeService.getActiveRuntimes().stream()
+                        .anyMatch(r -> r.deployment().id().equals(createdDeploymentId));
+
+                if (!stillActive) {
+                    createdDeploymentId = null;
+                    return;
+                }
+
+                Thread.sleep(250);
+
+            }
+
+            Assert.fail("Deployment " + createdDeploymentId + " did not unload in time; active runtimes: "
+                    + runtimeService.getActiveRuntimes());
+        } finally {
+            createdDeploymentId = null;
+        }
+
+    }
+
     @Inject
     private ElementRuntimeService runtimeService;
 
@@ -77,6 +127,7 @@ public class ElementHotReloadApiTest {
         writeElmContent(elm.getId());
 
         final var created = elementDeploymentDao.createElementDeployment(newDeployment(elm));
+        createdDeploymentId = created.id();
         final var first = awaitRuntime(created.id(), created.version(), "initial load");
         final var firstGenerationEntityClass = entityClassOf(first);
 

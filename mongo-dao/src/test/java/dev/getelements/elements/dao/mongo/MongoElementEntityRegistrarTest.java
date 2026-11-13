@@ -7,6 +7,7 @@ import dev.getelements.elements.sdk.record.ElementDefinitionRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 import dev.morphia.Datastore;
 import dev.morphia.mapping.Mapper;
+import org.mockito.InOrder;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -145,6 +146,31 @@ public class MongoElementEntityRegistrarTest {
         try (var batch = registrar.beginBatch()) {
             batch.unregisterEntityClasses(elementA);
         }
+    }
+
+    /**
+     * Regression test: Morphia's mapper keeps the first model registered per FQCN, so a rebuild must map
+     * the most recently registered element's entity classes FIRST. Otherwise, when two live elements
+     * declare the same entity class name (e.g. a long-lived deployment still active while a transient one
+     * loads), the FQCN binds to the stale element's classloader and a freshly-loaded element resolves the
+     * entity through the shared mapper into the old loader's class, crashing its injector with
+     * {@code ClassCastException: X cannot be cast to X}.
+     */
+    @Test
+    public void rebuildMapsNewestRegisteredElementsEntityClassesFirst() {
+
+        final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
+        final var elementB = mockElementWithEntity("elementB", DummyEntityB.class);
+
+        registrar.registerEntityClasses(elementA);
+        registrar.registerEntityClasses(elementB);
+
+        final var mapper = datastoreRef.get().getMapper();
+
+        final InOrder inOrder = inOrder(mapper);
+        inOrder.verify(mapper).map(DummyEntityB.class);
+        inOrder.verify(mapper).map(DummyEntityA.class);
+
     }
 
     private static Element mockElementWithEntity(final String name, final Class<?> entityClass) {

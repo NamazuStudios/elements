@@ -191,7 +191,16 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
         final var datastore = createDatastore();
 
         final var thread = Thread.currentThread();
-        elements.forEach(e -> applyChanges(e, thread, datastore));
+
+        // Map entity classes in reverse-registration order: Morphia's mapper keeps the first model
+        // registered per FQCN, so the most recently registered element's classes must be mapped first.
+        // When two live elements declare the same entity class name (e.g. a long-lived deployment still
+        // active while a transient one loads), the newest deployment's classes must win -- otherwise the
+        // freshly-loaded element resolves the entity through the shared mapper into the stale element's
+        // classloader and crashes with ClassCastException: X cannot be cast to X.
+        for (var i = elements.size() - 1; i >= 0; i--) {
+            applyChanges(elements.get(i), thread, datastore);
+        }
 
         getDatastoreAtomicReference().set(datastore);
 
