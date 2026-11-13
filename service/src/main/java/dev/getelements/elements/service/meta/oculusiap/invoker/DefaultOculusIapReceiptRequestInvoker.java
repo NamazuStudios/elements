@@ -43,7 +43,10 @@ public class DefaultOculusIapReceiptRequestInvoker implements OculusIapReceiptRe
             responseEntity.setSuccess(success);
             return responseEntity;
         }  catch (Exception e) {
-            throw new OculusIapVerifyReceiptGraphErrorException(response.readEntity(String.class));
+            // The response is already closed at this point, so the failure detail comes from the
+            // exception itself rather than attempting to re-read the entity.
+            throw new OculusIapVerifyReceiptGraphErrorException(
+                    e.getMessage() != null ? e.getMessage() : e.toString());
         }
     }
 
@@ -71,7 +74,10 @@ public class DefaultOculusIapReceiptRequestInvoker implements OculusIapReceiptRe
 
             return response.readEntity(OculusIapConsumeResponse.class);
         } catch (Exception e) {
-            throw new OculusIapVerifyReceiptGraphErrorException(response.readEntity(String.class));
+            // The response is already closed at this point, so the failure detail comes from the
+            // exception itself rather than attempting to re-read the entity.
+            throw new OculusIapVerifyReceiptGraphErrorException(
+                    e.getMessage() != null ? e.getMessage() : e.toString());
         }
     }
 
