@@ -1,6 +1,9 @@
 package dev.getelements.elements.dao.mongo.guice;
 
 import com.google.inject.*;
+import com.mongodb.ReadConcern;
+import com.mongodb.TransactionOptions;
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoDatabase;
 import dev.getelements.elements.dao.mongo.provider.MongoDatastoreProvider;
 import dev.getelements.elements.guice.ConfigurationModule;
@@ -43,7 +46,19 @@ public class MongoTransactionProvider implements Provider<Transaction> {
         final var properties = getPropertiesProvider().get();
         final var morphiaSession = datastore.startSession();
 
-        morphiaSession.startTransaction();
+        // Start every transaction with an explicit readConcern SNAPSHOT and writeConcern MAJORITY.
+        // With no read concern supplied the driver sends none and mongod defaults the transaction
+        // to readConcern local (mx, per the TXN log, provenance implicitDefault). Snapshot + majority
+        // makes the guarantees explicit: reads observe committed state plus this session's writes,
+        // and the commit waits for majority durability. mongod forces majority on commitTransaction
+        // itself, and existing Elements DAO usage matches the snapshot contract.
+        // NB: this does NOT by itself resolve the transient stale-snapshot reads observed in
+        // NamazuStudios/crossfire#20 (A/B tested against mongod 6.0.9 single-node replica set:
+        // failures persisted with these options); that investigation continues with MongoDB upstream.
+        morphiaSession.startTransaction(TransactionOptions.builder()
+                .readConcern(ReadConcern.SNAPSHOT)
+                .writeConcern(WriteConcern.MAJORITY)
+                .build());
 
         final var transactionInjector = Guice.createInjector(
                 GuiceStages.get(),
