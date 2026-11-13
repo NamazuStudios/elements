@@ -46,7 +46,8 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         Map.entry(ErrorCode.RATE_LIMITED, Response.Status.TOO_MANY_REQUESTS),
         Map.entry(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR),
         Map.entry(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED),
-        Map.entry(ErrorCode.MFA_REQUIRED, Response.Status.UNAUTHORIZED)
+        Map.entry(ErrorCode.MFA_REQUIRED, Response.Status.UNAUTHORIZED),
+        Map.entry(ErrorCode.EXTERNAL_RESOURCE_FAILED, Response.Status.BAD_GATEWAY)
     );
 
     public static final Response.Status getStatusForCode(final Object code) {
@@ -185,12 +186,20 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
         } catch (BaseException ex) {
 
             final ErrorResponse errorResponse = new ErrorResponse();
-            LOG.debug("Caught expected exception while processing request.", ex);
+
+            final var status = getStatusForCode(ex.getCode());
+
+            if (status.getFamily() == Response.Status.Family.SERVER_ERROR) {
+                // A 5xx outcome must always leave a server-side trail at standard log levels.
+                LOG.warn("Caught server-level exception while processing request.", ex);
+            } else {
+                LOG.debug("Caught expected exception while processing request.", ex);
+            }
 
             errorResponse.setMessage(ex.getMessage());
             errorResponse.setCode(ex.getCode().toString());
 
-            return Response.status(getStatusForCode(ex.getCode()))
+            return Response.status(status)
                            .entity(errorResponse)
                            .type(MediaType.APPLICATION_JSON)
                            .build();
@@ -202,6 +211,13 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
             final ErrorResponse errorResponse = new ErrorResponse();
             errorResponse.setMessage(wex.getMessage());
             errorResponse.setCode(ErrorCode.UNKNOWN.toString());
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SERVER_ERROR) {
+                // A 5xx outcome must always leave a server-side trail at standard log levels.
+                LOG.warn("Caught server-level web application exception while processing request.", wex);
+            } else {
+                LOG.debug("Caught web application exception while processing request.", wex);
+            }
 
             return Response.fromResponse(response)
                            .entity(errorResponse)
