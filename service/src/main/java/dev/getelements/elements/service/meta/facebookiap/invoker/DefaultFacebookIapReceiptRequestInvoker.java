@@ -41,7 +41,10 @@ public class DefaultFacebookIapReceiptRequestInvoker implements FacebookIapRecei
         try(response) {
             return response.readEntity(FacebookIapVerifyReceiptResponse.class);
         } catch (Exception e){
-            throw new FacebookIapVerifyReceiptGraphErrorException(response.readEntity(String.class));
+            // The response is already closed at this point, so the failure detail comes from the
+            // exception itself rather than attempting to re-read the entity.
+            throw new FacebookIapVerifyReceiptGraphErrorException(
+                    e.getMessage() != null ? e.getMessage() : e.toString());
         }
     }
 
