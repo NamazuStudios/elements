@@ -205,6 +205,24 @@ public class ElementHotReloadApiTest {
         Assert.assertTrue(unloadIndex >= 0 && loadedIndex > unloadIndex,
                 "expected RUNTIME_UNLOADED before RUNTIME_LOADED; events: " + runtimeEventLog);
 
+        // A SECOND hot-swap must be just as clean as the first: repeated swaps must not accumulate
+        // classloader generations whose entity classes shadow each other in the shared mapper
+        // (staging reproduced CCEs on the second swap of a production element, 2026-11-13).
+        final var reloadedAgain = elementDeploymentDao.updateElementDeployment(reloaded);
+        final var third = awaitRuntime(reloadedAgain.id(), reloadedAgain.version(), "second hot reload");
+        final var thirdGenerationEntityClass = entityClassOf(third);
+
+        Assert.assertEquals(third.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                "the second hot reload must complete cleanly");
+
+        Assert.assertNotSame(secondGenerationEntityClass, thirdGenerationEntityClass,
+                "each reload must produce a distinct Class object");
+
+        final var secondReloadUnloadIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_UNLOADED);
+        Assert.assertTrue(secondReloadUnloadIndex > loadedIndex,
+                "the second reload must announce the unload of the previous generation; events: "
+                        + runtimeEventLog);
+
     }
 
     private ElementDeployment newDeployment(final LargeObject elm) {
