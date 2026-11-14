@@ -445,7 +445,14 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                     // Version changed - reload
                     try {
                         doUnloadDeployment(deploymentId);
-                        unloadedDeploymentIds.add(deploymentId);
+
+                        // Publish the unload BEFORE loading the new version. The container service
+                        // retires the old Jetty handlers at this point -- closing the window where a
+                        // request could still route to the retired element generation after the
+                        // reload's entity registration rebuilds the shared Morphia mapper (which
+                        // resolves entity classes by FQCN to the newest registration, breaking any
+                        // old-loader code still serving -- NamazuStudios/elements#209).
+                        publishRuntimeUnloaded(deploymentId);
 
                         final var record = doLoadDeployment(deployment, false);  // Not transient
                         if (record != null && record.status() != RuntimeStatus.FAILED) {
