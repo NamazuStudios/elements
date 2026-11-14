@@ -302,7 +302,9 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
                             thread.setContextClassLoader(elementClassLoader);
                             final Element element;
                             try {
-                                element = record.loadElement(config.failedElementHandler());
+                                element = record.loadElement(
+                                        config.failedElementHandler(),
+                                        config.elementPreLoadHandler());
                                 elements.add(element);
                                 config.elementLoadedHandler().accept(subdir, element);
                             } finally {
@@ -993,10 +995,22 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
         }
 
-        public Element loadElement(final ElementPathLoader.FailedElementHandler failedElementHandler) {
+        public Element loadElement(final ElementPathLoader.FailedElementHandler failedElementHandler,
+                                   final ElementPathLoader.ElementPreLoadHandler elementPreLoadHandler) {
             logger.debug("Loading element from: {}", elementPath());
             final var elementLoader = getLoader();
             final var elementRecord = elementLoader.getElementRecord();
+
+            // The element's implementation classloader now exists, but its injector has not built. This is
+            // the pre-load window (#209): a handler here sees the element's own classes under their final
+            // classloader BEFORE any eager singleton resolves entities through the shared datastore. On a
+            // hot reload, deferring registration until after the injector build means the injector observes
+            // the previous generation's cached mapper models for identical class names --
+            // ClassCastException: X cannot be cast to X.
+            if (elementPreLoadHandler != null) {
+                elementPreLoadHandler.accept(elementPath(), elementRecord);
+            }
+
             try {
                 return registry().register(elementLoader);
             } catch (final Throwable t) {

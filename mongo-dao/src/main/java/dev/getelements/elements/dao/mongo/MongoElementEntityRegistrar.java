@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,7 +39,11 @@ import java.util.function.Supplier;
  * {@link #registerEntityClasses(Element)}/{@link #unregisterEntityClasses(Element)} call (or once per
  * {@link Batch}, when several mutations are accumulated via {@link #beginBatch()}) so that reloaded
  * elements (same class name, new classloader) replace the stale cached model rather than being silently
- * ignored. This rebuild replaces (never mutates) the shared {@link Datastore}/{@code Mapper} referenced by
+ * ignored. Registrations are keyed by the element's implementation classloader — never by the
+ * {@link Element} instance — and the declared classes are captured eagerly, so a rebuild never re-resolves
+ * classes through a (possibly closed) generation's service locator and deregistration never depends on a
+ * dead element's locator still resolving its {@link EntityRegistry} export (#209). This rebuild replaces
+ * (never mutates) the shared {@link Datastore}/{@code Mapper} referenced by
  * {@link #getDatastoreAtomicReference()} — see {@code dev.getelements.elements.sdk.mongo.provider.LiveDatastore}
  * for why a consumer can safely hold the injected {@link Datastore} in a singleton across any number of
  * these rebuilds.
@@ -66,7 +71,15 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
     private final ReentrantLock lock = new ReentrantLock();
 
-    private final List<Element> elements = new ArrayList<>();
+    /**
+     * Live registrations in registration order, keyed by the element's implementation classloader. The
+     * classloader is the key (not the {@link Element}) so that both pre-registration (before the element's
+     * injector builds, #209) and post-load {@link EntityRegistry} registration land on the same entry, and
+     * so deregistration never depends on a dead generation's service locator still resolving its exports.
+     * Classes are captured eagerly at registration time — a rebuild must never re-resolve classes through
+     * a (possibly closed) generation's locator.
+     */
+    private final LinkedHashMap<ClassLoader, List<Class<?>>> registrations = new LinkedHashMap<>();
 
     @Override
     public void registerEntityClasses(final Element element) {
@@ -76,9 +89,23 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
     }
 
     @Override
+    public void registerEntityClasses(final ClassLoader owner, final List<Class<?>> entityClasses) {
+        try (var batch = beginBatch()) {
+            batch.registerEntityClasses(owner, entityClasses);
+        }
+    }
+
+    @Override
     public void unregisterEntityClasses(final Element element) {
         try (var batch = beginBatch()) {
             batch.unregisterEntityClasses(element);
+        }
+    }
+
+    @Override
+    public void unregisterEntityClasses(final ClassLoader owner) {
+        try (var batch = beginBatch()) {
+            batch.unregisterEntityClasses(owner);
         }
     }
 
@@ -91,52 +118,44 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
         final var locator = element.getServiceLocator();
 
-        locator.findInstance(EntityRegistry.class)
+        final var classes = locator.findInstance(EntityRegistry.class)
                 .map(Supplier::get)
-                .ifPresent(registry -> {
+                .map(EntityRegistry::entityClasses)
+                .orElse(null);
 
-                    final var classes = registry.entityClasses();
+        applyRegister(element.getElementRecord().classLoader(), classes);
 
-                    if (classes == null || classes.isEmpty()) {
-                        return;
-                    }
+    }
 
-                    if (elements.contains(element)) {
-                        throw new IllegalStateException("Element already registered: " +
-                                element.getElementRecord().classLoader().getName()
-                        );
-                    }
+    private void applyRegister(final ClassLoader owner, final List<Class<?>> classes) {
 
-                    elements.add(element);
+        // Null/empty clears any prior registration for this owner: there is nothing to map. A re-register
+        // of the same classloader (pre-registration followed by the element's own EntityRegistry
+        // registration, or a retried load) replaces the entry rather than failing -- the newest class list
+        // for a classloader is the authoritative one.
+        if (classes == null || classes.isEmpty()) {
+            registrations.remove(owner);
+            return;
+        }
 
-                });
+        registrations.put(owner, List.copyOf(classes));
 
     }
 
     private void applyUnregister(final Element element) {
+        applyUnregister(element.getElementRecord().classLoader());
+    }
 
-        final var locator = element.getServiceLocator();
+    private void applyUnregister(final ClassLoader owner) {
 
-        locator.findInstance(EntityRegistry.class)
-                .map(Supplier::get)
-                .ifPresent(registry -> {
-
-                    final var classes = registry.entityClasses();
-
-                    if (classes == null || classes.isEmpty()) {
-                        return;
-                    }
-
-                    // Idempotent (#209): an element may legitimately be deregistered twice — the runtime
-                    // service unloads synchronously during a hot reload, and the container service's
-                    // event-driven unmount then repeats the call for the same element. Deregistering an
-                    // unknown element is therefore a no-op, not a failure.
-                    if (!elements.remove(element)) {
-                        logger.debug("Element not registered; ignoring duplicate deregistration: {}",
-                                element.getElementRecord().classLoader().getName());
-                    }
-
-                });
+        // Unconditional removal, keyed only by the classloader (#209): the previous gate resolved the
+        // element's EntityRegistry export through its service locator before removing anything, so a
+        // generation whose runtime was already torn down was silently never removed -- it stayed in the
+        // registration list and every subsequent rebuild re-mapped its (closed) classes.
+        if (registrations.remove(owner) == null) {
+            logger.debug("No entity registration for classloader {}; ignoring duplicate deregistration: {}",
+                    owner, owner.getName());
+        }
 
     }
 
@@ -160,9 +179,21 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
         }
 
         @Override
+        public void registerEntityClasses(final ClassLoader owner, final List<Class<?>> entityClasses) {
+            ensureOpen();
+            applyRegister(owner, entityClasses);
+        }
+
+        @Override
         public void unregisterEntityClasses(final Element element) {
             ensureOpen();
             applyUnregister(element);
+        }
+
+        @Override
+        public void unregisterEntityClasses(final ClassLoader owner) {
+            ensureOpen();
+            applyUnregister(owner);
         }
 
         @Override
@@ -198,8 +229,10 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
         // active while a transient one loads), the newest deployment's classes must win -- otherwise the
         // freshly-loaded element resolves the entity through the shared mapper into the stale element's
         // classloader and crashes with ClassCastException: X cannot be cast to X.
-        for (var i = elements.size() - 1; i >= 0; i--) {
-            applyChanges(elements.get(i), thread, datastore);
+        final var order = List.copyOf(registrations.entrySet());
+        for (var i = order.size() - 1; i >= 0; i--) {
+            final var registration = order.get(i);
+            applyChanges(registration.getKey(), registration.getValue(), thread, datastore);
         }
 
         getDatastoreAtomicReference().set(datastore);
@@ -268,31 +301,24 @@ public class MongoElementEntityRegistrar implements ElementEntityRegistrar {
 
     }
 
-    private void applyChanges(final Element element,
+    private void applyChanges(final ClassLoader owner,
+                              final List<Class<?>> entityClasses,
                               final Thread thread,
                               final Datastore datastore) {
 
         final var previous = thread.getContextClassLoader();
-        final var elementClassLoader = element.getElementRecord().classLoader();
 
-        element.getServiceLocator()
-                .findInstance(EntityRegistry.class)
-                .map(Supplier::get)
-                .ifPresent(registry -> {
-                    try {
-                        thread.setContextClassLoader(elementClassLoader);
-                        registry.entityClasses().forEach(entityClass -> {
-                            datastore.getMapper().map(entityClass);
-                            logger.info(
-                                    "Registered Morphia entity class {} for element {}",
-                                    entityClass.getName(),
-                                    element.getElementRecord().definition().name()
-                            );
-                        });
-                    } finally {
-                        thread.setContextClassLoader(previous);
-                    }
-                });
+        try {
+            thread.setContextClassLoader(owner);
+            entityClasses.forEach(entityClass -> {
+                datastore.getMapper().map(entityClass);
+                logger.info("Registered Morphia entity class {} for element classloader {}",
+                        entityClass.getName(),
+                        owner.getName());
+            });
+        } finally {
+            thread.setContextClassLoader(previous);
+        }
 
     }
 

@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.assertThrows;
 
 public class MongoElementEntityRegistrarTest {
 
@@ -97,20 +96,27 @@ public class MongoElementEntityRegistrarTest {
 
     }
 
+    /**
+     * Re-registering the same classloader replaces the registration rather than failing: on a hot reload,
+     * pre-registration (#209) lands on the classloader key first, and the element's own
+     * {@link EntityRegistry}-driven registration then replaces it with the authoritative class list. The
+     * old duplicate-throw behavior would have poisoned exactly that sequence.
+     */
     @Test
-    public void duplicateRegistrationMidBatch_throwsButCommitsEarlierMutations() {
+    public void duplicateRegistrationReplacesRatherThanThrows() {
 
         final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
 
-        assertThrows(IllegalStateException.class, () -> {
-            try (var batch = registrar.beginBatch()) {
-                batch.registerEntityClasses(elementA);
-                batch.registerEntityClasses(elementA); // duplicate
-            }
-        });
+        try (var batch = registrar.beginBatch()) {
+            batch.registerEntityClasses(elementA);
+            batch.registerEntityClasses(elementA); // same classloader: replaces, does not throw
+        }
 
-        // The batch still committed elementA's registration (via try-with-resources calling close()).
-        assertEquals(rebuildCount.get(), 1, "Mutations preceding the failure should still be committed.");
+        assertEquals(rebuildCount.get(), 1, "the batch still rebuilds exactly once");
+
+        final var mapper = datastoreRef.get().getMapper();
+        verify(mapper, times(1)).map(DummyEntityA.class);
+
     }
 
     @Test
@@ -173,6 +179,84 @@ public class MongoElementEntityRegistrarTest {
 
     }
 
+    /**
+     * THE rc-7 regression (#209): a generation whose runtime was already torn down can no longer resolve its
+     * {@link EntityRegistry} export through its service locator. The old deregistration gate resolved the
+     * registry <i>before</i> removing anything, so such a generation was silently never removed — it stayed
+     * in the registration list and every subsequent mapper rebuild kept re-mapping its closed classes.
+     * Deregistration is now keyed by classloader and unconditional.
+     */
+    @Test
+    public void unregisterRemovesDeadGenerationWhoseLocatorCannotResolveRegistry() {
+
+        final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
+        registrar.registerEntityClasses(elementA);
+        rebuildCount.set(0);
+
+        // The same generation, now dead: SAME classloader, locator no longer resolves the registry.
+        final var dead = mockDeadElementWithEntity("elementA", DummyEntityA.class,
+                elementA.getElementRecord().classLoader());
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(dead);
+        }
+
+        assertEquals(rebuildCount.get(), 1, "the batch close rebuilds exactly once");
+
+        // The rebuild must no longer map the dead generation's classes. Each rebuild builds a fresh
+        // mapper, so the current datastore's mapper must have received no map() calls at all.
+        final var mapper = datastoreRef.get().getMapper();
+        verify(mapper, never()).map(DummyEntityA.class);
+
+    }
+
+    /**
+     * Pre-registration (#209) happens in the element's pre-load window, keyed by the element's impl
+     * classloader; the element's own {@link EntityRegistry}-driven registration then replaces it once the
+     * element has loaded. Both must land on the same key, and the second registration must not double-map
+     * the classes.
+     */
+    @Test
+    public void preRegistrationByClassloaderIsReplacedByElementRegistration() {
+
+        final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
+        final var classLoader = elementA.getElementRecord().classLoader();
+
+        // 1. Pre-load window: classes registered by classloader, before the injector builds.
+        registrar.registerEntityClasses(classLoader, List.of(DummyEntityA.class));
+        // 2. Post-load: the element's EntityRegistry registration replaces the pre-registration.
+        registrar.registerEntityClasses(elementA);
+
+        assertEquals(rebuildCount.get(), 2, "each registration call rebuilds once");
+
+        // Each rebuild builds a FRESH mapper, so the final mapper must show exactly one map() call for the
+        // second rebuild -- proving the replacement registration mapped the class once, not twice.
+        final var mapper = datastoreRef.get().getMapper();
+        verify(mapper, times(1)).map(DummyEntityA.class);
+
+    }
+
+    /**
+     * The classloader-keyed deregistration removes a pre-registration directly — used on the failed-element
+     * path so a load failure does not pin the failed generation's classloader in the registrar.
+     */
+    @Test
+    public void preRegistrationIsRemovedByClassloaderKeyedDeregistration() {
+
+        final var elementA = mockElementWithEntity("elementA", DummyEntityA.class);
+        final var classLoader = elementA.getElementRecord().classLoader();
+
+        registrar.registerEntityClasses(classLoader, List.of(DummyEntityA.class));
+        rebuildCount.set(0);
+
+        registrar.unregisterEntityClasses(classLoader);
+
+        assertEquals(rebuildCount.get(), 1);
+
+        final var mapper = datastoreRef.get().getMapper();
+        verify(mapper, never()).map(DummyEntityA.class);
+
+    }
+
     private static Element mockElementWithEntity(final String name, final Class<?> entityClass) {
 
         final var entityRegistry = mock(EntityRegistry.class);
@@ -182,12 +266,49 @@ public class MongoElementEntityRegistrarTest {
         when(serviceLocator.findInstance(eq(EntityRegistry.class)))
                 .thenReturn(Optional.of(() -> entityRegistry));
 
+        return mockElement(name, serviceLocator, entityClass);
+
+    }
+
+    /**
+     * An element whose runtime is already torn down: its service locator no longer resolves the
+     * {@link EntityRegistry} export. This is the shape of a stale generation at deregister time on a hot
+     * reload (#209) — deregistration must still remove the element's classes. Shares the SAME classloader
+     * as the original generation: the dead generation differs only in that its locator no longer resolves.
+     */
+    private static Element mockDeadElementWithEntity(final String name,
+                                                     final Class<?> entityClass,
+                                                     final ClassLoader classLoader) {
+
+        final var serviceLocator = mock(ServiceLocator.class);
+        when(serviceLocator.findInstance(eq(EntityRegistry.class))).thenReturn(Optional.empty());
+
+        return mockElement(name, serviceLocator, entityClass, classLoader);
+
+    }
+
+    private static Element mockElement(final String name, final ServiceLocator serviceLocator, final Class<?> entityClass) {
+
+        // Each element gets its OWN classloader mock: real elements never share an implementation
+        // classloader, and the registrar keys registrations by classloader.
+        final var classLoader = mock(ClassLoader.class);
+        when(classLoader.getName()).thenReturn("ELEMENTPATH[" + name + "]");
+
+        return mockElement(name, serviceLocator, entityClass, classLoader);
+
+    }
+
+    private static Element mockElement(final String name,
+                                       final ServiceLocator serviceLocator,
+                                       final Class<?> entityClass,
+                                       final ClassLoader classLoader) {
+
         final var definition = mock(ElementDefinitionRecord.class);
         when(definition.name()).thenReturn(name);
 
         final var elementRecord = mock(ElementRecord.class);
         when(elementRecord.definition()).thenReturn(definition);
-        when(elementRecord.classLoader()).thenReturn(MongoElementEntityRegistrarTest.class.getClassLoader());
+        when(elementRecord.classLoader()).thenReturn(classLoader);
 
         final var element = mock(Element.class);
         when(element.getServiceLocator()).thenReturn(serviceLocator);
