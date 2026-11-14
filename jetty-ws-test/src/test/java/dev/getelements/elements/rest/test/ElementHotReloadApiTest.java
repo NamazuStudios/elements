@@ -10,6 +10,7 @@ import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
+import dev.getelements.elements.sdk.deployment.ElementContainerService;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.AccessPermissions;
@@ -20,9 +21,11 @@ import dev.getelements.elements.sdk.model.system.ElementDeploymentState;
 import dev.getelements.elements.sdk.model.largeobject.LargeObjectReference;
 import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
+import dev.getelements.elements.sdk.test.TestElementArtifact;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
+import jakarta.ws.rs.client.Client;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -34,8 +37,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import static dev.getelements.elements.rest.test.TestUtils.TEST_APP_SERVE_RS_ROOT;
 import static dev.getelements.elements.sdk.test.TestElementArtifact.MONGO;
+import static dev.getelements.elements.sdk.test.TestElementArtifact.JAKARTA_RS;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 /**
  * Regression coverage for #209, end-to-end through the real injector, runtime service, entity registrar and
@@ -152,6 +159,18 @@ public class ElementHotReloadApiTest {
 
     @Inject
     private ApplicationDao applicationDao;
+
+    @Inject
+    private Client client;
+
+    @Inject
+    @Named(TEST_APP_SERVE_RS_ROOT)
+    private String appServeRoot;
+
+    /**
+     * The current persisted record of the HTTP round-trip test's deployment (version-bumped on each swap).
+     */
+    private ElementDeployment liveHttpDeployment;
 
     @Inject
     private LargeObjectDao largeObjectDao;
@@ -341,6 +360,148 @@ public class ElementHotReloadApiTest {
         return "the unnamed system-wide deployment " + deployment.id();
     }
 
+    /**
+     * The rc-8 staging signature (2026-11-14), end-to-end over HTTP: during a hot swap, the OLD generation's
+     * Jetty handlers were left mounted while the new version loaded (minutes in staging) -- but the old
+     * elements' classloaders were already closed, so requests routed to the stale handlers failed with
+     * {@code NoClassDefFoundError} against the closed archives. Post-fix, the unload event retires the stale
+     * handlers immediately (version-aware unmount) and the route serves only clean statuses across the whole
+     * swap window: 200 while the old generation is still mounted, 404 while the route is retired, and 200
+     * again once the new generation mounts -- never 5xx.
+     */
+    @Test(timeOut = 180_000)
+    public void hotSwapNeverServesRequestsFromClosedClassloaders() throws Exception {
+
+        final var elm = createElmLargeObjectWithContent(JAKARTA_RS);
+        liveHttpDeployment = elementDeploymentDao.createElementDeployment(newRsDeployment(elm));
+        createdDeploymentIds.add(liveHttpDeployment.id());
+
+        final var route = appServeRoot + "/hotreload/message";
+
+        // Boot load, then wait for the route to come up.
+        final var first = awaitRuntime(liveHttpDeployment.id(), liveHttpDeployment.version(), "initial load");
+        Assert.assertEquals(first.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                "the initial load must complete cleanly; warnings: " + first.warnings()
+                        + "; errors: " + first.errors() + "; logs: " + first.logs());
+
+        final var deadline = System.currentTimeMillis() + 60_000;
+        var lastBody = "<none>";
+        var lastStatus = -1;
+        while (System.currentTimeMillis() < deadline && lastStatus != 200) {
+            final var response = client.target(route).request(APPLICATION_JSON).get();
+            lastStatus = response.getStatus();
+            if (lastStatus != 200) {
+                try {
+                    response.bufferEntity();
+                    lastBody = response.readEntity(String.class);
+                } catch (Exception ex) {
+                    lastBody = "<unreadable: " + ex + ">";
+                }
+            }
+            Thread.sleep(100);
+        }
+        if (lastStatus != 200) {
+            Assert.fail("the element route must serve before the hot swap; last status " + lastStatus
+                    + "; body: " + lastBody);
+        }
+
+        // Hot-swap and poll the route continuously across the whole window.
+        final var reloaded = elementDeploymentDao.updateElementDeployment(liveHttpDeployment);
+        liveHttpDeployment = reloaded;
+
+        final var statusesDuringWindow = new CopyOnWriteArrayList<Integer>();
+        final var polling = new AtomicBoolean(true);
+        final var poller = new Thread(() -> {
+            while (polling.get()) {
+                try {
+                    statusesDuringWindow.add(client.target(route).request(APPLICATION_JSON).get().getStatus());
+                } catch (Exception ex) {
+                    statusesDuringWindow.add(-1); // connector-level failure -- recorded, never expected
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException ex) {
+                    return;
+                }
+            }
+        });
+        poller.setDaemon(true);
+        poller.start();
+
+        final var record = awaitRuntime(reloaded.id(), reloaded.version(), "hot reload");
+        Assert.assertEquals(record.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                "the hot reload must complete cleanly");
+
+        polling.set(false);
+        poller.join(5000);
+
+        // The staging failure signature was 5xx from stale handlers serving closed archives: a 5xx at ANY
+        // point during the swap window means requests routed to (or resolved against) a retired generation.
+        final var serverErrors = statusesDuringWindow.stream().filter(s -> s >= 500).toList();
+        Assert.assertEquals(serverErrors, List.of(),
+                "no request during the swap window may return 5xx; statuses observed: " + statusesDuringWindow);
+
+        final var connectorFailures = statusesDuringWindow.stream().filter(s -> s == -1).toList();
+        Assert.assertEquals(connectorFailures, List.of(),
+                "no request during the swap window may fail at the connector; statuses observed: "
+                        + statusesDuringWindow);
+
+        // The fresh generation must serve.
+        Assert.assertEquals(client.target(route).request(APPLICATION_JSON).get().getStatus(), 200,
+                "the route must serve again once the new generation mounts");
+
+    }
+
+    /**
+     * The ELM-internal path of the {@code JAKARTA_RS} test element (the archive's element directory name),
+     * used as the key for per-path SPI and attribute mappings.
+     */
+    private static final String RS_ELEMENT_PATH = "/dev.getelements.elements.sdk-test-element-rs";
+
+    /**
+     * A persistent deployment of the {@code JAKARTA_RS} test element, with its REST route pinned to
+     * {@code /app/rest/hotreload} (overriding the element's bundled default prefix via the deployment's
+     * path attributes) so the route cannot collide with other suite fixtures. The element's own manifest
+     * declares its builtin SPI, so no explicit SPI mapping is needed.
+     */
+    private ElementDeployment newRsDeployment(final LargeObject elm) {
+        return new ElementDeployment(
+                null,                                           // id -- assigned
+                "hot-reload-http-under-test",                   // name
+                null,                                           // application -- global
+                LargeObjectReference.fromLargeObject(elm),      // elm
+                Map.of(),                                       // pathSpiBuiltins (manifest-declared)
+                Map.of(),                                       // pathSpiClassPaths
+                Map.of(RS_ELEMENT_PATH,
+                        Map.of(ElementContainerService.APPLICATION_PREFIX, "hotreload")), // pathAttributes
+                List.of(),                                      // elements (deprecated)
+                List.of(),                                      // packages
+                true,                                           // useDefaultRepositories
+                false,                                          // missionCritical
+                List.of(),                                      // repositories
+                ElementDeploymentState.ENABLED,                 // state
+                0L                                              // version -- bumped by the DAO on update
+        );
+    }
+
+    /**
+     * A fresh ELM LargeObject with the MONGO test element's ELM content written into it, ready to stage.
+     * The matrix test needs one per deployment: distinct LargeObjects, same artifact content.
+     */
+    private LargeObject createElmLargeObjectWithContent() throws IOException {
+        return createElmLargeObjectWithContent(MONGO);
+    }
+
+    /**
+     * A fresh ELM LargeObject with the supplied test element artifact's ELM content written into it, ready
+     * to stage.
+     */
+    private LargeObject createElmLargeObjectWithContent(final TestElementArtifact artifact) throws IOException {
+        final var elm = createElmLargeObject();
+        writeElmContent(elm.getId(), artifact);
+        return elm;
+    }
+
     private ElementDeployment newDeployment(final LargeObject elm) {
         return newDeployment(elm, "hot-reload-under-test", null);
     }
@@ -384,24 +545,18 @@ public class ElementHotReloadApiTest {
 
     }
 
-    /**
-     * A fresh ELM LargeObject with the MONGO test element's ELM content written into it, ready to stage.
-     * The matrix test needs one per deployment: distinct LargeObjects, same artifact content.
-     */
-    private LargeObject createElmLargeObjectWithContent() throws IOException {
-        final var elm = createElmLargeObject();
-        writeElmContent(elm.getId());
-        return elm;
+    private void writeElmContent(final String largeObjectId) throws IOException {
+        writeElmContent(largeObjectId, MONGO);
     }
 
-    private void writeElmContent(final String largeObjectId) throws IOException {
+    private void writeElmContent(final String largeObjectId, final TestElementArtifact artifact) throws IOException {
         try (final var os = largeObjectBucket.writeObject(largeObjectId);
              final var is = ElementArtifactLoader.newDefaultInstance()
-                     .findArtifact(ArtifactRepository.DEFAULTS, MONGO.getCoordinatesForElm())
+                     .findArtifact(ArtifactRepository.DEFAULTS, artifact.getCoordinatesForElm())
                      .map(Artifact::read)
                      .orElseThrow(() -> new IllegalStateException(
-                             "MONGO test element ELM not found in local repository: "
-                                     + MONGO.getCoordinatesForElm()))) {
+                             artifact + " test element ELM not found in local repository: "
+                                     + artifact.getCoordinatesForElm()))) {
             is.transferTo(os);
         }
     }
