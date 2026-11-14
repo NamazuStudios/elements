@@ -6,10 +6,12 @@ import dev.getelements.elements.sdk.ElementRegistry;
 import dev.getelements.elements.sdk.Event;
 import dev.getelements.elements.sdk.MutableElementRegistry;
 import dev.getelements.elements.sdk.Subscription;
+import dev.getelements.elements.sdk.dao.ApplicationDao;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
 import dev.getelements.elements.sdk.deployment.ElementRuntimeService;
+import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.largeobject.AccessPermissions;
 import dev.getelements.elements.sdk.model.largeobject.LargeObject;
 import dev.getelements.elements.sdk.model.largeobject.Subjects;
@@ -28,6 +30,7 @@ import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -71,10 +74,10 @@ public class ElementHotReloadApiTest {
     }
 
     /**
-     * The id of the deployment created by the test method, if it got that far. Cleared in the after-method
-     * below once the deployment is deleted.
+     * The ids of the deployments created by the test methods, if they got that far. Cleared in the
+     * after-method below once the deployments are deleted.
      */
-    private String createdDeploymentId;
+    private final List<String> createdDeploymentIds = new CopyOnWriteArrayList<>();
 
     @BeforeMethod
     public void recordRuntimeEvents() {
@@ -107,22 +110,25 @@ public class ElementHotReloadApiTest {
     @AfterMethod
     public void deleteDeploymentAndWaitForUnload() throws InterruptedException {
 
-        if (createdDeploymentId == null) {
+        if (createdDeploymentIds.isEmpty()) {
             return;
         }
 
         try {
-            elementDeploymentDao.deleteDeployment(createdDeploymentId);
+
+            for (final var id : createdDeploymentIds) {
+                elementDeploymentDao.deleteDeployment(id);
+            }
 
             final var deadline = System.currentTimeMillis() + 60_000;
 
             while (System.currentTimeMillis() < deadline) {
 
                 final var stillActive = runtimeService.getActiveRuntimes().stream()
-                        .anyMatch(r -> r.deployment().id().equals(createdDeploymentId));
+                        .anyMatch(r -> createdDeploymentIds.contains(r.deployment().id()));
 
                 if (!stillActive) {
-                    createdDeploymentId = null;
+                    createdDeploymentIds.clear();
                     return;
                 }
 
@@ -130,10 +136,10 @@ public class ElementHotReloadApiTest {
 
             }
 
-            Assert.fail("Deployment " + createdDeploymentId + " did not unload in time; active runtimes: "
+            Assert.fail("Deployments " + createdDeploymentIds + " did not unload in time; active runtimes: "
                     + runtimeService.getActiveRuntimes());
         } finally {
-            createdDeploymentId = null;
+            createdDeploymentIds.clear();
         }
 
     }
@@ -143,6 +149,9 @@ public class ElementHotReloadApiTest {
 
     @Inject
     private ElementDeploymentDao elementDeploymentDao;
+
+    @Inject
+    private ApplicationDao applicationDao;
 
     @Inject
     private LargeObjectDao largeObjectDao;
@@ -161,7 +170,7 @@ public class ElementHotReloadApiTest {
         writeElmContent(elm.getId());
 
         final var created = elementDeploymentDao.createElementDeployment(newDeployment(elm));
-        createdDeploymentId = created.id();
+        createdDeploymentIds.add(created.id());
         final var first = awaitRuntime(created.id(), created.version(), "initial load");
         final var firstGenerationEntityClass = entityClassOf(first);
 
@@ -225,11 +234,126 @@ public class ElementHotReloadApiTest {
 
     }
 
+    /**
+     * Four deployments coexist, one per attribute shape: name only, application only, both, neither. Each
+     * carries the same entity-declaring Element and is hot-swapped <b>in turn</b> while the other three stay
+     * live. Every swap must complete cleanly with a fresh entity {@link Class} object, and the untouched
+     * deployments must remain active and CLEAN: a swap rebuilds the JVM-global shared Morphia mapper for
+     * <i>all</i> registered elements, so a swap that poisons the registrar's bookkeeping would break its
+     * neighbors too (NamazuStudios/elements#209).
+     */
+    @Test(timeOut = 300_000)
+    public void fourDeploymentsWithAttributeMatrixHotSwapOneByOne() throws Exception {
+
+        // One application fixture, shared by the application-scoped deployments.
+        final var application = new Application();
+        application.setName("HRMT4APP");
+        application.setDescription("Hot-reload four-deployment matrix test application");
+        application.setMaxProfiles(1000);
+        final var createdApplication = applicationDao.createOrUpdateInactiveApplication(application);
+
+        // Each deployment stages its own ELM LargeObject (same MONGO test element artifact).
+        final var live = new ArrayList<ElementDeployment>();
+
+        final var matrix = new ArrayList<ElementDeployment>();
+        matrix.add(newDeployment(createElmLargeObjectWithContent(), "hot-reload-matrix-name-only", null));
+        matrix.add(newDeployment(createElmLargeObjectWithContent(), null, createdApplication));
+        matrix.add(newDeployment(createElmLargeObjectWithContent(), "hot-reload-matrix-both", createdApplication));
+        matrix.add(newDeployment(createElmLargeObjectWithContent(), null, null));
+
+        for (final var request : matrix) {
+            live.add(elementDeploymentDao.createElementDeployment(request));
+        }
+
+        createdDeploymentIds.addAll(live.stream().map(ElementDeployment::id).toList());
+
+        // All four load concurrently on the next reconcile; every runtime must come up CLEAN.
+        final var currentEntityClasses = new java.util.HashMap<String, Class<?>>();
+
+        for (final var deployment : live) {
+            final var record = awaitRuntime(deployment.id(), deployment.version(),
+                    "initial load of " + describe(deployment));
+            Assert.assertEquals(record.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                    "the initial load of " + describe(deployment) + " must complete cleanly");
+            currentEntityClasses.put(deployment.id(), entityClassOf(record));
+        }
+
+        // Hot-swap each deployment in turn. After each swap, the swapped deployment must serve a fresh
+        // entity Class, and the other three must still be active, CLEAN, and at their unchanged versions.
+        for (int i = 0; i < live.size(); i++) {
+
+            final var before = live.get(i);
+            final var swapped = elementDeploymentDao.updateElementDeployment(before);
+            live.set(i, swapped);
+
+            final var label = describe(before);
+
+            final var record = awaitRuntime(swapped.id(), swapped.version(), "hot reload of " + label);
+
+            Assert.assertEquals(record.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                    "the hot reload of " + label + " must complete cleanly");
+
+            final var newEntityClass = entityClassOf(record);
+
+            Assert.assertNotSame(currentEntityClasses.get(swapped.id()), newEntityClass,
+                    "the hot reload of " + label + " must produce a distinct entity Class object");
+
+            currentEntityClasses.put(swapped.id(), newEntityClass);
+
+            final int unloadIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_UNLOADED);
+            final int loadedIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_LOADED);
+            Assert.assertTrue(unloadIndex >= 0 && loadedIndex > unloadIndex,
+                    "the swap of " + label + " must announce RUNTIME_UNLOADED before RUNTIME_LOADED; events: "
+                            + runtimeEventLog);
+
+            for (int j = 0; j < live.size(); j++) {
+                if (j == i) {
+                    continue;
+                }
+                final var other = live.get(j);
+                final var otherRecord = runtimeService.getActiveRuntimes().stream()
+                        .filter(r -> r.deployment().id().equals(other.id()))
+                        .findFirst()
+                        .orElse(null);
+                Assert.assertNotNull(otherRecord,
+                        describe(other) + " must stay active while " + label + " hot-swaps");
+                Assert.assertEquals(otherRecord.deployment().version(), other.version(),
+                        describe(other) + " must not reload while " + label + " hot-swaps");
+                Assert.assertEquals(otherRecord.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                        describe(other) + " must stay CLEAN while " + label + " hot-swaps; errors: "
+                                + otherRecord.errors());
+            }
+
+        }
+
+    }
+
+    /**
+     * A human-readable description of a deployment for assertion messages, in terms of the attribute matrix
+     * (deployment name and/or application, or neither).
+     */
+    private static String describe(final ElementDeployment deployment) {
+        final var hasName = deployment.name() != null;
+        final var hasApplication = deployment.application() != null;
+        if (hasName && hasApplication) return "the named application-scoped deployment '" + deployment.name() + "'";
+        if (hasName) return "the named deployment '" + deployment.name() + "'";
+        if (hasApplication) return "the unnamed application-scoped deployment " + deployment.id();
+        return "the unnamed system-wide deployment " + deployment.id();
+    }
+
     private ElementDeployment newDeployment(final LargeObject elm) {
-        return new ElementDeployment(
+        return newDeployment(elm, "hot-reload-under-test", null);
+    }
+
+    /**
+     * Builds a deployment whose {@code name} and {@code application} may each be {@code null}: the
+     * four-deployment matrix test covers one deployment with only a name, one with only an application,
+     * one with both, and one with neither.
+     */
+    private ElementDeployment newDeployment(final LargeObject elm, final String name, final Application application) {        return new ElementDeployment(
                 null,                                           // id -- assigned
-                "hot-reload-under-test",                        // name
-                null,                                           // application -- global
+                name,                                           // name -- optional, falls back to the id
+                application,                                    // application -- null deploys system wide
                 LargeObjectReference.fromLargeObject(elm),      // elm
                 Map.of(ELEMENT_NAME, List.of("DEFAULT")),       // pathSpiBuiltins
                 Map.of(),                                       // pathSpiClassPaths
@@ -258,6 +382,16 @@ public class ElementHotReloadApiTest {
 
         return largeObjectDao.createLargeObject(elm);
 
+    }
+
+    /**
+     * A fresh ELM LargeObject with the MONGO test element's ELM content written into it, ready to stage.
+     * The matrix test needs one per deployment: distinct LargeObjects, same artifact content.
+     */
+    private LargeObject createElmLargeObjectWithContent() throws IOException {
+        final var elm = createElmLargeObject();
+        writeElmContent(elm.getId());
+        return elm;
     }
 
     private void writeElmContent(final String largeObjectId) throws IOException {
