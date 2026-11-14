@@ -316,19 +316,19 @@ public class JettyElementContainerService implements ElementContainerService {
      * Synchronizes container state with runtime state.
      */
     private void sync() {
+
+        // Fetch the active runtimes BEFORE taking the container lock: getActiveRuntimes() acquires the
+        // runtime service's lock, and reconcile() holds that lock while publishing RUNTIME_UNLOADED -- whose
+        // handler acquires this container lock. Fetching under the lock made the two locks acquirable in
+        // opposite orders by the container poller and the reconcile scheduler -- a textbook ABBA deadlock
+        // that a busy hot-reload sequence (four deployments swapping back-to-back) hits reliably (#209).
+        // The fetched snapshot may be moments stale by the time the lock is acquired; harmless for a
+        // 10-second reconciliation loop.
+        final List<RuntimeRecord> activeRuntimes = getElementRuntimeService().getActiveRuntimes();
+
         try (var mon = Monitor.enter(lock)) {
 
             logger.debug("Starting container synchronization...");
-
-            // Fetch all active runtimes
-            final List<RuntimeRecord> activeRuntimes;
-
-            try {
-                activeRuntimes = getElementRuntimeService().getActiveRuntimes();
-            } catch (Exception ex) {
-                logger.error("Failed to fetch active runtimes", ex);
-                return;
-            }
 
             // Build set of deployment IDs from runtimes. FAILED runtimes are excluded: their container (if any
             // survived from a previous version) must be unmounted below, since the reload path already closed
