@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.dao.ApplicationConfigurationDao;
 import dev.getelements.elements.sdk.model.application.Application;
 import dev.getelements.elements.sdk.model.application.SteamApplicationConfiguration;
 import dev.getelements.elements.sdk.model.profile.Profile;
+import dev.getelements.elements.sdk.model.exception.InvalidDataException;
 import dev.getelements.elements.sdk.model.reward.RewardIssuance;
 import dev.getelements.elements.sdk.model.steam.SteamIapReceipt;
 import dev.getelements.elements.sdk.service.goods.ProductBundleService;
@@ -30,8 +31,8 @@ import static org.testng.Assert.*;
  * Tests Steam IAP reward issuance behavior:
  * <ul>
  *   <li>{@link UserSteamIapReceiptService#verifyAndCreateSteamIapReceiptIfNeeded}: must create a
- *       receipt and issue rewards when Steam confirms a Committed transaction, and must reject
- *       non-Committed statuses.</li>
+ *       receipt and issue rewards when Steam reports a Succeeded transaction, and must reject
+ *       other statuses (Approved means authorized but not charged).</li>
  *   <li>{@link UserSteamIapReceiptService#getOrCreateRewardIssuances}: must return reward
  *       issuances from the configured product bundle for the item ID.</li>
  * </ul>
@@ -79,6 +80,7 @@ public class SteamIapRewardIssuanceTest extends AbstractReceiptServiceTest {
         final var steamConfig = new SteamApplicationConfiguration();
         steamConfig.setPublisherKey(TEST_PUBLISHER_KEY);
         steamConfig.setAppId(TEST_APP_ID);
+        steamConfig.setSandbox(true);
 
         when(applicationConfigurationDao.getDefaultApplicationConfigurationForApplication(
                 eq(TEST_APPLICATION_ID), eq(SteamApplicationConfiguration.class)))
@@ -97,18 +99,18 @@ public class SteamIapRewardIssuanceTest extends AbstractReceiptServiceTest {
     }
 
     @Test
-    public void testCommittedTransactionCreatesReceiptAndIssuance() {
+    public void testSucceededTransactionCreatesReceiptAndIssuance() {
 
         when(steamIapReceiptRequestInvoker.invokeQueryTxn(
-                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq(TEST_ORDER_ID)))
-                .thenReturn(buildQueryTxnResponse("Committed", REDEEMABLE_ITEM_ID));
+                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq(TEST_ORDER_ID), eq(true)))
+                .thenReturn(buildQueryTxnResponse("Succeeded", REDEEMABLE_ITEM_ID));
 
         final var receipt = steamIapReceiptService.verifyAndCreateSteamIapReceiptIfNeeded(TEST_ORDER_ID);
 
         assertNotNull(receipt);
         assertEquals(receipt.getOrderId(), TEST_ORDER_ID);
         assertEquals(receipt.getItemId(), REDEEMABLE_ITEM_ID);
-        assertEquals(receipt.getStatus(), "Committed");
+        assertEquals(receipt.getStatus(), "Succeeded");
 
         final var issuances = steamIapReceiptService.getOrCreateRewardIssuances(receipt);
         assertFalse(issuances.isEmpty());
@@ -116,23 +118,23 @@ public class SteamIapRewardIssuanceTest extends AbstractReceiptServiceTest {
     }
 
     @Test
-    public void testApprovedTransactionCreatesReceipt() {
+    public void testApprovedTransactionIsRejected() {
 
+        // "Approved" means authorized but not yet charged: Elements never calls FinalizeTxn, so
+        // granting rewards on an Approved transaction would grant for an uncharged order (#222).
         when(steamIapReceiptRequestInvoker.invokeQueryTxn(
-                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq("steam_order_approved")))
+                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq("steam_order_approved"), eq(true)))
                 .thenReturn(buildQueryTxnResponse("Approved", REDEEMABLE_ITEM_ID));
 
-        final var receipt = steamIapReceiptService.verifyAndCreateSteamIapReceiptIfNeeded("steam_order_approved");
-
-        assertNotNull(receipt);
-        assertEquals(receipt.getStatus(), "Approved");
+        assertThrows(InvalidDataException.class,
+                () -> steamIapReceiptService.verifyAndCreateSteamIapReceiptIfNeeded("steam_order_approved"));
     }
 
     @Test(expectedExceptions = Exception.class)
     public void testRefundedTransactionIsRejected() {
 
         when(steamIapReceiptRequestInvoker.invokeQueryTxn(
-                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq("steam_order_refunded")))
+                eq(TEST_PUBLISHER_KEY), eq(TEST_APP_ID), eq("steam_order_refunded"), eq(true)))
                 .thenReturn(buildQueryTxnResponse("Refunded", REDEEMABLE_ITEM_ID));
 
         steamIapReceiptService.verifyAndCreateSteamIapReceiptIfNeeded("steam_order_refunded");
@@ -166,14 +168,11 @@ public class SteamIapRewardIssuanceTest extends AbstractReceiptServiceTest {
     }
 
     private SteamIapQueryTxnResponse buildQueryTxnResponse(final String status, final String itemId) {
-        final var lineItem = new SteamIapQueryTxnResponse.LineItem();
-        lineItem.setItemId(itemId);
-        lineItem.setQuantity("1");
-        lineItem.setAmount("499");
-        lineItem.setItemStatus("Succeeded");
-
-        final var lineItems = new SteamIapQueryTxnResponse.LineItems();
-        lineItems.setLineItemList(List.of(lineItem));
+        final var item = new SteamIapQueryTxnResponse.Item();
+        item.setItemId(itemId);
+        item.setQuantity("1");
+        item.setAmount("499");
+        item.setItemStatus("Succeeded");
 
         final var params = new SteamIapQueryTxnResponse.Params();
         params.setOrderId(TEST_ORDER_ID);
@@ -185,11 +184,11 @@ public class SteamIapRewardIssuanceTest extends AbstractReceiptServiceTest {
         params.setCountry("US");
         params.setPrice("499");
         params.setVat("0");
+        params.setItems(List.of(item));
 
         final var response = new SteamIapQueryTxnResponse.Response();
         response.setResult("OK");
         response.setParams(params);
-        response.setLineItems(lineItems);
 
         final var txnResponse = new SteamIapQueryTxnResponse();
         txnResponse.setResponse(response);
