@@ -17,6 +17,9 @@ import dev.getelements.elements.sdk.record.ElementRecord;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +54,8 @@ public class StandardElementRuntimeServiceReloadTest {
 
     private ElementPathLoader pathLoader;
 
+    private org.mockito.ArgumentCaptor<ElementPathLoader.LoadConfiguration> configCaptor;
+
     private RecordingRegistrar entityRegistrar;
 
     private AtomicLong clock;
@@ -63,6 +68,7 @@ public class StandardElementRuntimeServiceReloadTest {
         clock = new AtomicLong();
         entityRegistrar = new RecordingRegistrar(eventLog);
         pathLoader = mock(ElementPathLoader.class);
+        configCaptor = org.mockito.ArgumentCaptor.forClass(ElementPathLoader.LoadConfiguration.class);
     }
 
     /**
@@ -136,6 +142,50 @@ public class StandardElementRuntimeServiceReloadTest {
 
         assertTrue(eventLog.contains("publish:" + ElementRuntimeService.RUNTIME_UNLOADED),
                 "the unload of the previous version must still be published so the container service unmounts it");
+
+    }
+
+    /**
+     * The {@code LoadConfiguration} passed to the loader must carry the pre-load handler wired to the entity
+     * registrar (#209): the handler receives the element's record in the pre-load window (classloader exists,
+     * injector not yet built), scans the element's classloader for {@code @Entity} classes, and registers
+     * them by classloader. A failed element load must then deregister those classes through the
+     * {@code failedElementHandler} so the failed generation's classloader is not pinned in the registrar.
+     */
+    @Test
+    public void preLoadHandlerRegistersEntityClassesByClassloaderAndFailureDeregistersThem() throws Exception {
+
+        final var service = newService();
+        final var element = mockElement("element-1");
+        when(pathLoader.load(configCaptor.capture()))
+                .thenAnswer(invocation -> Stream.of(element));
+
+        givenDeployments(deployment("deployment-1", 1L));
+        service.reconcile();
+
+        final var config = configCaptor.getValue();
+
+        // A real classloader over the test-classes directory with the platform classloader as parent: the
+        // registrar's scan sees exactly TestHotReloadEntity, hermetically.
+        final var testClassesUrl = TestHotReloadEntity.class
+                .getProtectionDomain().getCodeSource().getLocation();
+        final var classLoader = new URLClassLoader(
+                "ELEMENTPATH[test]", new URL[]{testClassesUrl}, null);
+
+        final var record = mockElement("element-1").getElementRecord();
+        when(record.classLoader()).thenReturn(classLoader);
+
+        config.elementPreLoadHandler().accept(Path.of("element"), record);
+
+        assertEquals(eventLog.getLast(), "register:ELEMENTPATH[test]:1",
+                "the pre-load handler must register the scanned entity classes by classloader");
+
+        // The element then fails to load: the failedElementHandler must deregister the pre-registration so
+        // the failed generation's classloader is not pinned in the registrar.
+        config.failedElementHandler().accept(record, Path.of("element"), new IllegalStateException("boom"));
+
+        assertEquals(eventLog.getLast(), "unregister:ELEMENTPATH[test]:0",
+                "a failed element load must deregister its pre-registered entity classes");
 
     }
 
@@ -222,14 +272,28 @@ public class StandardElementRuntimeServiceReloadTest {
                     + element.getElementRecord().definition().name());
         }
 
+        private void apply(final boolean unregister, final ClassLoader owner, final int classCount) {
+            eventLog.add((unregister ? "unregister:" : "register:") + owner.getName() + ":" + classCount);
+        }
+
         @Override
         public void registerEntityClasses(final Element element) {
             apply(false, element);
         }
 
         @Override
+        public void registerEntityClasses(final ClassLoader owner, final List<Class<?>> entityClasses) {
+            apply(false, owner, entityClasses.size());
+        }
+
+        @Override
         public void unregisterEntityClasses(final Element element) {
             apply(true, element);
+        }
+
+        @Override
+        public void unregisterEntityClasses(final ClassLoader owner) {
+            apply(true, owner, 0);
         }
 
         @Override
@@ -241,8 +305,18 @@ public class StandardElementRuntimeServiceReloadTest {
                 }
 
                 @Override
+                public void registerEntityClasses(final ClassLoader owner, final List<Class<?>> entityClasses) {
+                    RecordingRegistrar.this.apply(false, owner, entityClasses.size());
+                }
+
+                @Override
                 public void unregisterEntityClasses(final Element element) {
                     RecordingRegistrar.this.apply(true, element);
+                }
+
+                @Override
+                public void unregisterEntityClasses(final ClassLoader owner) {
+                    RecordingRegistrar.this.apply(true, owner, 0);
                 }
 
                 @Override

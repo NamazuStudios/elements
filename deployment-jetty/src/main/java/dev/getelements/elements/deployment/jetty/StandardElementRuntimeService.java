@@ -21,6 +21,8 @@ import dev.getelements.elements.sdk.model.util.ValidationHelper;
 import dev.getelements.elements.sdk.util.Monitor;
 import dev.getelements.elements.sdk.util.SimpleAttributes;
 import dev.getelements.elements.sdk.util.TemporaryFiles;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ScanResult;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import org.slf4j.Logger;
@@ -709,7 +711,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
                         .attributesLoader(context::loadAttributesForPath)
                         .sdkExceptionHandler(context::error)
                         .elementLoadedHandler(context::recordElement)
-                        .failedElementHandler(context::recordFailedElement)
+                        .failedElementHandler((record, path, cause) -> {
+                            deregisterFailedElementEntities(record);
+                            context.recordFailedElement(record, path, cause);
+                        })
+                        .elementPreLoadHandler(this::preregisterEntityClasses)
                         .build();
 
                 allElements = pathLoader.load(config).toList();
@@ -1028,8 +1034,10 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
      * {@code ClassCastException: X cannot be cast to X}. Deregistering here — synchronously, before the new
      * load — guarantees the shared datastore is rebuilt without the old entities first.
      * <p>
-     * This must run while the elements are still alive: deregistration resolves each element's
-     * {@link EntityRegistry} exports through its service locator.
+     * Deregistration is keyed by each element's classloader and is unconditional: it does not depend on the
+     * elements still resolving their {@link EntityRegistry} exports. Running it here — synchronously, while
+     * the elements are still alive — guarantees the shared datastore is rebuilt without the old entities
+     * before the new load begins.
      *
      * @param active the deployment being unloaded
      */
@@ -1046,6 +1054,106 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
             active.elements().forEach(batch::unregisterEntityClasses);
         } catch (Exception ex) {
             logger.error("Failed to deregister entity classes for deployment {}", active.deployment().id(), ex);
+        }
+
+    }
+
+    /**
+     * The FQCN of Morphia's {@code @Entity} annotation. Referenced by name so this module needs no
+     * Morphia dependency; the annotation is runtime-retained, so ClassGraph discovers it by name.
+     */
+    private static final String ENTITY_ANNOTATION_CLASS_NAME = "dev.morphia.annotations.Entity";
+
+    /**
+     * Pre-registers the element's {@code @Entity} classes with the shared Morphia mapper <b>before</b> the
+     * element's injector builds (#209). Called from the loader in the element's pre-load window: the
+     * element's implementation classloader exists, but no eager singleton has resolved entities through the
+     * shared datastore yet. On a hot reload, the shared mapper still holds the previous generation's cached
+     * models for identical class names at this point — unless the new generation's classes are mapped first,
+     * the injector build resolves entities into the old (closed) classloader's classes and crashes with
+     * {@code ClassCastException: X cannot be cast to X}.
+     *
+     * <p>The scan uses the same ClassGraph mechanism the element loader itself uses for service discovery,
+     * so it works identically for on-disk and ELM-staged elements. Failures degrade softly to the previous
+     * behavior (post-load registration via the element's {@link EntityRegistry} export): a failed scan logs
+     * a warning and registers nothing.
+     *
+     * @param elementPath  the element's staged path (diagnostics only)
+     * @param elementRecord the element's record; {@code classLoader()} is the registration key
+     */
+    private void preregisterEntityClasses(final Path elementPath, final ElementRecord elementRecord) {
+
+        final var registrar = elementEntityRegistrar;
+        if (registrar == null) {
+            return;
+        }
+
+        final var classLoader = elementRecord.classLoader();
+        final var elementName = elementRecord.definition().name();
+
+        final List<Class<?>> entityClasses = new ArrayList<>();
+
+        try (final var result = new ClassGraph()
+                .overrideClassLoaders(classLoader)
+                .ignoreParentClassLoaders()
+                .enableClassInfo()
+                .enableAnnotationInfo()
+                .scan()) {
+
+            result.getAllClasses()
+                    .stream()
+                    .filter(classInfo -> classInfo.hasAnnotation(ENTITY_ANNOTATION_CLASS_NAME))
+                    .forEach(classInfo -> {
+                        try {
+                            entityClasses.add(classInfo.loadClass());
+                        } catch (Throwable t) {
+                            logger.warn("Failed to load entity class {} for element {} at {}; skipping.",
+                                    classInfo.getName(), elementName, elementPath, t);
+                        }
+                    });
+
+        } catch (Throwable t) {
+            logger.warn("Failed to scan for entity classes for element {} at {}; entity registration "
+                    + "will fall back to the element's EntityRegistry export after load.", elementName, elementPath, t);
+            return;
+        }
+
+        if (entityClasses.isEmpty()) {
+            logger.debug("No @Entity classes found for element {} at {}; nothing to pre-register.",
+                    elementName, elementPath);
+            return;
+        }
+
+        try (var batch = registrar.beginBatch()) {
+            logger.info("Pre-registering {} entity class(es) for element {} before injector build",
+                    entityClasses.size(), elementName);
+            batch.registerEntityClasses(classLoader, entityClasses);
+        } catch (Exception ex) {
+            logger.error("Failed to pre-register entity classes for element {}", elementName, ex);
+        }
+
+    }
+
+    /**
+     * Deregisters the entity classes pre-registered for an element whose load subsequently failed, so the
+     * registrar does not pin the failed generation's classloader (the classes were captured eagerly at
+     * pre-registration time). Mirrors {@link #preregisterEntityClasses(Path, ElementRecord)}, which ran for
+     * the same element record moments earlier.
+     *
+     * @param elementRecord the record of the element that failed to load
+     */
+    private void deregisterFailedElementEntities(final ElementRecord elementRecord) {
+
+        final var registrar = elementEntityRegistrar;
+        if (registrar == null) {
+            return;
+        }
+
+        try (var batch = registrar.beginBatch()) {
+            batch.unregisterEntityClasses(elementRecord.classLoader());
+        } catch (Exception ex) {
+            logger.error("Failed to deregister entity classes for failed element {}",
+                    elementRecord.definition().name(), ex);
         }
 
     }
