@@ -369,7 +369,7 @@ public class ElementHotReloadApiTest {
      * swap window: 200 while the old generation is still mounted, 404 while the route is retired, and 200
      * again once the new generation mounts -- never 5xx.
      */
-    @Test(timeOut = 180_000)
+    @Test(timeOut = 300_000)
     public void hotSwapNeverServesRequestsFromClosedClassloaders() throws Exception {
 
         final var elm = createElmLargeObjectWithContent(JAKARTA_RS);
@@ -384,9 +384,75 @@ public class ElementHotReloadApiTest {
                 "the initial load must complete cleanly; warnings: " + first.warnings()
                         + "; errors: " + first.errors() + "; logs: " + first.logs());
 
+        awaitRouteServing(route, "the element route must serve before the first hot swap");
+
+        // TWO hot swaps against the same route: staging degraded on repeated swaps. Each swap's window
+        // must serve only clean statuses (200 from a live generation, 404 while the route is retired)
+        // and the fresh generation must serve once the swap completes.
+        for (int swap = 1; swap <= 2; swap++) {
+
+            final var before = liveHttpDeployment;
+            final var reloaded = elementDeploymentDao.updateElementDeployment(before);
+            liveHttpDeployment = reloaded;
+
+            final var statusesDuringWindow = new CopyOnWriteArrayList<Integer>();
+            final var polling = new AtomicBoolean(true);
+            final var poller = new Thread(() -> {
+                while (polling.get()) {
+                    try {
+                        statusesDuringWindow.add(client.target(route).request(APPLICATION_JSON).get().getStatus());
+                    } catch (Exception ex) {
+                        statusesDuringWindow.add(-1); // connector-level failure -- recorded, never expected
+                    }
+                    try {
+                        Thread.sleep(50);
+                    } catch (InterruptedException ex) {
+                        return;
+                    }
+                }
+            });
+            poller.setDaemon(true);
+            poller.start();
+
+            try {
+                final var record = awaitRuntime(reloaded.id(), reloaded.version(), "hot swap " + swap);
+                Assert.assertEquals(record.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                        "hot swap " + swap + " must complete cleanly");
+            } finally {
+                polling.set(false);
+                poller.join(5000);
+            }
+
+            // The staging failure signature was 5xx from stale handlers serving closed archives: a 5xx at
+            // ANY point during the swap window means requests routed to (or resolved against) a retired
+            // generation.
+            final var serverErrors = statusesDuringWindow.stream().filter(s -> s >= 500).toList();
+            Assert.assertEquals(serverErrors, List.of(),
+                    "no request during swap " + swap + " may return 5xx; statuses observed: "
+                            + statusesDuringWindow);
+
+            final var connectorFailures = statusesDuringWindow.stream().filter(s -> s == -1).toList();
+            Assert.assertEquals(connectorFailures, List.of(),
+                    "no request during swap " + swap + " may fail at the connector; statuses observed: "
+                            + statusesDuringWindow);
+
+            Assert.assertEquals(client.target(route).request(APPLICATION_JSON).get().getStatus(), 200,
+                    "the route must serve again once hot swap " + swap + " mounts the new generation");
+
+        }
+
+    }
+
+    /**
+     * Polls the element route until it serves 200, failing with the offending status and response body
+     * otherwise.
+     */
+    private void awaitRouteServing(final String route, final String message) throws InterruptedException {
+
         final var deadline = System.currentTimeMillis() + 60_000;
         var lastBody = "<none>";
         var lastStatus = -1;
+
         while (System.currentTimeMillis() < deadline && lastStatus != 200) {
             final var response = client.target(route).request(APPLICATION_JSON).get();
             lastStatus = response.getStatus();
@@ -400,55 +466,10 @@ public class ElementHotReloadApiTest {
             }
             Thread.sleep(100);
         }
+
         if (lastStatus != 200) {
-            Assert.fail("the element route must serve before the hot swap; last status " + lastStatus
-                    + "; body: " + lastBody);
+            Assert.fail(message + "; last status " + lastStatus + "; body: " + lastBody);
         }
-
-        // Hot-swap and poll the route continuously across the whole window.
-        final var reloaded = elementDeploymentDao.updateElementDeployment(liveHttpDeployment);
-        liveHttpDeployment = reloaded;
-
-        final var statusesDuringWindow = new CopyOnWriteArrayList<Integer>();
-        final var polling = new AtomicBoolean(true);
-        final var poller = new Thread(() -> {
-            while (polling.get()) {
-                try {
-                    statusesDuringWindow.add(client.target(route).request(APPLICATION_JSON).get().getStatus());
-                } catch (Exception ex) {
-                    statusesDuringWindow.add(-1); // connector-level failure -- recorded, never expected
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ex) {
-                    return;
-                }
-            }
-        });
-        poller.setDaemon(true);
-        poller.start();
-
-        final var record = awaitRuntime(reloaded.id(), reloaded.version(), "hot reload");
-        Assert.assertEquals(record.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
-                "the hot reload must complete cleanly");
-
-        polling.set(false);
-        poller.join(5000);
-
-        // The staging failure signature was 5xx from stale handlers serving closed archives: a 5xx at ANY
-        // point during the swap window means requests routed to (or resolved against) a retired generation.
-        final var serverErrors = statusesDuringWindow.stream().filter(s -> s >= 500).toList();
-        Assert.assertEquals(serverErrors, List.of(),
-                "no request during the swap window may return 5xx; statuses observed: " + statusesDuringWindow);
-
-        final var connectorFailures = statusesDuringWindow.stream().filter(s -> s == -1).toList();
-        Assert.assertEquals(connectorFailures, List.of(),
-                "no request during the swap window may fail at the connector; statuses observed: "
-                        + statusesDuringWindow);
-
-        // The fresh generation must serve.
-        Assert.assertEquals(client.target(route).request(APPLICATION_JSON).get().getStatus(), 200,
-                "the route must serve again once the new generation mounts");
 
     }
 
