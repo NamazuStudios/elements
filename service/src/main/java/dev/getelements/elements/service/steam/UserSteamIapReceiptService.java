@@ -34,8 +34,7 @@ public class UserSteamIapReceiptService implements SteamIapReceiptService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserSteamIapReceiptService.class);
 
-    private static final String STATUS_COMMITTED = "Committed";
-    private static final String STATUS_APPROVED = "Approved";
+    private static final String STATUS_SUCCEEDED = "Succeeded";
 
     private User user;
 
@@ -120,11 +119,12 @@ public class UserSteamIapReceiptService implements SteamIapReceiptService {
         final var config = getSteamApplicationConfiguration(application);
         final var publisherKey = config.getPublisherKey();
         final var appId = config.getAppId();
+        final var sandbox = Boolean.TRUE.equals(config.getSandbox());
 
         final SteamIapQueryTxnResponse response;
 
         try {
-            response = getRequestInvoker().invokeQueryTxn(publisherKey, appId, orderId);
+            response = getRequestInvoker().invokeQueryTxn(publisherKey, appId, orderId, sandbox);
         } catch (Exception e) {
             logger.error("Communication with the Steam API was not successful: ", e);
             throw new InternalException("Communication with the Steam API was not successful: " + e.getMessage());
@@ -137,17 +137,23 @@ public class UserSteamIapReceiptService implements SteamIapReceiptService {
         final var params = response.getResponse().getParams();
         final var status = params.getStatus();
 
-        if (!STATUS_COMMITTED.equals(status) && !STATUS_APPROVED.equals(status)) {
+        // Steam's documented transaction statuses are Init, Approved, Succeeded, Failed, Refunded,
+        // PartialRefund, Chargedback, RefundedSuspectedFraud and RefundedFriendlyFraud. "Committed"
+        // is not one of them. Only final successful states qualify for reward issuance: "Succeeded"
+        // means captured. "Approved" means authorized but not yet charged -- Elements never calls
+        // FinalizeTxn, so granting rewards on Approved would grant for uncharged orders.
+        if (!STATUS_SUCCEEDED.equals(status)) {
             throw new InvalidDataException(
                     "Steam transaction status is not valid for reward issuance. Status: " + status);
         }
 
-        final var lineItems = response.getResponse().getLineItems();
-        if (lineItems == null || lineItems.getLineItemList() == null || lineItems.getLineItemList().isEmpty()) {
+        // QueryTxn v3 returns the line items under response.params.items[] (not response.lineitems[]).
+        final var items = params.getItems();
+        if (items == null || items.isEmpty()) {
             throw new InvalidDataException("Steam transaction contains no line items for order: " + orderId);
         }
 
-        final var firstItem = lineItems.getLineItemList().get(0);
+        final var firstItem = items.get(0);
 
         final var steamIapReceipt = new SteamIapReceipt();
         steamIapReceipt.setOrderId(orderId);

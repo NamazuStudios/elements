@@ -2,6 +2,10 @@ package dev.getelements.elements.rest.test;
 
 import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.ElementPathLoader;
+import dev.getelements.elements.sdk.ElementRegistry;
+import dev.getelements.elements.sdk.Event;
+import dev.getelements.elements.sdk.MutableElementRegistry;
+import dev.getelements.elements.sdk.Subscription;
 import dev.getelements.elements.sdk.dao.ElementDeploymentDao;
 import dev.getelements.elements.sdk.dao.LargeObjectBucket;
 import dev.getelements.elements.sdk.dao.LargeObjectDao;
@@ -16,14 +20,17 @@ import dev.getelements.elements.sdk.record.Artifact;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static dev.getelements.elements.sdk.test.TestElementArtifact.MONGO;
 
@@ -48,6 +55,14 @@ public class ElementHotReloadApiTest {
 
     private static final String ELEMENT_NAME = "dev.getelements.elements.sdk-test-element-mongo";
 
+    @Inject
+    @Named(ElementRegistry.ROOT)
+    private MutableElementRegistry rootElementRegistry;
+
+    private final List<String> runtimeEventLog = new CopyOnWriteArrayList<>();
+
+    private Subscription runtimeEventSubscription;
+
     @Factory
     public Object[] getTests() {
         return new Object[] {
@@ -60,6 +75,25 @@ public class ElementHotReloadApiTest {
      * below once the deployment is deleted.
      */
     private String createdDeploymentId;
+
+    @BeforeMethod
+    public void recordRuntimeEvents() {
+        runtimeEventLog.clear();
+        runtimeEventSubscription = rootElementRegistry.onEvent(event -> {
+            if (ElementRuntimeService.RUNTIME_LOADED.equals(event.getEventName())
+                    || ElementRuntimeService.RUNTIME_UNLOADED.equals(event.getEventName())) {
+                runtimeEventLog.add(event.getEventName());
+            }
+        });
+    }
+
+    @AfterMethod
+    public void unsubscribeRuntimeEvents() {
+        if (runtimeEventSubscription != null) {
+            runtimeEventSubscription.unsubscribe();
+            runtimeEventSubscription = null;
+        }
+    }
 
     /**
      * Deletes the deployment created by the test, if any, and waits for its runtime to unload. Without
@@ -160,6 +194,34 @@ public class ElementHotReloadApiTest {
         secondGenerationEntityClass.getMethod("setId", String.class).invoke(document, "post-hot-reload");
         secondGenerationEntityClass.getMethod("setText", String.class).invoke(document, "after-hot-reload");
         datastore.save(document);
+
+        // The unload of the old generation must be announced BEFORE the new generation loads: the
+        // container service retires the old Jetty handlers at that point. Publishing the loaded event
+        // first leaves the old container serving requests after the shared Morphia mapper has already
+        // been rebuilt for the new generation -- every request routed to it fails with
+        // ClassCastException: X cannot be cast to X (NamazuStudios/elements#209).
+        final int unloadIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_UNLOADED);
+        final int loadedIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_LOADED);
+        Assert.assertTrue(unloadIndex >= 0 && loadedIndex > unloadIndex,
+                "expected RUNTIME_UNLOADED before RUNTIME_LOADED; events: " + runtimeEventLog);
+
+        // A SECOND hot-swap must be just as clean as the first: repeated swaps must not accumulate
+        // classloader generations whose entity classes shadow each other in the shared mapper
+        // (staging reproduced CCEs on the second swap of a production element, 2026-11-13).
+        final var reloadedAgain = elementDeploymentDao.updateElementDeployment(reloaded);
+        final var third = awaitRuntime(reloadedAgain.id(), reloadedAgain.version(), "second hot reload");
+        final var thirdGenerationEntityClass = entityClassOf(third);
+
+        Assert.assertEquals(third.status(), ElementRuntimeService.RuntimeStatus.CLEAN,
+                "the second hot reload must complete cleanly");
+
+        Assert.assertNotSame(secondGenerationEntityClass, thirdGenerationEntityClass,
+                "each reload must produce a distinct Class object");
+
+        final var secondReloadUnloadIndex = runtimeEventLog.lastIndexOf(ElementRuntimeService.RUNTIME_UNLOADED);
+        Assert.assertTrue(secondReloadUnloadIndex > loadedIndex,
+                "the second reload must announce the unload of the previous generation; events: "
+                        + runtimeEventLog);
 
     }
 

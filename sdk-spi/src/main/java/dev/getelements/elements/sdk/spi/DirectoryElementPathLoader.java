@@ -288,9 +288,26 @@ public class DirectoryElementPathLoader implements ElementPathLoader {
 
                     if (record.isValidElement()) {
                         try {
-                            final var element = record.loadElement(config.failedElementHandler());
-                            elements.add(element);
-                            config.elementLoadedHandler().accept(subdir, element);
+                            // The element's injector is built here (loadElement), which instantiates
+                            // eager singletons that resolve Morphia entities through the shared
+                            // Datastore's discriminator lookup. That lookup falls back to
+                            // Class.forName using the thread's context classloader -- so the load
+                            // must run with the element's own classloader as the TCCL. Pooled
+                            // threads (reconcile, ELM-reload requests) carry a stale TCCL from
+                            // whatever ran on them before, which resolves the PREVIOUS generation's
+                            // entity classes into the shared mapper and poisons the fresh injector
+                            // with ClassCastException: X cannot be cast to X (#209).
+                            final var thread = Thread.currentThread();
+                            final var previousTccl = thread.getContextClassLoader();
+                            thread.setContextClassLoader(elementClassLoader);
+                            final Element element;
+                            try {
+                                element = record.loadElement(config.failedElementHandler());
+                                elements.add(element);
+                                config.elementLoadedHandler().accept(subdir, element);
+                            } finally {
+                                thread.setContextClassLoader(previousTccl);
+                            }
 
                             // spiClassLoader/elementClassLoader sit between the (ref-counted, shared)
                             // apiClassLoader and the element's own implementation classloader.
