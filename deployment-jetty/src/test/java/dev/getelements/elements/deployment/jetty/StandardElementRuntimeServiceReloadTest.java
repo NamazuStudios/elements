@@ -93,10 +93,13 @@ public class StandardElementRuntimeServiceReloadTest {
                 List.of("load:start",
                         "publish:" + ElementRuntimeService.RUNTIME_LOADED,
                         "unregister:element-1",
+                        "publish:" + ElementRuntimeService.RUNTIME_UNLOADED,
                         "load:start",
-                        "publish:" + ElementRuntimeService.RUNTIME_LOADED,
-                        "publish:" + ElementRuntimeService.RUNTIME_UNLOADED),
-                "reload must deregister the old entities synchronously, before the new load begins"
+                        "publish:" + ElementRuntimeService.RUNTIME_LOADED),
+                "reload must deregister the old entities synchronously and publish the unload event "
+                        + "before the new load begins (the container service retires the old serving "
+                        + "handlers at the unload event, before the new load's registration rebuilds "
+                        + "the shared mapper)"
         );
 
     }
