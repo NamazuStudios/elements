@@ -26,6 +26,13 @@ public class SteamApplicationConfiguration extends ApplicationConfiguration impl
     @Schema(description = "The Steam AppID for the game as it appears in the Steamworks partner portal.")
     private String appId;
 
+    /**
+     * True to verify purchases against Steam's sandbox micro-transaction API
+     * (ISteamMicroTxnSandbox). Development and team purchases are recorded only in the
+     * sandbox until the application is released on Steam.
+     */
+    private Boolean sandbox;
+
     @Valid
     @Schema(description = "The list of product bundles that may be rewarded upon successful IAP transactions.")
     @Deprecated
@@ -105,6 +112,24 @@ public class SteamApplicationConfiguration extends ApplicationConfiguration impl
         return "SteamApplicationConfiguration{" +
                 "appId='" + appId + '\'' +
                 '}';
+    }
+
+    /**
+     * True to verify purchases against Steam's sandbox micro-transaction API.
+     *
+     * @return the sandbox flag
+     */
+    public Boolean getSandbox() {
+        return sandbox;
+    }
+
+    /**
+     * Sets the sandbox flag.
+     *
+     * @param sandbox the sandbox flag
+     */
+    public void setSandbox(Boolean sandbox) {
+        this.sandbox = sandbox;
     }
 
 }
