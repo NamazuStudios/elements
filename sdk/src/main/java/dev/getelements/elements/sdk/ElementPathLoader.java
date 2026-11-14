@@ -5,6 +5,8 @@ import dev.getelements.elements.sdk.record.ElementManifestRecord;
 import dev.getelements.elements.sdk.record.ElementPathRecord;
 import dev.getelements.elements.sdk.record.ElementRecord;
 
+import dev.getelements.elements.sdk.record.ElementRecord;
+
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -150,6 +152,7 @@ public interface ElementPathLoader {
      * @param baseClassLoader the base classloader for selective type borrowing (nullable, defaults to this class's classloader)
      * @param spiLoader the SPI loader
      * @param attributesProvider function to provide Attributes for each Element path (nullable, defaults to properties file reader)
+     * @param elementPreLoadHandler invoked after each element's classloader exists but before its injector builds (nullable, defaults to no-op)
      * @since 3.7
      */
     record LoadConfiguration(
@@ -162,7 +165,8 @@ public interface ElementPathLoader {
             AttributesLoader attributesProvider,
             Consumer<SdkException> sdkExceptionHandler,
             BiConsumer<Path, Element> elementLoadedHandler,
-            FailedElementHandler failedElementHandler) {
+            FailedElementHandler failedElementHandler,
+            ElementPreLoadHandler elementPreLoadHandler) {
 
         /**
          * Creates a new builder for LoadConfiguration.
@@ -197,6 +201,8 @@ public interface ElementPathLoader {
             private BiConsumer<Path, Element> elementLoadedHandler = (p, e) -> {};
 
             private FailedElementHandler failedElementHandler = (r, p, t) -> {};
+
+            private ElementPreLoadHandler elementPreLoadHandler = (p, r) -> {};
 
             private Builder() {}
 
@@ -347,6 +353,25 @@ public interface ElementPathLoader {
             }
 
             /**
+             * Sets a handler invoked for each element after its implementation classloader is constructed
+             * but <b>before</b> the element's injector builds. This is the only point in the load sequence
+             * where the element's own classes exist under their final classloader while no eager singleton
+             * has yet resolved platform-global state (such as the shared datastore's entity mapper).
+             * The platform uses this to pre-register the element's entity classes so the injector build
+             * observes the new generation's classes rather than a previous generation's cached models
+             * (#209).
+             *
+             * @param elementPreLoadHandler the handler (null resets to no-op)
+             * @return this
+             */
+            public Builder elementPreLoadHandler(final ElementPreLoadHandler elementPreLoadHandler) {
+                this.elementPreLoadHandler = elementPreLoadHandler == null
+                        ? (p, r) -> {}
+                        : elementPreLoadHandler;
+                return this;
+            }
+
+            /**
              * Builds the LoadConfiguration with defaults applied for unspecified optional parameters.
              *
              * @return the configured LoadConfiguration
@@ -371,7 +396,8 @@ public interface ElementPathLoader {
                         attributesLoader,
                         loadErrorHandler,
                         elementLoadedHandler,
-                        failedElementHandler
+                        failedElementHandler,
+                        elementPreLoadHandler
                 );
 
             }
@@ -624,6 +650,26 @@ public interface ElementPathLoader {
     @FunctionalInterface
     interface FailedElementHandler {
         void accept(ElementRecord record, Path elementPath, Throwable cause);
+    }
+
+    /**
+     * Invoked for each element after its implementation classloader is constructed but <b>before</b> the
+     * element's injector builds — i.e., before any eager singleton has resolved platform-global state keyed
+     * by class identity (the shared datastore's entity mapper, JSR-330 extension registries, ...).
+     *
+     * <p>This is the only point in the load sequence where the element's own classes exist under their
+     * final classloader while nothing has yet been built from them. Handlers registering the element's
+     * classes with such platform-global services must do it here: registering earlier would use the wrong
+     * classloader (the implementation classloader does not exist yet), and registering later (after the
+     * injector builds) observes stale cached models for identical class names from the previous element
+     * generation on a hot reload — the {@code ClassCastException: X cannot be cast to X} failure (#209).
+     *
+     * <p>If the element's load subsequently fails, the handler's registrations remain; callers should
+     * deregister via {@link FailedElementHandler}, which fires for the same element record.
+     */
+    @FunctionalInterface
+    interface ElementPreLoadHandler {
+        void accept(Path elementPath, ElementRecord elementRecord);
     }
 
     /**
