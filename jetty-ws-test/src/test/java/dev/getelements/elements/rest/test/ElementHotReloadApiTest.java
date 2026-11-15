@@ -436,8 +436,10 @@ public class ElementHotReloadApiTest {
                     "no request during swap " + swap + " may fail at the connector; statuses observed: "
                             + statusesDuringWindow);
 
-            Assert.assertEquals(client.target(route).request(APPLICATION_JSON).get().getStatus(), 200,
-                    "the route must serve again once hot swap " + swap + " mounts the new generation");
+            // The fresh generation must serve. The mount happens in the RUNTIME_LOADED event handler,
+            // which can lag the runtime record flipping to CLEAN -- so poll rather than assert instantly.
+            awaitRouteServing(route, "the route must serve again once hot swap " + swap
+                    + " mounts the new generation");
 
         }
 
