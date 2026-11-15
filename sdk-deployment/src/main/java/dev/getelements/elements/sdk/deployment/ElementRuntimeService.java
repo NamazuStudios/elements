@@ -80,6 +80,15 @@ public interface ElementRuntimeService {
     String POLL_INTERVAL_SECONDS = "dev.getelements.elements.runtime.poll.interval.seconds";
 
     /**
+     * The attribute key for the unload grace period in seconds. Default is 30 seconds. After a deployment is
+     * unloaded, its handlers stop routing immediately, but its classloaders are closed only after this grace
+     * period -- giving in-flight requests time to finish (including lazily-resolved classes) before the
+     * archives backing them disappear (#209).
+     */
+    @ElementDefaultAttribute(value = "30", description = "Grace period in seconds between an unload and the closing of the deployment's classloaders.")
+    String UNLOAD_GRACE_PERIOD_SECONDS = "dev.getelements.elements.runtime.unload.grace.period.seconds";
+
+    /**
      * Starts the runtime service. This begins the polling loop that reconciles Element deployments.
      */
     void start();

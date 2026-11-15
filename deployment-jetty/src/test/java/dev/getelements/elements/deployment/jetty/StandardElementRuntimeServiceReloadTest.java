@@ -23,13 +23,18 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -62,9 +67,15 @@ public class StandardElementRuntimeServiceReloadTest {
 
     private List<String> eventLog;
 
+    /**
+     * The subordinate registry mock handed to the most recent load -- the object whose {@code close()} the
+     * grace-period close must eventually invoke (the real registry closes the elements).
+     */
+    private MutableElementRegistry lastSubordinateRegistry;
+
     @BeforeMethod
     public void setUp() {
-        eventLog = new ArrayList<>();
+        eventLog = new CopyOnWriteArrayList<>();
         clock = new AtomicLong();
         entityRegistrar = new RecordingRegistrar(eventLog);
         pathLoader = mock(ElementPathLoader.class);
@@ -189,12 +200,79 @@ public class StandardElementRuntimeServiceReloadTest {
 
     }
 
+    /**
+     * Fix B (#209): an unload retires the deployment's handlers immediately (the unregister + unload event
+     * are synchronous) but must NOT close the elements' classloaders until the grace period passes -- a
+     * request still executing against the retired handlers needs its archives alive. The close then fires
+     * on the close scheduler.
+     */
+    @Test
+    public void unloadDelaysElementCloseByTheGracePeriod() {
+
+        final var service = newService();
+        service.setUnloadGracePeriodSeconds(1);
+        final var element = mockElement("element-1");
+        when(pathLoader.load(any(ElementPathLoader.LoadConfiguration.class)))
+                .thenAnswer(invocation -> Stream.of(element));
+
+        givenDeployments(deployment("deployment-1", 1L));
+        service.reconcile();
+
+        // Delete the deployment: retire + unregister happen synchronously; the close must not.
+        givenDeployments();
+        service.reconcile();
+
+        assertTrue(eventLog.contains("unregister:element-1"),
+                "entity deregistration must happen synchronously at unload; events: " + eventLog);
+
+        verify(lastSubordinateRegistry, after(300).never()).close();
+
+        // The grace-period close fires ~1s later.
+        verify(lastSubordinateRegistry, timeout(5000)).close();
+
+    }
+
+    /**
+     * Fix B (#209): a {@code stop()} must flush pending grace-period closes immediately -- shutdown has no
+     * in-flight traffic to protect, so retired deployments close right away rather than waiting out the
+     * grace period.
+     */
+    @Test
+    public void stopFlushesPendingGracePeriodCloses() {
+
+        final var service = newService();
+        service.setUnloadGracePeriodSeconds(60);
+        final var element = mockElement("element-1");
+        when(pathLoader.load(any(ElementPathLoader.LoadConfiguration.class)))
+                .thenAnswer(invocation -> Stream.of(element));
+
+        // The stop() path requires a started service (it shuts the reconcile scheduler down).
+        service.start();
+
+        givenDeployments(deployment("deployment-1", 1L));
+        service.reconcile();
+
+        givenDeployments();
+        service.reconcile();
+
+        assertTrue(eventLog.contains("unregister:element-1"), "the deployment must be retired");
+
+        // The grace period (60s) has not elapsed; only stop() can close the elements now.
+        verify(lastSubordinateRegistry, never()).close();
+
+        service.stop();
+
+        verify(lastSubordinateRegistry, timeout(5000)).close();
+
+    }
+
     private StandardElementRuntimeService newService() {
 
         rootRegistry = mock(MutableElementRegistry.class);
         when(rootRegistry.newSubordinateRegistry()).thenAnswer(invocation -> {
             eventLog.add("load:start");
-            return mock(MutableElementRegistry.class);
+            lastSubordinateRegistry = mock(MutableElementRegistry.class);
+            return lastSubordinateRegistry;
         });
         doAnswer(invocation -> {
             eventLog.add("publish:" + ((Event) invocation.getArgument(0)).getEventName());

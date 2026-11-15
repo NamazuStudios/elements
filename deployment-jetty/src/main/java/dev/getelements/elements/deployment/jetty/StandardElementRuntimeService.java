@@ -36,6 +36,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +138,19 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     private ElementEntityRegistrar elementEntityRegistrar;
 
     private ScheduledExecutorService scheduler;
+
+    /**
+     * Single-thread daemon scheduler for grace-period closes of retired deployments, created lazily. Kept
+     * separate from the reconcile scheduler so a pending close never delays deployment polling.
+     */
+    private ScheduledExecutorService closeScheduler;
+
+    /**
+     * Retired deployments awaiting their grace-period close, keyed by identity. See {@link #scheduleClose}.
+     */
+    private final Set<ActiveDeployment> pendingCloses = ConcurrentHashMap.newKeySet();
+
+    private int unloadGracePeriodSeconds = 30;
 
     /**
      * Sets the platform {@link ElementEntityRegistrar}, used to deregister a deployment's entity classes when
@@ -246,6 +260,27 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
 
             activeDeployments.clear();
             retryStates.clear();
+
+            // Flush pending grace-period closes now: this is shutdown, not a hot swap -- there is no
+            // in-flight traffic to protect, so retired deployments close immediately rather than waiting
+            // out the grace period (#209).
+            final var pending = List.copyOf(pendingCloses);
+            pendingCloses.clear();
+            for (final var active : pending) {
+                try {
+                    active.close();
+                } catch (Exception ex) {
+                    logger.error("Error closing retired deployment {} during shutdown",
+                            active.deployment().id(), ex);
+                }
+            }
+
+            // Late grace-period tasks would no-op against the cleared pending set; shut the closer down.
+            if (closeScheduler != null) {
+                closeScheduler.shutdownNow();
+                closeScheduler = null;
+            }
+
             logger.info("ElementRuntimeService stopped");
 
         }
@@ -1014,14 +1049,75 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     }
 
     /**
-     * Unloads a deployment and clears any pending retry bookkeeping for it.
+     * Unloads a deployment and clears any pending retry bookkeeping for it. The deployment's handlers stop
+     * routing when the unload event is published; the classloaders backing them are closed after the
+     * configured grace period ({@link #UNLOAD_GRACE_PERIOD_SECONDS}), so in-flight requests -- including
+     * lazily-resolved classes -- finish before the archives backing them disappear (#209).
      */
     private void doUnloadDeployment(final String deploymentId) {
         final var active = activeDeployments.remove(deploymentId);
         retryStates.remove(deploymentId);
         if (active != null) {
             unregisterEntities(active);
+            scheduleClose(active);
+        }
+    }
+
+    /**
+     * Schedules the closing of an unloaded deployment's elements after the unload grace period. The close
+     * must wait: retiring the Jetty handlers is asynchronous relative to in-flight requests, and a request
+     * that is mid-flight (or lazily resolving a class) when its handlers retire needs the old classloader
+     * alive until it completes -- otherwise it fails with {@code NoClassDefFoundError} against the closed
+     * archive (#209). Entity deregistration, by contrast, happens synchronously at unload: it does not close
+     * anything and the shared mapper must be rebuilt without the old generation before the new load.
+     *
+     * @param active the retired deployment, held until the close fires
+     */
+    private void scheduleClose(final ActiveDeployment active) {
+
+        final var gracePeriodSeconds = getUnloadGracePeriodSeconds();
+
+        if (gracePeriodSeconds <= 0) {
+            performClose(active);
+            return;
+        }
+
+        pendingCloses.add(active);
+        getCloseScheduler().schedule(() -> performClose(active), gracePeriodSeconds, TimeUnit.SECONDS);
+
+    }
+
+    /**
+     * Closes a retired deployment's elements, releasing its classloaders and staged files. Idempotent: the
+     * first invocation for a given retirement wins; late duplicate firings (and post-shutdown flushes) are
+     * no-ops. Each retirement gets its own close even when the same deployment id is unloaded twice within
+     * one grace period -- every retired generation's classloaders must eventually be released.
+     */
+    private void performClose(final ActiveDeployment active) {
+        if (!pendingCloses.remove(active)) {
+            return;
+        }
+        try {
             active.close();
+        } catch (Exception ex) {
+            logger.error("Error closing unloaded deployment {}", active.deployment().id(), ex);
+        }
+    }
+
+    /**
+     * Lazily creates the single-thread daemon scheduler used for grace-period closes. Separate from the
+     * reconcile scheduler so a pending close never delays deployment polling.
+     */
+    private ScheduledExecutorService getCloseScheduler() {
+        synchronized (this) {
+            if (closeScheduler == null) {
+                closeScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+                    final var thread = new Thread(r, "element-runtime-unload-closer");
+                    thread.setDaemon(true);
+                    return thread;
+                });
+            }
+            return closeScheduler;
         }
     }
 
@@ -1363,10 +1459,18 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
     public int getPollIntervalSeconds() {
         return pollIntervalSeconds;
     }
-
     @Inject
     public void setPollIntervalSeconds(@Named(POLL_INTERVAL_SECONDS) final int pollIntervalSeconds) {
         this.pollIntervalSeconds = pollIntervalSeconds;
+    }
+
+    public int getUnloadGracePeriodSeconds() {
+        return unloadGracePeriodSeconds;
+    }
+
+    @Inject
+    public void setUnloadGracePeriodSeconds(@Named(UNLOAD_GRACE_PERIOD_SECONDS) final int unloadGracePeriodSeconds) {
+        this.unloadGracePeriodSeconds = unloadGracePeriodSeconds;
     }
 
     /**

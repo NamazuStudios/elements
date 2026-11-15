@@ -40,6 +40,11 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 // (the driver default is unlimited) a stalled mongod blocks
                 // the calling thread forever instead of failing the test.
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d/?socketTimeoutMS=30000", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+                // A 1-second container sync poll: the container service's sync() loop constantly
+                // contends with the runtime service's reconcile lock while deployments load and swap,
+                // so any regression in the lock ordering between the two services (the #209 ABBA
+                // deadlock) surfaces here within seconds instead of a 2-hour CI timeout.
+                properties.put("dev.getelements.elements.container.poll.interval.seconds", "1");
                 // A deliberately small token-endpoint budget so OidcProviderApiTest can reach the 429 path
                 // in a handful of requests; every other test suite member leaves it untouched.
                 properties.put("dev.getelements.elements.oidc.rate.limit.token.per.minute", "10");
