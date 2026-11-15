@@ -1,9 +1,12 @@
 package dev.getelements.elements.sdk.test.element.mongo;
 
+import dev.getelements.elements.sdk.Element;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Bound eagerly by {@link TestRedeployGuiceModule}, so its constructor runs at Element injector-build time --
@@ -29,8 +32,31 @@ public class TestRedeployIndexInitializer {
 
     private static final Logger logger = LoggerFactory.getLogger(TestRedeployIndexInitializer.class);
 
+    /**
+     * Flipped when this generation's close hooks fire. Static on purpose: each Element generation has its
+     * OWN classloader and therefore its own copy of this class, so the flag is per-generation. The
+     * hot-reload test reads the OLD generation's copy (via the generation's still-loaded class) to assert
+     * that the platform invoked the Element's close hooks on the hot-reload unload path -- the exact
+     * mechanism Element authors rely on to stop background executors (#209, Fix C).
+     */
+    public static final AtomicBoolean ON_CLOSE_FIRED = new AtomicBoolean(false);
+
     @Inject
-    public TestRedeployIndexInitializer(final Datastore datastore) {
+    public TestRedeployIndexInitializer(final Datastore datastore, final Element element) {
+
+        // Register the same lifecycle hook the Fix C recipe documents for Element authors: a close hook
+        // that must fire when this Element generation is closed -- including the hot-reload unload path.
+        // A real Element stops its background executors here; this test Element records that the hook ran.
+        //
+        // The hook MUST be registered via constructor injection of the Element, NOT via the static
+        // ElementSupplier/ElementRegistrySupplier: their backing statics are set only AFTER the injector
+        // finishes building (GuiceElementLoader binds them post-createInjector), so an eager singleton's
+        // constructor observes null from the static suppliers. Injection works at any point in the
+        // lifecycle, including here at injector-build time.
+        element.onClose(el -> {
+            logger.info("Element closing; this generation's onClose hook firing");
+            ON_CLOSE_FIRED.set(true);
+        });
 
         // Decode any rows left by a previous generation through the Mapper's currently-cached model. Pre-fix
         // this is where the cross-loader ClassCastException materializes: the cached model belongs to the

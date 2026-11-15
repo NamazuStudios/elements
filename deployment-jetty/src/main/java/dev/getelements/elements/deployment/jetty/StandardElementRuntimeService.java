@@ -1097,8 +1097,11 @@ public class StandardElementRuntimeService implements ElementRuntimeService {
         if (!pendingCloses.remove(active)) {
             return;
         }
+        logger.info("Grace period elapsed for deployment {}; closing its elements and classloaders",
+                active.deployment().id());
         try {
             active.close();
+            logger.info("Closed unloaded deployment {}", active.deployment().id());
         } catch (Exception ex) {
             logger.error("Error closing unloaded deployment {}", active.deployment().id(), ex);
         }
