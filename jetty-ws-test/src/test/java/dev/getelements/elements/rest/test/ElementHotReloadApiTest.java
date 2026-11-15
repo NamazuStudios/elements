@@ -181,7 +181,7 @@ public class ElementHotReloadApiTest {
     @Inject
     private Datastore datastore;
 
-    @Test(timeOut = 120_000)
+    @Test(timeOut = 300_000)
     public void hotReloadSwapsEntityClassesAndKeepsServing() throws Exception {
 
         // Deploy v1: an enabled deployment whose ELM LargeObject holds the MONGO test element.
@@ -250,6 +250,41 @@ public class ElementHotReloadApiTest {
         Assert.assertTrue(secondReloadUnloadIndex > loadedIndex,
                 "the second reload must announce the unload of the previous generation; events: "
                         + runtimeEventLog);
+
+        // The unload path must eventually close the OLD generation's element -- firing the onClose hooks
+        // Element authors use to stop background executors (Fix C). The close is deferred by the unload
+        // grace period (default 30s), so poll until it fires. The flag is read from the OLD generation's
+        // still-loaded class: each generation has its own classloader and therefore its own static.
+        assertOnCloseFired(firstGenerationEntityClass, "first generation");
+        assertOnCloseFired(secondGenerationEntityClass, "second generation");
+
+    }
+
+    /**
+     * Waits (bounded) for the given element generation's {@code TestRedeployIndexInitializer.ON_CLOSE_FIRED}
+     * flag to flip -- proving the platform closed that generation's element and fired its close hooks on the
+     * hot-reload unload path. Reading the static of an already-loaded class requires no classloading, so
+     * this works even after the generation's classloader is closed.
+     */
+    private static void assertOnCloseFired(final Class<?> generationEntityClass, final String label)
+            throws Exception {
+
+        final var initializerClass = Class.forName(
+                "dev.getelements.elements.sdk.test.element.mongo.TestRedeployIndexInitializer",
+                false,
+                generationEntityClass.getClassLoader());
+
+        final var flag = (java.util.concurrent.atomic.AtomicBoolean)
+                initializerClass.getField("ON_CLOSE_FIRED").get(null);
+
+        final var deadline = System.currentTimeMillis() + 60_000;
+        while (System.currentTimeMillis() < deadline && !flag.get()) {
+            Thread.sleep(500);
+        }
+
+        Assert.assertTrue(flag.get(),
+                "the " + label + " element's onClose hook must fire after its hot-reload unload "
+                        + "(the grace-period close) -- Element authors rely on it to stop background executors");
 
     }
 

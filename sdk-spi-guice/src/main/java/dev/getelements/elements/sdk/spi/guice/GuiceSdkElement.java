@@ -84,6 +84,12 @@ public class GuiceSdkElement implements Element {
     @Override
     public void close() {
         if (closed.compareAndSet(false, true)) {
+
+            // Fire the close subscriptions BEFORE closing the classloader: subscribers use this hook to
+            // stop background work (executors, pollers) and may still need to load classes or resolve
+            // resources from the element's own archives while doing so (#209).
+            onClosePublisher.publish(this);
+
             final var cl = getElementRecord().classLoader();
 
             if (cl instanceof AutoCloseable) {
@@ -94,7 +100,6 @@ public class GuiceSdkElement implements Element {
                 }
             }
 
-            onClosePublisher.publish(this);
             onClosePublisher.clear();
             elementEventDispatcher.close();
         }
