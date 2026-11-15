@@ -233,32 +233,42 @@ public class JettyElementContainerService implements ElementContainerService {
     public void onRuntimeUnloaded(final String deploymentId) {
         boolean unmounted = false;
 
-        // Check BEFORE acquiring the container lock whether the deployment is still active
-        // in the runtime service. If it is, the deployment was reloaded (not truly removed),
-        // and the RuntimeUnloaded event is the "old version" notification from reconcile().
-        // In that case we must not unmount the freshly-loaded container.
-        final var stillActive = stillActive(getElementRuntimeService().getActiveRuntimes(), deploymentId);
+        // Decide whether the mounted container must retire BEFORE acquiring the container lock: the
+        // decision needs the runtime service's active runtimes. On a hot reload the unload event fires
+        // while (or before) the new version loads, so the mounted container is the OLD generation whose
+        // elements were already closed -- it must be unmounted NOW, before the new version's load, not
+        // when the new version mounts. Retaining it leaves requests routing to handlers whose
+        // classloaders are closed for the entire load window (#209).
+        final var activeRuntimes = getElementRuntimeService().getActiveRuntimes();
 
         try (var mon = Monitor.enter(lock)) {
             logger.info("Received RuntimeUnloaded event for deployment: {}", deploymentId);
 
-            if (stillActive) {
-                logger.debug("Deployment {} was reloaded; skipping event-driven unmount", deploymentId);
+            final var existing = activeContainers.get(deploymentId);
+            if (existing == null) {
+                logger.debug("No container found for unloaded deployment: {}", deploymentId);
                 return;
             }
 
-            // Unmount the container if it exists
-            final var existing = activeContainers.get(deploymentId);
-            if (existing != null) {
-                try {
-                    doUnmount(deploymentId);
-                    logger.info("Unmounted container in response to RuntimeUnloaded event: {}", deploymentId);
-                    unmounted = true;
-                } catch (Exception ex) {
-                    logger.error("Failed to unmount container for deployment: {}", deploymentId, ex);
-                }
-            } else {
-                logger.debug("No container found for unloaded deployment: {}", deploymentId);
+            final var mountedVersion = existing.runtime().deployment().version();
+
+            if (shouldRetainMountedContainer(activeRuntimes, deploymentId, mountedVersion)) {
+                logger.debug("Deployment {} was reloaded and the mounted container is already the current "
+                        + "generation (version {}); skipping event-driven unmount", deploymentId, mountedVersion);
+                return;
+            }
+
+            try {
+                doUnmount(deploymentId);
+                logger.info("Unmounted container in response to RuntimeUnloaded event: {} "
+                        + "(mounted version {}; active runtime version {})",
+                        deploymentId, mountedVersion, activeRuntimes.stream()
+                                .filter(r -> r.deployment().id().equals(deploymentId))
+                                .map(r -> r.deployment().version())
+                                .findFirst().orElse(-1L));
+                unmounted = true;
+            } catch (Exception ex) {
+                logger.error("Failed to unmount container for deployment: {}", deploymentId, ex);
             }
         }
 
@@ -269,40 +279,56 @@ public class JettyElementContainerService implements ElementContainerService {
     }
 
     /**
-     * Whether a {@code RUNTIME_UNLOADED} event for the given deployment should leave the currently mounted
-     * container in place: true when the runtime service still holds a live (non-failed) runtime for it, i.e.
-     * the deployment was reloaded rather than removed. A {@code FAILED} record must not count as still active —
-     * on a failed reload the old container's elements were already closed, so the stale container must be
-     * unmounted rather than kept serving (#209).
+     * Whether a {@code RUNTIME_UNLOADED} event should leave the currently mounted container in place. The
+     * mounted container is retained only when it <b>is</b> the runtime service's current generation: a live
+     * (non-{@link RuntimeStatus#FAILED}) runtime record exists for the deployment <i>at the same version as
+     * the mounted container</i>. That is the event-reordering case where a reload's fresh mount already
+     * replaced the old container before the unload event was processed.
+     * <p>
+     * Any other state means the mounted container is <b>stale</b> and must retire immediately:
+     * <ul>
+     *     <li>no active runtime (deployment deleted, or the unload event processed before the new version
+     *     loads) -- the old generation's elements were already closed, so the mounted handlers are serving
+     *     from closed classloaders;</li>
+     *     <li>a live runtime at a <i>different</i> version -- a reload completed (or is in flight) and the
+     *     mounted container is the previous generation (#209: the old handlers must stop routing at unload
+     *     time, not when the new version mounts, which can be minutes later);</li>
+     *     <li>a {@code FAILED} runtime -- on a failed reload the old container's elements were already
+     *     closed, so the stale container must be unmounted rather than kept serving.</li>
+     * </ul>
      *
      * @param activeRuntimes the runtime service's current records
      * @param deploymentId   the deployment ID from the unload event
+     * @param mountedVersion the version of the currently mounted container
      * @return true if the mounted container should be left in place
      */
-    static boolean stillActive(final List<RuntimeRecord> activeRuntimes, final String deploymentId) {
+    static boolean shouldRetainMountedContainer(final List<RuntimeRecord> activeRuntimes,
+                                                final String deploymentId,
+                                                final long mountedVersion) {
         return activeRuntimes
                 .stream()
                 .anyMatch(r -> r.deployment().id().equals(deploymentId)
-                        && r.status() != ElementRuntimeService.RuntimeStatus.FAILED);
+                        && r.status() != ElementRuntimeService.RuntimeStatus.FAILED
+                        && r.deployment().version() == mountedVersion);
     }
 
     /**
      * Synchronizes container state with runtime state.
      */
     private void sync() {
+
+        // Fetch the active runtimes BEFORE taking the container lock: getActiveRuntimes() acquires the
+        // runtime service's lock, and reconcile() holds that lock while publishing RUNTIME_UNLOADED -- whose
+        // handler acquires this container lock. Fetching under the lock made the two locks acquirable in
+        // opposite orders by the container poller and the reconcile scheduler -- a textbook ABBA deadlock
+        // that a busy hot-reload sequence (four deployments swapping back-to-back) hits reliably (#209).
+        // The fetched snapshot may be moments stale by the time the lock is acquired; harmless for a
+        // 10-second reconciliation loop.
+        final List<RuntimeRecord> activeRuntimes = getElementRuntimeService().getActiveRuntimes();
+
         try (var mon = Monitor.enter(lock)) {
 
             logger.debug("Starting container synchronization...");
-
-            // Fetch all active runtimes
-            final List<RuntimeRecord> activeRuntimes;
-
-            try {
-                activeRuntimes = getElementRuntimeService().getActiveRuntimes();
-            } catch (Exception ex) {
-                logger.error("Failed to fetch active runtimes", ex);
-                return;
-            }
 
             // Build set of deployment IDs from runtimes. FAILED runtimes are excluded: their container (if any
             // survived from a previous version) must be unmounted below, since the reload path already closed
