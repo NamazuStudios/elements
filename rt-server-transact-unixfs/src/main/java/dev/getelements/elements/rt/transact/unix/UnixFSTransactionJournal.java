@@ -324,7 +324,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             final var journalDPath = getUtils().getTransactionJournalDirectoryPath();
 
-            try (final var journalD = (SecureDirectoryStream<Path>) newDirectoryStream(journalDPath)) {
+            try (final var journalD = newDirectoryStream(journalDPath)) {
 
                 final var transactions = new TreeSet<Path>();
 
@@ -337,14 +337,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 }
 
                 for (var transaction : transactions) {
-                    doReplayForTransaction(journalD, transaction);
+                    doReplayForTransaction(transaction);
                 }
             }
 
         }
 
         private boolean doReplayForTransaction(
-                final SecureDirectoryStream<Path> journalD,
                 final Path transactionPath) throws IOException {
 
             final ByteBuffer transactionBuffer;
@@ -372,7 +371,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                         .tryExecuteCommitPhase(commitHandler)
                         .tryExecuteCleanupPhase(cleanupHandler);
 
-                journalD.deleteFile(transactionPath);
+                delete(transactionPath);
 
                 return true;
             } else {

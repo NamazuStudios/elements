@@ -4,6 +4,7 @@ import dev.getelements.elements.sdk.cluster.id.NodeId;
 import dev.getelements.elements.rt.transact.DataStore;
 
 import jakarta.inject.Inject;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SecureDirectoryStream;
 import java.util.concurrent.Executor;
@@ -36,9 +37,20 @@ public class UnixFSDataStore implements DataStore {
         final var garbageDirectory = getUnixFSUtils().allocateGarbageDirectory();
 
         getUnixFSUtils().doOperationV(() -> {
-            try (final var node = (SecureDirectoryStream<Path>) newDirectoryStream(nodeDirectory);
-                 final var garbage = (SecureDirectoryStream<Path>) newDirectoryStream(garbageDirectory)) {
-                node.move(nodeDirectory, garbage, nodeDirectory.getFileName());
+            try (final var nodeStream = newDirectoryStream(nodeDirectory);
+                 final var garbageStream = newDirectoryStream(garbageDirectory)) {
+
+                if (nodeStream instanceof SecureDirectoryStream<Path> node
+                        && garbageStream instanceof SecureDirectoryStream<Path> garbage) {
+                    node.move(nodeDirectory, garbage, nodeDirectory.getFileName());
+                } else {
+                    // Not every filesystem supplies a SecureDirectoryStream (macOS's NIO implementation
+                    // never does); fall back to a plain move. The relative move above is atomic where
+                    // supported; this variant is not, but the target is the garbage directory, whose
+                    // contents are deleted either way.
+                    Files.move(nodeDirectory, garbageDirectory.resolve(nodeDirectory.getFileName()));
+                }
+
             }
         });
 
