@@ -90,6 +90,11 @@ public class GuiceSdkElement implements Element {
             // resources from the element's own archives while doing so (#209).
             onClosePublisher.publish(this);
 
+            // Reaping of executors vended through the platform facility happens via the element's own
+            // close-hook mechanism: GuiceElementExecutors registers element.onClose(-> close()) at
+            // construction, so it is reaped with the subscriptions above -- before the classloader
+            // closes (#209).
+
             final var cl = getElementRecord().classLoader();
 
             if (cl instanceof AutoCloseable) {

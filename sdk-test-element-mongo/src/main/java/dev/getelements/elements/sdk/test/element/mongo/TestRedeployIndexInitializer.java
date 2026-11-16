@@ -1,11 +1,13 @@
 package dev.getelements.elements.sdk.test.element.mongo;
 
 import dev.getelements.elements.sdk.Element;
+import dev.getelements.elements.sdk.ElementExecutors;
 import dev.morphia.Datastore;
 import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -41,8 +43,17 @@ public class TestRedeployIndexInitializer {
      */
     public static final AtomicBoolean ON_CLOSE_FIRED = new AtomicBoolean(false);
 
+    /**
+     * A platform-managed executor: proves (end-to-end, on every hot reload) that the {@link
+     * ElementExecutors} binding exists in a real Element's injector and that the runtime reaps vended
+     * executors at close. Its shutdown is observable as the {@code Reaped N executor(s)} log line.
+     */
+    private final ScheduledExecutorService managedExecutor;
+
     @Inject
-    public TestRedeployIndexInitializer(final Datastore datastore, final Element element) {
+    public TestRedeployIndexInitializer(final Datastore datastore,
+                                        final Element element,
+                                        final ElementExecutors elementExecutors) {
 
         // Register the same lifecycle hook the Fix C recipe documents for Element authors: a close hook
         // that must fire when this Element generation is closed -- including the hot-reload unload path.
@@ -57,6 +68,10 @@ public class TestRedeployIndexInitializer {
             logger.info("Element closing; this generation's onClose hook firing");
             ON_CLOSE_FIRED.set(true);
         });
+
+        // The managed executor needs no work here; its purpose is to prove the binding is present in the
+        // real element injector and that the runtime reaps it at close (#209).
+        managedExecutor = elementExecutors.newScheduledExecutor("test-redeploy-poller", 1);
 
         // Decode any rows left by a previous generation through the Mapper's currently-cached model. Pre-fix
         // this is where the cross-loader ClassCastException materializes: the cached model belongs to the
