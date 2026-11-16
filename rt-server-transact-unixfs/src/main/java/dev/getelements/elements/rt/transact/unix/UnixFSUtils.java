@@ -462,13 +462,18 @@ public class UnixFSUtils {
 
         doOperationV(() -> {
 
-            try (var directory = (SecureDirectoryStream<Path>) Files.newDirectoryStream(path)) {
+            try (var directory = Files.newDirectoryStream(path)) {
 
-                for (final var child : directory) {
-                    rmrf(child, directory);
+                if (directory instanceof SecureDirectoryStream<Path> secureDirectory) {
+                    for (final var child : secureDirectory) {
+                        rmrf(child, secureDirectory);
+                    }
+                    secureDirectory.deleteDirectory(path);
+                } else {
+                    // Not every filesystem supplies a SecureDirectoryStream (macOS's NIO implementation
+                    // never does); fall back to a plain recursive delete.
+                    deleteRecursively(path);
                 }
-
-                directory.deleteDirectory(path);
 
             }
         });
@@ -492,6 +497,27 @@ public class UnixFSUtils {
     }
 
     /**
+     * Deletes the supplied {@link Path} and everything beneath it, without requiring a
+     * {@link SecureDirectoryStream}. Used on filesystems whose directory streams are not secure
+     * (macOS), where the relative-deletion variants cannot be used.
+     */
+    private static void deleteRecursively(final Path path) throws IOException {
+        Files.walkFileTree(path, new java.nio.file.SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attributes) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException ex) throws IOException {
+                if (ex != null) throw ex;
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    /**
      * Prune the supplied {@link Path}. This will delete all empty directories and subdirectories of the path provided
      * that they are empty.
      *
@@ -507,15 +533,36 @@ public class UnixFSUtils {
                 return;
             }
 
-            try (final var root = (SecureDirectoryStream<Path>)newDirectoryStream(getStorageRoot());
-                 final var toPrune = root.newDirectoryStream(path, NOFOLLOW_LINKS)) {
-                if (prune(path, toPrune)) {
-                    try {
-                        toPrune.deleteDirectory(path);
-                    } catch (NoSuchFileException ex) {
-                        logger.info("Caught exception pruning path. Skipping.", ex);
+            try (final var root = Files.newDirectoryStream(getStorageRoot())) {
+
+                if (root instanceof SecureDirectoryStream<Path> secureRoot) {
+                    try (final var toPrune = secureRoot.newDirectoryStream(path, NOFOLLOW_LINKS)) {
+                        if (prune(path, toPrune)) {
+                            try {
+                                toPrune.deleteDirectory(path);
+                            } catch (NoSuchFileException ex) {
+                                logger.info("Caught exception pruning path. Skipping.", ex);
+                            }
+                        }
                     }
+                } else {
+                    // Not every filesystem supplies a SecureDirectoryStream (macOS); prune by deleting
+                    // empty directories bottom-up (directories with contents are left alone).
+                    Files.walkFileTree(path, new java.nio.file.SimpleFileVisitor<>() {
+                        @Override
+                        public FileVisitResult postVisitDirectory(final Path dir, final IOException ex)
+                                throws IOException {
+                            if (ex != null) throw ex;
+                            try {
+                                Files.delete(dir); // fails with DirectoryNotEmptyException when not empty
+                            } catch (DirectoryNotEmptyException ex2) {
+                                logger.debug("Not pruning non-empty directory {}", dir);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
                 }
+
             }
 
         });
@@ -587,10 +634,20 @@ public class UnixFSUtils {
      */
     public void cleanupGarbage() {
         doOperationV(() -> {
-            try (var directory = (SecureDirectoryStream<Path>) Files.newDirectoryStream(getGarbageDirectory())) {
-                for (final var child : directory) {
-                    rmrf(child, directory);
+            try (var directory = Files.newDirectoryStream(getGarbageDirectory())) {
+
+                if (directory instanceof SecureDirectoryStream<Path> secureDirectory) {
+                    for (final var child : secureDirectory) {
+                        rmrf(child, secureDirectory);
+                    }
+                } else {
+                    // Not every filesystem supplies a SecureDirectoryStream (macOS); delete each
+                    // garbage child with a plain recursive walk.
+                    for (final var child : directory) {
+                        deleteRecursively(child);
+                    }
                 }
+
             }
         });
     }
