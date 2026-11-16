@@ -70,6 +70,10 @@ public class GuiceElementLoader implements ElementLoader {
                                 .to(GuiceSdkElement.class)
                                 .asEagerSingleton();
 
+                        bind(ElementExecutors.class)
+                                .to(GuiceElementExecutors.class)
+                                .asEagerSingleton();
+
                     }
                 }
         );
