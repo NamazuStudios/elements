@@ -11,6 +11,7 @@ buildNumber.properties
 test-repositories
 node_modules
 .DS_Store
+**/tmp/
 
 #IntelliJ Configurations (except shared run configurations
 .idea/jarRepositories.xml
