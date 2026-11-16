@@ -1,0 +1,38 @@
+# Verifies that the pure-filesystem persistence modules build and pass their tests
+# on Windows, for contributors building Elements locally with tests.
+#
+# Windows is not a production target (production is Linux: deb/rpm + Docker images),
+# and the full test suite requires Docker for the embedded Mongo test instances, which
+# is not available on Windows runners. These two modules are pure filesystem code and
+# are where platform differences bite (SecureDirectoryStream availability, mapped-file
+# deletion semantics), so they get dedicated Windows coverage.
+#
+# Manual trigger only: this job exists for platform-support verification, not per-PR CI.
+
+name: unixfs-windows-build
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  unixfs-windows:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build setup
+        uses: ./.github/actions/build-setup
+
+      - name: Build and test the unixfs persistence modules
+        shell: pwsh
+        run: mvn -pl rt-server-transact-unixfs,rt-server-transact-unixfs-guice -am install "-Dskip.web-ui-build=true" "--no-transfer-progress" "-B"
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports-windows-${{ github.run_id }}
+          path: |
+            **/target/surefire-reports/**
+            **/target/*.dump
