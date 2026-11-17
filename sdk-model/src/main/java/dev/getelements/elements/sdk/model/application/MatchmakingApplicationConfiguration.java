@@ -41,6 +41,12 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
     @Schema(description = "Describes the matchmaker (dev.getelements.elements.sdk.dao.Matchmaker) to use for this configuration.")
     private ElementServiceReference matchmaker;
 
+    @Valid
+    @Schema(description = "Selects the host orchestration strategy element service to use for matches of this " +
+                           "configuration (e.g. the Crossfire HostOrchestrationStrategy). If null, the platform's " +
+                           "default peer-to-peer host selection is used.")
+    private ElementServiceReference hostOrchestration;
+
     @Min(MIN_PROFILE_CAP)
     @Schema(description = "The maximum number of profiles that can be matched in a single match. ")
     private int maxProfiles = MIN_PROFILE_CAP;
@@ -90,6 +96,22 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
      */
     public void setMatchmaker(ElementServiceReference matchmaker) {
         this.matchmaker = matchmaker;
+    }
+
+    /**
+     * Returns the host orchestration strategy service reference.
+     * @return the host orchestration strategy reference, or null for the default
+     */
+    public ElementServiceReference getHostOrchestration() {
+        return hostOrchestration;
+    }
+
+    /**
+     * Sets the host orchestration strategy service reference.
+     * @param hostOrchestration the host orchestration strategy reference, or null for the default
+     */
+    public void setHostOrchestration(ElementServiceReference hostOrchestration) {
+        this.hostOrchestration = hostOrchestration;
     }
 
     /**
@@ -180,13 +202,14 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         return maxProfiles == that.maxProfiles &&
                 Objects.equals(success, that.success) &&
                 Objects.equals(matchmaker, that.matchmaker) &&
+                Objects.equals(hostOrchestration, that.hostOrchestration) &&
                 Objects.equals(metadata, that.metadata) &&
                 Objects.equals(metadataSpec, that.metadataSpec);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), success, matchmaker, maxProfiles, metadata, metadataSpec);
+        return Objects.hash(super.hashCode(), success, matchmaker, hostOrchestration, maxProfiles, metadata, metadataSpec);
     }
 
     @Override
@@ -194,6 +217,7 @@ public class MatchmakingApplicationConfiguration extends ApplicationConfiguratio
         return "MatchmakingApplicationConfiguration{" +
                 "success=" + success +
                 ", matchmaker=" + matchmaker +
+                ", hostOrchestration=" + hostOrchestration +
                 ", maxPlayers=" + maxProfiles +
                 ", metadata=" + metadata +
                 ", metadataSpec=" + metadataSpec +
