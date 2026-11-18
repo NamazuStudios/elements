@@ -289,6 +289,24 @@ function SteamConfigFields({ value, onChange }: { value: any; onChange: (field: 
       </div>
 
       <ProductBundlesField value={value.productBundles || []} onChange={(bundles) => onChange('productBundles', bundles)} />
+
+      <div className="space-y-2">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="steam-sandbox"
+            checked={!!value.sandbox}
+            onCheckedChange={(checked) => onChange('sandbox', checked === true)}
+            data-testid="checkbox-sandbox"
+          />
+          <Label htmlFor="steam-sandbox" className="text-sm font-normal cursor-pointer">
+            Sandbox
+          </Label>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Verify purchases against Steam's sandbox micro-transaction API (ISteamMicroTxnSandbox). Required for
+          team/development purchases: they are recorded only in the sandbox until the application is released on Steam.
+        </p>
+      </div>
     </>
   );
 }
