@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 /**
@@ -152,6 +153,43 @@ public class AppleIapVerifyReceiptInvokerTest {
             assertNotNull(e.getMessage());
         }
 
+    }
+
+    /**
+     * Apple's non-200 response bodies carry diagnostics. The invoker must read the body before the
+     * response closes and include it in the exception message -- a bare status with no reason is what
+     * made the sandbox-vs-production mismatch hard to diagnose (#209-family hardening, mirroring the
+     * Steam QueryTxn fix).
+     */
+    @Test
+    public void testNonOkHttpResponseSurfacesApplesResponseBody() {
+
+        when(httpResponse.getStatus()).thenReturn(503);
+        when(httpResponse.readEntity(String.class))
+                .thenReturn("{\"issue\":\"receipt data is malformed\"}");
+
+        final var invoker = new DefaultAppleIapVerifyReceiptInvoker(client, SANDBOX, "receipt-data");
+
+        try {
+            invoker.invoke();
+            fail("Expected InternalException");
+        } catch (InternalException e) {
+            assertTrue(e.getMessage().contains("receipt data is malformed"),
+                    "the exception must carry Apple's response body; got: " + e.getMessage());
+        }
+
+    }
+
+    /**
+     * The status-code exception must carry Apple's documented description alongside the number, so the
+     * log names the failure (e.g. 21007 = sandbox receipt sent to production).
+     */
+    @Test
+    public void statusExceptionMessageDescribesApplesStatus() {
+        final var exception = new AppleIapVerifyReceiptStatusErrorCodeException(21007);
+        assertTrue(exception.getMessage().contains("21007"));
+        assertTrue(exception.getMessage().contains("test environment"),
+                "the message must include Apple's documented description for 21007; got: " + exception.getMessage());
     }
 
 }
