@@ -5,6 +5,7 @@ import dev.getelements.elements.sdk.service.steam.client.model.SteamIapQueryTxnR
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 public class DefaultSteamIapReceiptRequestInvoker implements SteamIapReceiptRequestInvoker {
 
@@ -28,7 +29,7 @@ public class DefaultSteamIapReceiptRequestInvoker implements SteamIapReceiptRequ
         // environment is a configuration property of the application.
         final var microTxn = sandbox ? STEAM_MICRO_TXN_SANDBOX : STEAM_MICRO_TXN;
 
-        return getClient()
+        final var response = getClient()
                 .target(STEAM_MICRO_TXN_ROOT_URL)
                 .path(microTxn)
                 .path("QueryTxn")
@@ -37,7 +38,28 @@ public class DefaultSteamIapReceiptRequestInvoker implements SteamIapReceiptRequ
                 .queryParam("appid", appId)
                 .queryParam("orderid", orderId)
                 .request(MediaType.APPLICATION_JSON_TYPE)
-                .get(SteamIapQueryTxnResponse.class);
+                .get();
+
+        if (response.getStatus() != Response.Status.OK.getStatusCode()) {
+
+            // Steam's error body (response.error.*) names the actual failure -- an order not found in
+            // this environment, a key without access to the app, an app not entitled for micro-transactions
+            // -- without which a bare HTTP 400/403 is undiagnosable (sandbox-vs-live mismatches present
+            // exactly that way). Surface the queried endpoint, the status, and Steam's response body.
+            String body;
+            try {
+                body = response.readEntity(String.class);
+            } catch (Exception ex) {
+                body = "<unreadable response body: " + ex.getMessage() + ">";
+            }
+
+            throw new SteamIapQueryTxnException(microTxn
+                    + "/QueryTxn/v3 returned HTTP " + response.getStatus()
+                    + " for appid " + appId + " orderid " + orderId + ": " + body);
+
+        }
+
+        return response.readEntity(SteamIapQueryTxnResponse.class);
     }
 
     public Client getClient() {
