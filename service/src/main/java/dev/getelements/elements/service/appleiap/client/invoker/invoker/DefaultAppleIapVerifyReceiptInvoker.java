@@ -98,8 +98,23 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
                     .post(entity(requestBody, APPLICATION_JSON_TYPE));
 
             if (OK.getStatusCode() != response.getStatus()) {
-                logger.error("Apple {} server returned error status {}", appleIapVerifyReceiptEnvironment, response.getStatus());
-                throw new InternalException("Failed to make API call with Apple IAP Receipt Verification servers: " + response.getStatus());
+
+                // Apple's non-200 bodies carry diagnostics (e.g. the shared secret mismatch detail).
+                // Read the body before the response closes and surface it in the exception, so a log
+                // names the failure rather than a bare status (#209-family hardening).
+                String body;
+                try {
+                    body = response.readEntity(String.class);
+                } catch (Exception ex) {
+                    body = "<unreadable response body: " + ex.getMessage() + ">";
+                }
+
+                logger.error("Apple {} server returned error status {} body {}",
+                        appleIapVerifyReceiptEnvironment, response.getStatus(), body);
+
+                throw new InternalException("Failed to make API call with Apple IAP Receipt Verification servers: "
+                        + response.getStatus() + " -- " + body);
+
             }
 
             return response.readEntity(AppleIapVerifyReceiptResponse.class);
