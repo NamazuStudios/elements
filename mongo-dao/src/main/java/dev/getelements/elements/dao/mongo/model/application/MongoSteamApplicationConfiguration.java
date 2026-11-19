@@ -12,6 +12,14 @@ public class MongoSteamApplicationConfiguration extends MongoApplicationConfigur
     @Property
     private String appId;
 
+    /**
+     * True to verify purchases against Steam's sandbox micro-transaction API (ISteamMicroTxnSandbox).
+     * Required for team/development purchases: they are recorded only in the sandbox until the
+     * application is released on Steam.
+     */
+    @Property
+    private Boolean sandbox;
+
     @Property
     private List<MongoProductBundle> productBundles;
 
@@ -29,6 +37,14 @@ public class MongoSteamApplicationConfiguration extends MongoApplicationConfigur
 
     public void setAppId(String appId) {
         this.appId = appId;
+    }
+
+    public Boolean getSandbox() {
+        return sandbox;
+    }
+
+    public void setSandbox(Boolean sandbox) {
+        this.sandbox = sandbox;
     }
 
     public List<MongoProductBundle> getProductBundles() {
