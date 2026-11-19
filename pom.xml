@@ -196,7 +196,7 @@
         <mongo.java.driver.version>4.10.2</mongo.java.driver.version>
         <flow.sdk.version>0.4.0</flow.sdk.version>
         <kotlin.version>1.9.25</kotlin.version>
-        <google.android.publisher.api.version>v3-rev61-1.25.0</google.android.publisher.api.version>
+        <google.android.publisher.api.version>v3-rev20261022-2.0.0</google.android.publisher.api.version>
         <google-api-client.version>2.0.0</google-api-client.version>
         <near-java-api.version>0.2.0</near-java-api.version>
         <boolparser.version>1.0.3</boolparser.version>
