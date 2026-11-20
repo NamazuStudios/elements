@@ -54,12 +54,30 @@ public class IntegrationTestModule extends AbstractModule {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
         final int port = testPort.getAndIncrement();
 
-        // Start MongoDB before building the injector so that eager singletons
-        // (e.g. AtomicReference<Datastore>) can connect immediately.
-        final var mongoTestInstance = new DockerMongoTestInstance(port);
-        mongoTestInstance.start();
-        getRuntime().addShutdownHook(new Thread(mongoTestInstance::close));
-        bind(MongoTestInstance.class).toInstance(mongoTestInstance);
+        // When ELEMENTS_TEST_MONGO_URI is set, no MongoDB process is started and the tests connect
+        // to the supplied, already-running instance. This exists for environments without Docker
+        // (e.g. a locally installed mongod); the per-class Docker instances remain the default.
+        final var externalMongoUri = System.getenv("ELEMENTS_TEST_MONGO_URI");
+        final var useExternalMongo = externalMongoUri != null && !externalMongoUri.isBlank();
+
+        if (useExternalMongo) {
+
+            bind(MongoTestInstance.class).toInstance(new NoopMongoTestInstance());
+
+        } else {
+
+            // Start MongoDB before building the injector so that eager singletons
+            // (e.g. AtomicReference<Datastore>) can connect immediately.
+            final var mongoTestInstance = new DockerMongoTestInstance(port);
+            mongoTestInstance.start();
+            getRuntime().addShutdownHook(new Thread(mongoTestInstance::close));
+            bind(MongoTestInstance.class).toInstance(mongoTestInstance);
+
+        }
+
+        final var mongoUri = useExternalMongo
+                ? externalMongoUri
+                : format("mongodb://%s:%d/?socketTimeoutMS=30000", TEST_BIND_IP, port);
 
         install(new ConfigurationModule(() -> {
             final var properties = defaultConfigurationSupplier.get();
@@ -68,7 +86,7 @@ public class IntegrationTestModule extends AbstractModule {
             // contention between many concurrently-running per-test-class
             // Docker Mongo instances in CI) blocks the calling thread forever
             // with no exception, instead of failing the test.
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d/?socketTimeoutMS=30000", TEST_BIND_IP, port));
+            properties.put(MONGO_CLIENT_URI, mongoUri);
             return properties;
         }));
 
@@ -112,6 +130,20 @@ public class IntegrationTestModule extends AbstractModule {
         install(new MongoGridFSLargeObjectBucketModule());
         install(new MongoMigrationModule());
         install(new ValidationModule());
+
+    }
+
+    /**
+     * A {@link MongoTestInstance} that manages no process: used when ELEMENTS_TEST_MONGO_URI points
+     * the test at an already-running MongoDB instance.
+     */
+    private static class NoopMongoTestInstance implements MongoTestInstance {
+
+        @Override
+        public void start() {}
+
+        @Override
+        public void close() {}
 
     }
 

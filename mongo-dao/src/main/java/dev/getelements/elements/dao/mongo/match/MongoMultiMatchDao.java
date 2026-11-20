@@ -33,18 +33,21 @@ import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import jakarta.inject.Inject;
 
+import org.bson.types.ObjectId;
+
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.getelements.elements.sdk.model.match.MultiMatchStatus.*;
 import static dev.morphia.query.Sort.ascending;
 import static dev.morphia.query.filters.Filters.*;
-import static dev.morphia.query.updates.UpdateOperators.set;
+import static dev.morphia.query.updates.UpdateOperators.*;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -196,50 +199,15 @@ public class MongoMultiMatchDao implements MultiMatchDao {
     @Override
     public MultiMatch addProfile(final String multiMatchId, final Profile profile) {
 
-        final var query = getMongoDBUtils()
+        requireNonNull(multiMatchId, "multiMatchId");
+        requireNonNull(profile, "profile");
+
+        final var objectId = getMongoDBUtils()
                 .parse(multiMatchId)
-                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
                 .orElseThrow(MultiMatchNotFoundException::new);
 
         final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-        final var mongoProfileId = mongoProfile.getObjectId();
-        final var mongoMultiMatch = query
-                .stream()
-                .findFirst()
-                .orElseThrow(MultiMatchNotFoundException::new);
-
-        if (!OPEN.equals(mongoMultiMatch.getStatus())) {
-            throw new InvalidMultiMatchPhaseException(mongoMultiMatch.getStatus(), OPEN);
-        }
-
-        var profiles = mongoMultiMatch.getProfiles();
-        profiles = profiles == null ? new ArrayList<>() : new ArrayList<>(profiles);
-
-        if (profiles.size() >= mongoMultiMatch.getConfiguration().getMaxProfiles()) {
-            throw new InvalidDataException("Maximum number of profiles reached for multi-match: " + mongoMultiMatch.getId());
-        }
-
-        final var exists = profiles
-                .stream()
-                .map(MongoProfile::getObjectId)
-                .anyMatch(id -> id.equals(mongoProfileId));
-
-        if (exists) {
-            throw new DuplicateProfileException();
-        }
-
-        profiles.add(mongoProfile);
-
-        final var configuration = mongoMultiMatch.getConfiguration();
-
-        final var status = profiles.size() >= configuration.getMaxProfiles()
-                ? FULL
-                : OPEN;
-
-        final var updated = new UpdateBuilder()
-                .with(set("profiles", profiles))
-                .with(set("status", status))
-                .execute(query, new ModifyOptions().returnDocument(AFTER));
+        final var updated = addProfileAtomically(objectId, mongoProfile);
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
 
@@ -254,43 +222,99 @@ public class MongoMultiMatchDao implements MultiMatchDao {
 
     }
 
+    /*
+     * Performs the add-profile mutation as a single atomic conditional update (elements#236).
+     *
+     * The previous implementation was a client-side read-modify-write: it read the match, checked
+     * the invariants in Java, and overwrote the whole profiles array with $set. Under bursty
+     * concurrent joins that loses updates (two joins each read the same array; the last write
+     * silently drops the other profile) and races the capacity check.
+     *
+     * This version keeps the fast-path invariant checks (preserving the exact exception types
+     * callers rely on) but performs the mutation as one conditional findAndModify whose filter
+     * re-evaluates every invariant server-side: the phase must still be OPEN, the profile must
+     * still be absent, and the profile count must still equal the observed count (an optimistic
+     * concurrency check standing in for a version field). $addToSet additionally deduplicates
+     * the same profile in the residual window between the filter's evaluation and the write. A
+     * concurrent writer that changes the match between the read and the update simply causes
+     * the conditional update to match nothing, and the caller retries against a fresh read —
+     * bounded by ATOMIC_UPDATE_ATTEMPTS.
+     */
+    private MongoMultiMatch addProfileAtomically(final ObjectId objectId, final MongoProfile mongoProfile) {
+
+        final var mongoProfileId = mongoProfile.getObjectId();
+
+        for (var attempt = 0; attempt < ATOMIC_UPDATE_ATTEMPTS; attempt++) {
+
+            // A fresh read per attempt: every decision below is derived from it.
+            final var mongoMultiMatch = getBaseQuery()
+                    .filter(eq("_id", objectId))
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(MultiMatchNotFoundException::new);
+
+            if (!OPEN.equals(mongoMultiMatch.getStatus())) {
+                throw new InvalidMultiMatchPhaseException(mongoMultiMatch.getStatus(), OPEN);
+            }
+
+            final var profiles = mongoMultiMatch.getProfiles() == null
+                    ? List.<MongoProfile>of()
+                    : mongoMultiMatch.getProfiles();
+
+            final var configuration = mongoMultiMatch.getConfiguration();
+
+            if (profiles.size() >= configuration.getMaxProfiles()) {
+                throw new InvalidDataException("Maximum number of profiles reached for multi-match: " + mongoMultiMatch.getId());
+            }
+
+            final var exists = profiles
+                    .stream()
+                    .map(MongoProfile::getObjectId)
+                    .anyMatch(id -> id.equals(mongoProfileId));
+
+            if (exists) {
+                throw new DuplicateProfileException();
+            }
+
+            final var status = profiles.size() + 1 >= configuration.getMaxProfiles()
+                    ? FULL
+                    : OPEN;
+
+            final var conditional = getBaseQuery()
+                    .filter(eq("_id", objectId))
+                    .filter(eq("status", OPEN))
+                    .filter(elemMatch("profiles", eq("$id", mongoProfileId)).not())
+                    .filter(profiles.isEmpty()
+                            ? or(exists("profiles").not(), size("profiles", 0))
+                            : size("profiles", profiles.size()));
+
+            final var updated = new UpdateBuilder()
+                    .with(addToSet("profiles", mongoProfile))
+                    .with(set("status", status))
+                    .execute(conditional, new ModifyOptions().returnDocument(AFTER));
+
+            if (updated != null) return updated;
+
+        }
+
+        throw new InternalException(String.format(
+                "Could not add profile %s to multi-match %s after %d attempts; the match is under heavy concurrent update.",
+                mongoProfileId, objectId.toHexString(), ATOMIC_UPDATE_ATTEMPTS));
+
+    }
+
     @Override
     public MultiMatch removeProfile(final String multiMatchId, final Profile profile) {
 
-        final var query = getMongoDBUtils()
+        requireNonNull(multiMatchId, "multiMatchId");
+        requireNonNull(profile, "profile");
+
+        final var objectId = getMongoDBUtils()
                 .parse(multiMatchId)
-                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
                 .orElseThrow(MultiMatchNotFoundException::new);
 
         final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-        final var mongoProfileId = mongoProfile.getObjectId();
-        final var mongoMultiMatch = query
-                .stream()
-                .findFirst()
-                .orElseThrow(MultiMatchNotFoundException::new);
-
-        var profiles = mongoMultiMatch.getProfiles();
-
-        profiles = profiles == null
-                ? new ArrayList<>()
-                : new ArrayList<>(profiles);
-
-        final var removed = profiles.removeIf(p -> p.getObjectId().equals(mongoProfileId));
-
-        if (!removed) {
-            throw new ProfileNotFoundException();
-        }
-
-        final var status = switch (mongoMultiMatch.getStatus()) {
-            case OPEN, FULL -> OPEN;
-            case CLOSED -> CLOSED;
-            case ENDED -> throw new InvalidDataException();
-        };
-
-        final var updated = new UpdateBuilder()
-                .with(set("profiles", profiles))
-                .with(set("status", status))
-                .execute(query, new ModifyOptions().returnDocument(AFTER));
+        final var updated = removeProfileAtomically(objectId, mongoProfile);
 
         final var multiMatch = getMapperRegistry().map(updated, MultiMatch.class);
 
@@ -304,6 +328,155 @@ public class MongoMultiMatchDao implements MultiMatchDao {
         return multiMatch;
 
     }
+
+    /*
+     * Performs the remove-profile mutation as a single atomic conditional update, mirroring the
+     * add path (elements#236): the profile must still be present and the profile count must still
+     * equal the observed count, so a concurrent join or removal between the read and the update
+     * causes the conditional update to match nothing and the caller retries against a fresh read.
+     * $pull removes exactly the matching reference, and the status is recomputed from the
+     * pre-removal state (any removal takes FULL to OPEN, matching the previous semantics).
+     */
+    private MongoMultiMatch removeProfileAtomically(final ObjectId objectId, final MongoProfile mongoProfile) {
+
+        final var mongoProfileId = mongoProfile.getObjectId();
+
+        for (var attempt = 0; attempt < ATOMIC_UPDATE_ATTEMPTS; attempt++) {
+
+            final var mongoMultiMatch = getBaseQuery()
+                    .filter(eq("_id", objectId))
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(MultiMatchNotFoundException::new);
+
+            final var profiles = mongoMultiMatch.getProfiles() == null
+                    ? List.<MongoProfile>of()
+                    : mongoMultiMatch.getProfiles();
+
+            final var present = profiles
+                    .stream()
+                    .map(MongoProfile::getObjectId)
+                    .anyMatch(id -> id.equals(mongoProfileId));
+
+            if (!present) {
+                throw new ProfileNotFoundException();
+            }
+
+            final var status = switch (mongoMultiMatch.getStatus()) {
+                case OPEN, FULL -> OPEN;
+                case CLOSED -> CLOSED;
+                case ENDED -> throw new InvalidDataException();
+            };
+
+            final var conditional = getBaseQuery()
+                    .filter(eq("_id", objectId))
+                    .filter(elemMatch("profiles", eq("$id", mongoProfileId)))
+                    .filter(size("profiles", profiles.size()));
+
+            final var updated = new UpdateBuilder()
+                    .with(pull("profiles", mongoProfile))
+                    .with(set("status", status))
+                    .execute(conditional, new ModifyOptions().returnDocument(AFTER));
+
+            if (updated != null) return updated;
+
+        }
+
+        throw new InternalException(String.format(
+                "Could not remove profile %s from multi-match %s after %d attempts; the match is under heavy concurrent update.",
+                mongoProfileId, objectId.toHexString(), ATOMIC_UPDATE_ATTEMPTS));
+
+    }
+
+    @Override
+    public MultiMatch updateMultiMatchMetadata(final String multiMatchId, final Map<String, Object> metadata) {
+
+        requireNonNull(multiMatchId, "multiMatchId");
+        requireNonNull(metadata, "metadata");
+
+        final var query = getMongoDBUtils()
+                .parse(multiMatchId)
+                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        if (metadata.isEmpty()) {
+            return query
+                    .stream()
+                    .findFirst()
+                    .map(mmm -> getMapperRegistry().map(mmm, MultiMatch.class))
+                    .orElseThrow(MultiMatchNotFoundException::new);
+        }
+
+        final var builder = new UpdateBuilder();
+
+        for (final var entry : metadata.entrySet()) {
+            builder.with(set("metadata." + requireValidMetadataKey(entry.getKey()), entry.getValue()));
+        }
+
+        // One server-side single-document $set of every supplied key's path: concurrent callers
+        // writing other keys are never lost (elements#236).
+        final var updated = builder.execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) throw new MultiMatchNotFoundException();
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    @Override
+    public MultiMatch addToMultiMatchMetadata(final String multiMatchId, final String key, final Object value) {
+
+        requireNonNull(value, "value");
+
+        final var query = getMongoDBUtils()
+                .parse(multiMatchId)
+                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        // Atomic $addToSet on the key's path: creates the entry when absent, never duplicates
+        // the value, and never loses a concurrent add (elements#236).
+        final var updated = new UpdateBuilder()
+                .with(addToSet("metadata." + requireValidMetadataKey(key), value))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) throw new MultiMatchNotFoundException();
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    @Override
+    public MultiMatch removeFromMultiMatchMetadata(final String multiMatchId, final String key, final Object value) {
+
+        requireNonNull(value, "value");
+
+        final var query = getMongoDBUtils()
+                .parse(multiMatchId)
+                .map(objectId -> getBaseQuery().filter(eq("_id", objectId)))
+                .orElseThrow(MultiMatchNotFoundException::new);
+
+        // Atomic $pull on the key's path (elements#236).
+        final var updated = new UpdateBuilder()
+                .with(pull("metadata." + requireValidMetadataKey(key), value))
+                .execute(query, new ModifyOptions().returnDocument(AFTER));
+
+        if (updated == null) throw new MultiMatchNotFoundException();
+
+        return getMapperRegistry().map(updated, MultiMatch.class);
+
+    }
+
+    private String requireValidMetadataKey(final String key) {
+        requireNonNull(key, "key");
+        if (!METADATA_KEY_PATTERN.matcher(key).matches()) {
+            throw new InvalidDataException("Multi-match metadata keys must be simple identifiers ([A-Za-z0-9_-]+): " + key);
+        }
+        return key;
+    }
+
+    private static final int ATOMIC_UPDATE_ATTEMPTS = 8;
+
+    private static final Pattern METADATA_KEY_PATTERN = Pattern.compile("[A-Za-z0-9_-]+");
 
     @Override
     public List<Profile> getProfiles(final String multiMatchId) {

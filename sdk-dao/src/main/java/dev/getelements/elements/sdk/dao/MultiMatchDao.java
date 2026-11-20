@@ -11,6 +11,7 @@ import dev.getelements.elements.sdk.model.match.MultiMatchStatus;
 import dev.getelements.elements.sdk.model.profile.Profile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -247,6 +248,56 @@ public interface MultiMatchDao {
      * @return the newly created {@link MultiMatch}
      */
     MultiMatch updateMultiMatch(String matchId, MultiMatch configuration);
+
+    /**
+     * <p>Atomically merges the supplied entries into the metadata map of the {@link MultiMatch} with the
+     * supplied ID.</p>
+     *
+     * <p>This is a server-side single-document update: each entry is applied with {@code $set} on the
+     * metadata key's path, so entries written concurrently by other callers to <em>different</em> keys are
+     * never lost, and the previous value of each supplied key is replaced wholesale. This is deliberately
+     * <em>not</em> a transaction: MongoDB guarantees per-document update atomicity, and the read-modify-write
+     * hazard this method exists to eliminate cannot occur when the merge is computed by the server.</p>
+     *
+     * <p>Metadata keys must be simple identifiers ({@code [A-Za-z0-9_-]+}) since they become path segments
+     * of the update. The match must exist and not be expired, otherwise
+     * {@link MultiMatchNotFoundException} is thrown.</p>
+     *
+     * @param multiMatchId the ID of the {@link MultiMatch} to update
+     * @param metadata the entries to merge into the match's metadata; may be empty (a no-op read)
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch updateMultiMatchMetadata(String multiMatchId, Map<String, Object> metadata);
+
+    /**
+     * <p>Atomically adds a value to the list-valued metadata entry {@code metadata[key]} of the
+     * {@link MultiMatch} with the supplied ID ({@code $addToSet} semantics: the entry is created if absent,
+     * and the value is not duplicated if already present).</p>
+     *
+     * <p>As with {@link #updateMultiMatchMetadata(String, Map)}, this is a server-side single-document
+     * update: concurrent adds to the same key never lose values, and concurrent writes to different keys
+     * never lose each other.</p>
+     *
+     * @param multiMatchId the ID of the {@link MultiMatch} to update
+     * @param key the metadata key, a simple identifier ({@code [A-Za-z0-9_-]+})
+     * @param value the value to add
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch addToMultiMatchMetadata(String multiMatchId, String key, Object value);
+
+    /**
+     * <p>Atomically removes the values equal to the supplied value from the list-valued metadata entry
+     * {@code metadata[key]} of the {@link MultiMatch} with the supplied ID ({@code $pull} semantics). The
+     * entry is left as-is if it contains no such value; it is an error for the entry to exist with a
+     * non-list value.</p>
+     *
+     * @param multiMatchId the ID of the {@link MultiMatch} to update
+     * @param key the metadata key, a simple identifier ({@code [A-Za-z0-9_-]+})
+     * @param value the value to remove
+     * @return the updated {@link MultiMatch}
+     */
+    MultiMatch removeFromMultiMatchMetadata(String multiMatchId, String key, Object value);
+
 
     /**
      * Flags the {@link MultiMatch} as open, allowing players to join. If the match is currently full, then
