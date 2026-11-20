@@ -12,6 +12,7 @@ import dev.getelements.elements.sdk.model.application.FacebookApplicationConfigu
 import dev.getelements.elements.sdk.model.application.GooglePlayApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.IosApplicationConfiguration;
 import dev.getelements.elements.sdk.model.application.OculusApplicationConfiguration;
+import dev.getelements.elements.sdk.model.application.SteamApplicationConfiguration;
 import dev.getelements.elements.sdk.model.exception.DuplicateException;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
@@ -25,6 +26,7 @@ import static dev.getelements.elements.sdk.service.appleiap.AppleIapReceiptServi
 import static dev.getelements.elements.sdk.service.googleplayiap.GooglePlayIapReceiptService.GOOGLE_IAP_SCHEME;
 import static dev.getelements.elements.sdk.service.meta.facebookiap.FacebookIapReceiptService.FACEBOOK_IAP_SCHEME;
 import static dev.getelements.elements.sdk.service.meta.oculusiap.OculusIapReceiptService.OCULUS_IAP_SCHEME;
+import static dev.getelements.elements.sdk.service.steam.SteamIapReceiptService.STEAM_IAP_SCHEME;
 
 @ElementServiceExport(ProductBundleMigration.class)
 public class ProductBundleMigration {
@@ -43,6 +45,7 @@ public class ProductBundleMigration {
         migrate(GooglePlayApplicationConfiguration.class, GOOGLE_IAP_SCHEME, GooglePlayApplicationConfiguration::getProductBundles);
         migrate(FacebookApplicationConfiguration.class, FACEBOOK_IAP_SCHEME, FacebookApplicationConfiguration::getProductBundles);
         migrate(OculusApplicationConfiguration.class, OCULUS_IAP_SCHEME, OculusApplicationConfiguration::getProductBundles);
+        migrate(SteamApplicationConfiguration.class, STEAM_IAP_SCHEME, SteamApplicationConfiguration::getProductBundles);
     }
 
     private <T extends ApplicationConfiguration> void migrate(
