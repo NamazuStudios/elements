@@ -25,6 +25,7 @@ import org.testng.annotations.Test;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static dev.getelements.elements.sdk.ElementRegistry.ROOT;
 import static dev.getelements.elements.sdk.dao.MultiMatchDao.*;
@@ -72,6 +73,8 @@ public class MongoMultiMatchDaoTest {
     private final List<UniqueCode> joinCodes = new CopyOnWriteArrayList<>();
 
     private final Map<String, Set<Profile>> profilesByMatch = new ConcurrentHashMap<>();
+
+    private final AtomicInteger metadataInvocationCounter = new AtomicInteger();
 
     @DataProvider
     public Object[][] allMatches() {
@@ -409,6 +412,97 @@ public class MongoMultiMatchDaoTest {
         final var expected = profilesByMatch.get(match.getId());
         assertEquals(actual.size(), expected.size(), "Profile count mismatch for match: " + match.getId());
         assertTrue(expected.containsAll(actual), "Expected profiles not found in match: " + match.getId());
+    }
+
+    @Test(groups = "matchMetadata", dependsOnGroups = "createMultiMatch")
+    public void testUpdateMultiMatchMetadata() {
+        final var match = matches.get(0);
+        final var metadata = Map.<String, Object>of("requireTwitchLogin", true, "hostNote", "alpha");
+        final var updated = multiMatchDao.updateMultiMatchMetadata(match.getId(), metadata);
+        assertEquals(updated.getMetadata().get("requireTwitchLogin"), true);
+        assertEquals(updated.getMetadata().get("hostNote"), "alpha");
+
+        final var fetched = multiMatchDao.getMultiMatch(match.getId());
+        assertEquals(fetched.getMetadata().get("requireTwitchLogin"), true);
+        assertEquals(fetched.getMetadata().get("hostNote"), "alpha");
+    }
+
+    @Test(
+            groups = "matchMetadata",
+            dependsOnGroups = "createMultiMatch",
+            threadPoolSize = 8,
+            invocationCount = 16
+    )
+    public void testConcurrentMetadataWritesAreNotLost() {
+        final var match = matches.get(1);
+        final var invocation = metadataInvocationCounter.getAndIncrement();
+        // Two concurrent single-key writers racing each other: one $set merge, one $addToSet.
+        multiMatchDao.updateMultiMatchMetadata(match.getId(), Map.<String, Object>of("writer" + invocation, invocation));
+        multiMatchDao.addToMultiMatchMetadata(match.getId(), "concurrentList", invocation);
+    }
+
+    @Test(
+            groups = "matchMetadata",
+            dependsOnGroups = "createMultiMatch",
+            dependsOnMethods = "testConcurrentMetadataWritesAreNotLost"
+    )
+    public void testConcurrentMetadataWritesLanded() {
+        final var fetched = multiMatchDao.getMultiMatch(matches.get(1).getId());
+        final var metadata = fetched.getMetadata();
+        assertNotNull(metadata, "Metadata was never written.");
+
+        // 16 concurrent single-key merges: none may be lost.
+        for (var i = 0; i < 16; i++) {
+            assertEquals(metadata.get("writer" + i), i, "Concurrent metadata write was lost for key: writer" + i);
+        }
+
+        // 16 concurrent $addToSet values: none may be lost, none may be duplicated.
+        final var list = (List<?>) metadata.get("concurrentList");
+        assertNotNull(list, "Concurrent metadata list was never written.");
+        assertEquals(list.size(), 16, "Concurrent $addToSet lost (or duplicated) values.");
+        assertEquals(list.stream().distinct().count(), 16L, "Concurrent $addToSet duplicated values.");
+    }
+
+    @Test(groups = "matchMetadata", dependsOnGroups = "createMultiMatch")
+    public void testAddRemoveMultiMatchMetadataList() {
+        final var match = matches.get(2);
+        var updated = multiMatchDao.addToMultiMatchMetadata(match.getId(), "kickedProfileIds", "profile-a");
+        updated = multiMatchDao.addToMultiMatchMetadata(match.getId(), "kickedProfileIds", "profile-b");
+        var list = (List<?>) updated.getMetadata().get("kickedProfileIds");
+        assertEquals(list.size(), 2);
+
+        // $addToSet never duplicates.
+        updated = multiMatchDao.addToMultiMatchMetadata(match.getId(), "kickedProfileIds", "profile-a");
+        list = (List<?>) updated.getMetadata().get("kickedProfileIds");
+        assertEquals(list.size(), 2);
+
+        // $pull removes exactly the matching value.
+        updated = multiMatchDao.removeFromMultiMatchMetadata(match.getId(), "kickedProfileIds", "profile-a");
+        list = (List<?>) updated.getMetadata().get("kickedProfileIds");
+        assertEquals(list.size(), 1);
+        assertEquals(list.get(0), "profile-b");
+    }
+
+    @Test(groups = "matchMetadata", dependsOnGroups = "createMultiMatch")
+    public void testMetadataKeyValidation() {
+        final var match = matches.get(3);
+        assertThrows(InvalidDataException.class,
+                () -> multiMatchDao.updateMultiMatchMetadata(match.getId(), Map.<String, Object>of("bad.key", 1)));
+        assertThrows(InvalidDataException.class,
+                () -> multiMatchDao.addToMultiMatchMetadata(match.getId(), "bad key", 1));
+        assertThrows(InvalidDataException.class,
+                () -> multiMatchDao.removeFromMultiMatchMetadata(match.getId(), "bad$key", 1));
+    }
+
+    @Test(groups = "matchMetadata", dependsOnGroups = "createMultiMatch")
+    public void testMetadataNotFoundForUnknownMatch() {
+        final var unknownId = new ObjectId().toHexString();
+        assertThrows(MultiMatchNotFoundException.class,
+                () -> multiMatchDao.updateMultiMatchMetadata(unknownId, Map.<String, Object>of("a", 1)));
+        assertThrows(MultiMatchNotFoundException.class,
+                () -> multiMatchDao.addToMultiMatchMetadata(unknownId, "a", 1));
+        assertThrows(MultiMatchNotFoundException.class,
+                () -> multiMatchDao.removeFromMultiMatchMetadata(unknownId, "a", 1));
     }
 
     @Test(
