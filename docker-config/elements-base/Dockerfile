@@ -15,6 +15,16 @@ ENV ELEMENTS_HOME "/opt/elements"
 
 # Sub Directories
 
+# Defensive JVM default: mitigates Java4Shell (CVE-2026-114938), a memory-corruption
+# flaw in HotSpot's AVX-512 Base64 intrinsic reached through java.util.Base64 decoders,
+# including from pre-auth request surfaces (e.g. Authorization headers). Affects
+# OpenJDK 17.0.6+ on AVX-512 VBMI capable x86-64 hosts. Disabling the intrinsic makes
+# even an unpatched JDK unexploitable here; every java invocation in derived images
+# picks this up. Deployments should APPEND to JAVA_TOOL_OPTIONS rather than replace it
+# (the jetty-ws ENTRYPOINT also sets the flag directly for that reason).
+# See https://github.com/NamazuStudios/elements/issues/246
+ENV JAVA_TOOL_OPTIONS "-XX:-UseBASE64Intrinsics"
+
 # Application Directories. Used by the deployment scripts.
 # - ELEMENTS_BIN holds any binaries the application may need. Added to the OS PATH
 # - ELEMENTS_LIB holds any number of jar files to be included on the Java classpath
