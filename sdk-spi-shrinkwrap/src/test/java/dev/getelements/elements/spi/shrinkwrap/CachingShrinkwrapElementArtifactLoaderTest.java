@@ -4,9 +4,13 @@ import dev.getelements.elements.sdk.ElementArtifactLoader;
 import dev.getelements.elements.sdk.record.ArtifactRepository;
 import dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 
 import static dev.getelements.elements.sdk.spi.shrinkwrap.CachingShrinkwrapElementArtifactLoader.LOCAL_REPOSITORY_PROPERTY;
@@ -41,7 +45,19 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
 
     private static final String MAVEN_LOCAL_REPO_PROPERTY = "maven.repo.local";
 
+    /**
+     * An existing-but-empty directory, served as a {@code file://} Maven repository. Resolving a
+     * deliberately missing artifact against it fails deterministically with ArtifactNotFoundException
+     * (the loader's "not found" path) without contacting any network repository.
+     */
+    private static Path emptyRepositoryDirectory;
+
     private final ElementArtifactLoader loader = new CachingShrinkwrapElementArtifactLoader();
+
+    @BeforeClass
+    public void createEmptyRepository() throws IOException {
+        emptyRepositoryDirectory = Files.createTempDirectory("empty-maven-repo-");
+    }
 
     @AfterMethod
     public void clearProperties() {
@@ -73,7 +89,19 @@ public class CachingShrinkwrapElementArtifactLoaderTest {
 
     @Test(dataProvider = "getMissingTestArtifacts")
     public void testMissingArtifacts(final String coordinates) {
-        final var result = loader.findClassLoader(null, ArtifactRepository.DEFAULTS, coordinates);
+        // Hermetic: resolve against a local file:// repository that never contains the artifact.
+        //
+        // Resolving against ArtifactRepository.DEFAULTS made this test depend on live Maven Central
+        // answering 404 for the missing artifact. On 2026-11-24 Central answered 429 (Too Many
+        // Requests) instead; the loader correctly classified that as "repository unreachable" and
+        // threw SdkException (after the local-cache fallback found nothing), failing the test and
+        // main's Branch Build. The unreachable-repository behavior is already covered separately
+        // (the loader's offline fallback); this test's job is the not-found path, which a local
+        // empty repository exercises deterministically.
+        final var hermeticRepositories = Set.of(new ArtifactRepository(
+                "empty-local",
+                emptyRepositoryDirectory.toUri().toString()));
+        final var result = loader.findClassLoader(null, hermeticRepositories, coordinates);
         assertFalse(result.isPresent());
     }
 
